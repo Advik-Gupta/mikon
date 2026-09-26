@@ -114,14 +114,45 @@ export interface ProgramTarget {
   unit: string;
   /** Same storage units as the metric (kg, seconds, %) */
   current: number | null;
+  /** To reach by the end of the program */
   target: number | null;
-  byDate: string;
+}
+
+export type SetKind = "warmup" | "working" | "backoff";
+
+export interface WorkoutSet {
+  id: string;
+  kind: SetKind;
+  /** kg; null = bodyweight / not set */
+  weight: number | null;
+  reps: number | null;
+  /** Rate of perceived exertion, 6–10 */
+  rpe: number | null;
+  /** SET_MODIFIERS ids, e.g. "dropset", "partials" */
+  modifiers: string[];
+}
+
+export interface WorkoutExercise {
+  id: string;
+  /** Exercise database id */
+  exerciseId: string;
+  sets: WorkoutSet[];
+  notes: string;
+}
+
+/** One slot in a workout. More than one exercise means a superset. */
+export interface WorkoutEntry {
+  id: string;
+  exercises: WorkoutExercise[];
+  /** Rest after the exercise (or superset round), seconds */
+  restSec: number | null;
 }
 
 export interface ProgramBlock {
   id: string;
   /** BLOCK_TYPES id */
   type: string;
+  entries?: WorkoutEntry[];
 }
 
 export interface ProgramDay {

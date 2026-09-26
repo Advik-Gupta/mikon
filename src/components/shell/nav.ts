@@ -1,4 +1,4 @@
-import { CalendarDays, Layers, LayoutGrid, Library, Settings, TrendingUp, type LucideIcon } from "lucide-react";
+import { CalendarDays, Compass, Layers, LayoutGrid, Settings, TrendingUp, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -11,7 +11,7 @@ export const MAIN_NAV: NavItem[] = [
   { href: "/", label: "Home", icon: LayoutGrid },
   { href: "/programs", label: "Programs", icon: Layers },
   { href: "/calendar", label: "Calendar", icon: CalendarDays, soon: true },
-  { href: "/library", label: "Exercise library", icon: Library, soon: true },
+  { href: "/explorer", label: "Explorer", icon: Compass },
   { href: "/progress", label: "Progress", icon: TrendingUp, soon: true },
 ];
 

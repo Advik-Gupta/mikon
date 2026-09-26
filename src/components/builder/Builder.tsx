@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight, Check, ChevronLeft, CloudCheck } from "lucide-react";
 import { resizeDays, STEP_ORDER, targetDayCount, updateProgram } from "@/lib/programs";
@@ -12,6 +13,7 @@ import { GoalsStep } from "./GoalsStep";
 import { StructureStep } from "./StructureStep";
 import { TargetsStep } from "./TargetsStep";
 import { TrainingStep } from "./TrainingStep";
+import { BlockEditor } from "./workout/BlockEditor";
 
 export type ProgramUpdate = (fn: (p: Program) => Program) => void;
 export interface BuilderStepProps {
@@ -72,6 +74,8 @@ export function Builder({ program }: { program: Program }) {
   const firstBlocked = STEPS.findIndex((s) => s.blocker?.(program));
   const blocker = current.blocker?.(program) ?? null;
   const isBoard = current.id === "board";
+  const blockParam = useSearchParams().get("block");
+  const editingDay = blockParam ? program.days.find((d) => d.blocks.some((b) => b.id === blockParam && b.type !== "recovery")) : undefined;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [dir, setDir] = useState(1);
 
@@ -100,7 +104,7 @@ export function Builder({ program }: { program: Program }) {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-b border-line px-4 pt-4 sm:px-8">
+      <div className={cn("border-b border-line px-4 pt-4 sm:px-8", editingDay && "pb-4")}>
         <div className="flex items-center gap-3">
           <Link href="/programs" className="rounded-lg p-1.5 text-muted hover:bg-surface-2 hover:text-ink" aria-label="All programs">
             <ChevronLeft className="size-5" />
@@ -117,7 +121,7 @@ export function Builder({ program }: { program: Program }) {
         </div>
 
         {/* Stepper */}
-        <nav className="scrollbar-thin -mb-px mt-4 flex gap-1 overflow-x-auto">
+        <nav hidden={!!editingDay} className="scrollbar-thin -mb-px mt-4 flex gap-1 overflow-x-auto">
           {STEPS.map((s, i) => {
             const active = i === idx;
             const done = i < idx;
@@ -149,7 +153,9 @@ export function Builder({ program }: { program: Program }) {
         </nav>
       </div>
 
-      {isBoard ? (
+      {editingDay && blockParam ? (
+        <BlockEditor key={blockParam} program={program} dayId={editingDay.id} blockId={blockParam} />
+      ) : isBoard ? (
         <Board program={program} update={update} goTo={goTo} />
       ) : (
         <>

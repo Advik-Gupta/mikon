@@ -67,6 +67,12 @@ export function TargetsStep({ program, update }: BuilderStepProps) {
   const patch = (id: string, patch: Partial<ProgramTarget>) =>
     setTargets(program.targets.map((t) => (t.id === id ? { ...t, ...patch } : t)));
 
+  const { startDate, lengthWeeks } = program.structure;
+  const end = startDate && lengthWeeks ? new Date(new Date(`${startDate}T00:00`).getTime() + lengthWeeks * 7 * 86400000) : null;
+  const endLabel = end
+    ? `Program ends ${end.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })} (${lengthWeeks} weeks)`
+    : "You'll set the program's length in the Structure step.";
+
   const available = TARGET_METRICS.filter((m) => !program.targets.some((t) => t.metric === m.id))
     .map((m) => ({ m, suggested: m.goals.some((g) => goalIds.includes(g)) }))
     .sort((a, b) => Number(b.suggested) - Number(a.suggested));
@@ -80,7 +86,6 @@ export function TargetsStep({ program, update }: BuilderStepProps) {
       unit: "",
       current: m ? currentFromProfile(m, profile) : null,
       target: null,
-      byDate: "",
     };
     setTargets([...program.targets, t]);
   };
@@ -91,8 +96,9 @@ export function TargetsStep({ program, update }: BuilderStepProps) {
         icon={Crosshair}
         eyebrow="Program · Targets"
         title="Any numbers you're chasing?"
-        subtitle="Optional. Add measurable targets like PRs, race times, body weight or body fat. Current values come from your profile."
+        subtitle="Optional. Add measurable targets like PRs, race times, body weight or body fat to hit by the end of this program. Current values come from your profile."
       />
+      <p className="-mt-4 mb-6 text-xs text-faint">{endLabel}</p>
 
       <div className="flex flex-wrap gap-2">
         {available.map(({ m, suggested }) => (
@@ -166,10 +172,6 @@ export function TargetsStep({ program, update }: BuilderStepProps) {
                     <span className="text-xs font-medium text-accent">Target</span>
                     <ValueInput t={t} field="target" units={units} onChange={(target) => patch(t.id, { target })} />
                   </div>
-                  <label className="mt-2 grid grid-cols-[52px_1fr] items-center gap-x-3 text-xs text-muted">
-                    By
-                    <Input type="date" className="h-10 text-sm" value={t.byDate} onChange={(e) => patch(t.id, { byDate: e.target.value })} />
-                  </label>
                   {m?.record && t.current == null && profile && (
                     <p className="mt-2 text-[11px] text-faint">
                       No {m.kind === "time" ? "time" : "PR"} on your profile.{" "}

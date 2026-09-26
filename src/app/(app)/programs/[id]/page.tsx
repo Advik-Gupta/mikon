@@ -1,12 +1,13 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { SearchX } from "lucide-react";
 import { Builder } from "@/components/builder/Builder";
 import { useProgram } from "@/lib/programs";
 
-export default function ProgramPage() {
+function ProgramBuilder() {
   const { id } = useParams<{ id: string }>();
   const program = useProgram(id);
 
@@ -24,4 +25,12 @@ export default function ProgramPage() {
     );
   }
   return <Builder program={program} />;
+}
+
+export default function ProgramPage() {
+  return (
+    <Suspense>
+      <ProgramBuilder />
+    </Suspense>
+  );
 }

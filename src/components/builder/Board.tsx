@@ -22,7 +22,9 @@ import {
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { AnimatePresence, motion } from "motion/react";
-import { Copy, GripVertical, Moon, Plus, Settings2, Trash2, X } from "lucide-react";
+import { Copy, GripVertical, ListChecks, Moon, Pencil, Plus, Settings2, Trash2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { entryValue, fmtSets } from "@/lib/workout";
 import { BLOCK_TYPES, blockType } from "@/lib/options";
 import { cycleSummary, dayLabel, newDay, weekdayOf } from "@/lib/programs";
 import { fmtDuration, freeMinutesByDay } from "@/lib/schedule";
@@ -32,13 +34,29 @@ import { cn } from "../ui";
 import type { BuilderStepProps } from "./Builder";
 
 const PALETTE = "palette:";
+/** Palette ids are `palette:<variant>:<type>`: the desktop sidebar and mobile strip each need unique ids. */
+const paletteType = (id: string | null | undefined) => (id?.startsWith(PALETTE) ? id.split(":")[2] : undefined);
 const DAY = "day:";
 
 /* ------------------------------------------------------------------ */
 /* Block visuals                                                        */
 /* ------------------------------------------------------------------ */
 
-function BlockFace({ type, onRemove, dragging, overlay }: { type: string; onRemove?: () => void; dragging?: boolean; overlay?: boolean }) {
+function BlockFace({
+  type,
+  onRemove,
+  onOpen,
+  summary,
+  dragging,
+  overlay,
+}: {
+  type: string;
+  onRemove?: () => void;
+  onOpen?: () => void;
+  summary?: string;
+  dragging?: boolean;
+  overlay?: boolean;
+}) {
   const t = blockType(type);
   const Icon = t.icon!;
   return (
@@ -56,7 +74,22 @@ function BlockFace({ type, onRemove, dragging, overlay }: { type: string; onRemo
       >
         <Icon className="size-3.5" />
       </span>
-      <span className="min-w-0 flex-1 truncate text-sm font-medium">{t.label}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium">{t.label}</span>
+        {summary && <span className="block truncate text-[11px] text-muted">{summary}</span>}
+      </span>
+      {onOpen && (
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={onOpen}
+          className="flex size-7 shrink-0 items-center justify-center rounded-md border border-line text-muted transition hover:border-accent/60 hover:bg-accent hover:text-accent-ink"
+          title={`Build this ${t.label.toLowerCase()} session`}
+          aria-label={`Build ${t.label}`}
+        >
+          <ListChecks className="size-3.5" />
+        </button>
+      )}
       {onRemove && (
         <button
           type="button"
@@ -72,7 +105,15 @@ function BlockFace({ type, onRemove, dragging, overlay }: { type: string; onRemo
   );
 }
 
-function SortableBlock({ block, onRemove }: { block: ProgramBlock; onRemove: () => void }) {
+function blockSummary(block: ProgramBlock) {
+  const entries = block.entries ?? [];
+  if (!entries.length) return undefined;
+  const exercises = entries.reduce((a, e) => a + e.exercises.length, 0);
+  const sets = entries.reduce((a, e) => a + entryValue(e), 0);
+  return `${exercises} exercise${exercises === 1 ? "" : "s"} · ${fmtSets(sets)} sets`;
+}
+
+function SortableBlock({ block, onRemove, onOpen }: { block: ProgramBlock; onRemove: () => void; onOpen?: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
   return (
     <div
@@ -82,13 +123,13 @@ function SortableBlock({ block, onRemove }: { block: ProgramBlock; onRemove: () 
       {...attributes}
       {...listeners}
     >
-      <BlockFace type={block.type} onRemove={onRemove} dragging={isDragging} />
+      <BlockFace type={block.type} onRemove={onRemove} onOpen={onOpen} summary={blockSummary(block)} dragging={isDragging} />
     </div>
   );
 }
 
-function PaletteItem({ type }: { type: string }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: PALETTE + type });
+function PaletteItem({ type, variant }: { type: string; variant: "side" | "strip" }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `${PALETTE}${variant}:${type}` });
   const t = blockType(type);
   const Icon = t.icon!;
   return (
@@ -128,6 +169,7 @@ function DayColumn({
   freeMin,
   onTitle,
   onRemoveBlock,
+  onOpenBlock,
   onDuplicate,
   onDelete,
 }: {
@@ -138,6 +180,7 @@ function DayColumn({
   freeMin: number | null;
   onTitle: (t: string) => void;
   onRemoveBlock: (id: string) => void;
+  onOpenBlock: (id: string) => void;
   onDuplicate: () => void;
   onDelete: () => void;
 }) {
@@ -161,12 +204,22 @@ function DayColumn({
         <div className="flex items-center gap-2">
           <span className="font-display text-sm font-semibold">{dayLabel(program, index)}</span>
           {freeMin != null && <span className="text-[11px] text-faint">{fmtDuration(freeMin).replace(/ \d+m$/, "")} free</span>}
-          <span className="ml-auto flex opacity-0 transition group-hover/day:opacity-100 focus-within:opacity-100">
+          <span className="ml-auto flex items-center">
+            <span className="flex opacity-0 transition group-hover/day:opacity-100 focus-within:opacity-100">
             <button type="button" onClick={onDuplicate} className="rounded-md p-1 text-faint hover:bg-surface-2 hover:text-ink" title="Duplicate day" aria-label="Duplicate day">
               <Copy className="size-3.5" />
             </button>
             <button type="button" onClick={onDelete} className="rounded-md p-1 text-faint hover:bg-danger/10 hover:text-danger" title="Delete day" aria-label="Delete day">
               <Trash2 className="size-3.5" />
+            </button>
+            </span>
+            <button
+              type="button"
+              className="ml-0.5 rounded-md p-1 text-muted hover:bg-surface-2 hover:text-accent"
+              title="Edit this day in detail (coming soon)"
+              aria-label={`Edit ${dayLabel(program, index)} in detail`}
+            >
+              <Pencil className="size-3.5" />
             </button>
           </span>
         </div>
@@ -182,7 +235,7 @@ function DayColumn({
       <SortableContext items={day.blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
         <div ref={setNodeRef} className="flex min-h-72 flex-1 flex-col gap-2 p-2.5">
           {day.blocks.map((b) => (
-            <SortableBlock key={b.id} block={b} onRemove={() => onRemoveBlock(b.id)} />
+            <SortableBlock key={b.id} block={b} onRemove={() => onRemoveBlock(b.id)} onOpen={b.type === "recovery" ? undefined : () => onOpenBlock(b.id)} />
           ))}
           {rest ? (
             <div
@@ -209,6 +262,7 @@ function DayColumn({
 /* ------------------------------------------------------------------ */
 
 export function Board({ program, update, goTo }: BuilderStepProps) {
+  const router = useRouter();
   const profile = useProfile();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overDay, setOverDay] = useState<string | null>(null);
@@ -294,7 +348,7 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
     if (!to) return;
 
     if (activeKey.startsWith(PALETTE)) {
-      const block: ProgramBlock = { id: crypto.randomUUID(), type: activeKey.slice(PALETTE.length) };
+      const block: ProgramBlock = { id: crypto.randomUUID(), type: paletteType(activeKey)! };
       setDays((ds) =>
         ds.map((d) => {
           if (d.id !== to) return d;
@@ -318,7 +372,7 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
   };
 
   const activeType = activeId?.startsWith(PALETTE)
-    ? activeId.slice(PALETTE.length)
+    ? paletteType(activeId)
     : days.flatMap((d) => d.blocks).find((b) => b.id === activeId)?.type;
 
   return (
@@ -340,7 +394,7 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
           <p className="mb-4 mt-1 text-xs text-muted">Drag onto any day.</p>
           <div className="space-y-2">
             {palette.map((b) => (
-              <PaletteItem key={b.id} type={b.id} />
+              <PaletteItem key={b.id} type={b.id} variant="side" />
             ))}
           </div>
           <button
@@ -383,14 +437,14 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
           <div className="scrollbar-thin flex gap-2 overflow-x-auto border-b border-line px-4 py-3 md:hidden">
             {palette.map((b) => (
               <div key={b.id} className="w-44 shrink-0">
-                <PaletteItem type={b.id} />
+                <PaletteItem type={b.id} variant="strip" />
               </div>
             ))}
           </div>
 
           {/* Columns */}
           <div className="board-grid scrollbar-thin min-h-0 flex-1 overflow-x-auto overflow-y-auto">
-            <div className="flex min-h-full items-stretch gap-4 p-4 sm:p-6">
+            <div className="flex min-h-full w-max min-w-full items-stretch gap-4 p-4 sm:p-6">
               <AnimatePresence initial={false}>
                 {days.map((d, i) => {
                   const wd = weekdayOf(program, i);
@@ -403,6 +457,7 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
                       highlight={overDay === d.id && !!activeId?.startsWith(PALETTE)}
                       freeMin={free && wd != null ? free[wd] : null}
                       onTitle={(title) => setDays((ds) => ds.map((x) => (x.id === d.id ? { ...x, title } : x)))}
+                      onOpenBlock={(id) => router.push(`/programs/${program.id}?block=${id}`)}
                       onRemoveBlock={(id) => setDays((ds) => ds.map((x) => (x.id === d.id ? { ...x, blocks: x.blocks.filter((b) => b.id !== id) } : x)))}
                       onDuplicate={() =>
                         setDayCount((ds) => {
