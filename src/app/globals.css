@@ -126,3 +126,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   scrollbar-width: thin;
   scrollbar-color: var(--color-line-strong) transparent;
 }
+
+/* Vertical scrollbar on the left: used where content also scrolls sideways on the right edge */
+.scroll-left {
+  direction: rtl;
+}
+.scroll-left > * {
+  direction: ltr;
+}

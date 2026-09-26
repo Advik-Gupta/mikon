@@ -1,20 +1,10 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  ChevronRight,
-  Crosshair,
-  Layers,
-  Link2,
-  Search,
-  Sparkles,
-  Zap,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, ChevronRight, Crosshair, Layers, Link2, Search, Sparkles, Zap } from "lucide-react";
 import { groupById, MUSCLE_GROUPS, MUSCLES, muscleById, REGIONS } from "@/data/muscles";
 import {
+  deleteCustomExercise,
   DRAWN,
   exercisesForGroup,
   exercisesForMuscle,
@@ -28,6 +18,7 @@ import {
   type Exercise,
 } from "@/lib/explorer";
 import { cn } from "../ui";
+import { CreateExerciseModal } from "./CreateExerciseModal";
 import { ExerciseImages, ExerciseList, LevelDot } from "./ExerciseBits";
 import type { ExplorerNav } from "./useExplorerNav";
 
@@ -230,7 +221,10 @@ export function MusclePanel({ nav, muscleId }: { nav: ExplorerNav; muscleId: str
   const [tab, setTab] = useState<Tab>("emphasis");
   const lists = useMemo(() => {
     if (!db || !m) return null;
-    return { ...exercisesForMuscle(m, db.exercises), stretch: stretchesForMuscle(m, db.exercises) };
+    return {
+      ...exercisesForMuscle(m, db.exercises),
+      stretch: stretchesForMuscle(m, db.exercises),
+    };
   }, [db, m]);
   if (!m) return null;
   const g = groupById(m.group)!;
@@ -384,7 +378,10 @@ function MuscleChips({ ids, nav, strong }: { ids: string[]; nav: ExplorerNav; st
 export function ExercisePanel({ nav, exercise }: { nav: ExplorerNav; exercise: Exercise }) {
   const worked = musclesForExercise(exercise);
   const { db } = useExerciseDB();
-  const ladder = exercise.family ? (db?.exercises ?? []).filter((e) => e.family === exercise.family).sort((a, b) => (a.step ?? 0) - (b.step ?? 0)) : [];
+  const [editingEx, setEditingEx] = useState(false);
+  const ladder = exercise.family
+    ? (db?.exercises ?? []).filter((e) => e.family === exercise.family).sort((a, b) => (a.step ?? 0) - (b.step ?? 0))
+    : [];
   const meta = [
     { label: "Discipline", value: exercise.discipline },
     ...(exercise.intensity ? [{ label: "Intensity", value: exercise.intensity }] : []),
@@ -400,7 +397,40 @@ export function ExercisePanel({ nav, exercise }: { nav: ExplorerNav; exercise: E
       <button type="button" onClick={nav.closeExercise} className="mb-4 flex items-center gap-1.5 text-xs text-muted hover:text-ink">
         <ArrowLeft className="size-3.5" /> Back
       </button>
-      <h2 className="font-display text-3xl font-semibold tracking-tight">{exercise.name}</h2>
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="font-display text-3xl font-semibold tracking-tight">{exercise.name}</h2>
+        {exercise.source === "custom" && (
+          <div className="flex shrink-0 gap-1.5 pt-1">
+            <button
+              type="button"
+              onClick={() => setEditingEx(true)}
+              className="rounded-lg border border-line px-2.5 py-1.5 text-xs text-muted hover:border-line-strong hover:text-ink"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm(`Delete "${exercise.name}" from your library? Programs that use it will show it as unknown.`)) {
+                  deleteCustomExercise(exercise.id);
+                  nav.closeExercise();
+                }
+              }}
+              className="rounded-lg border border-line px-2.5 py-1.5 text-xs text-muted hover:border-danger/40 hover:text-danger"
+            >
+              Delete
+            </button>
+          </div>
+        )}
+      </div>
+      {exercise.source === "custom" && <p className="mt-1 text-xs text-info">Your exercise</p>}
+      <CreateExerciseModal
+        open={editingEx}
+        onClose={() => setEditingEx(false)}
+        all={db?.exercises ?? []}
+        editing={exercise}
+        onSaved={() => setEditingEx(false)}
+      />
 
       {exercise.images.length ? (
         <>
@@ -433,10 +463,17 @@ export function ExercisePanel({ nav, exercise }: { nav: ExplorerNav; exercise: E
                   onClick={() => nav.openExercise(e.id)}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm transition",
-                    e.id === exercise.id ? "border-violet/50 bg-violet/10 text-ink" : "border-line text-muted hover:border-line-strong hover:text-ink",
+                    e.id === exercise.id
+                      ? "border-violet/50 bg-violet/10 text-ink"
+                      : "border-line text-muted hover:border-line-strong hover:text-ink",
                   )}
                 >
-                  <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-full font-display text-[11px] font-bold", e.id === exercise.id ? "bg-violet text-accent-ink" : "bg-surface-3")}>
+                  <span
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded-full font-display text-[11px] font-bold",
+                      e.id === exercise.id ? "bg-violet text-accent-ink" : "bg-surface-3",
+                    )}
+                  >
                     {e.step}
                   </span>
                   <span className="flex-1">{e.name}</span>
@@ -457,19 +494,27 @@ export function ExercisePanel({ nav, exercise }: { nav: ExplorerNav; exercise: E
         </Section>
       )}
 
-      <Section title="How to do it" icon={BookOpen}>
-        <ol className="space-y-3">
-          {exercise.instructions.map((step, i) => (
-            <li key={i} className="flex gap-3 text-sm leading-relaxed">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-3 font-display text-[11px] font-bold">{i + 1}</span>
-              <span className="pt-0.5 text-ink/90">{step}</span>
-            </li>
-          ))}
-        </ol>
-      </Section>
+      {exercise.instructions.length > 0 && (
+        <Section title="How to do it" icon={BookOpen}>
+          <ol className="space-y-3">
+            {exercise.instructions.map((step, i) => (
+              <li key={i} className="flex gap-3 text-sm leading-relaxed">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-3 font-display text-[11px] font-bold">
+                  {i + 1}
+                </span>
+                <span className="pt-0.5 text-ink/90">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </Section>
+      )}
 
       <p className="mt-8 border-t border-line pt-4 text-[11px] text-faint">
-        {exercise.source === "mikon" ? "Written for Mikon." : "Photos and instructions: free-exercise-db (public domain)."}
+        {exercise.source === "custom"
+          ? "Created by you."
+          : exercise.source === "mikon"
+            ? "Written for Mikon."
+            : "Photos and instructions: free-exercise-db (public domain)."}
       </p>
     </div>
   );

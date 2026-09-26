@@ -197,6 +197,16 @@ export interface ProgramDay {
   blocks: ProgramBlock[];
 }
 
+/** "Hit at least X sets and Y sessions per week" for a muscle group or a single muscle. */
+export interface VolumeTarget {
+  id: string;
+  kind: "group" | "muscle";
+  /** Muscle group id or muscle id */
+  ref: string;
+  minSets: number | null;
+  minFreq: number | null;
+}
+
 export interface Program {
   id: string;
   name: string;
@@ -217,4 +227,5 @@ export interface Program {
     startDate: string;
   };
   days: ProgramDay[];
+  volumeTargets?: VolumeTarget[];
 }

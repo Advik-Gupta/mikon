@@ -15,6 +15,7 @@ export const KEYS = {
   draft: "mikon.onboarding-draft.v1",
   programs: "mikon.programs.v1",
   sidebar: "mikon.sidebar-collapsed",
+  customExercises: "mikon.custom-exercises.v1",
 } as const;
 
 const listeners = new Set<() => void>();

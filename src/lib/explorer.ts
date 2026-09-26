@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { KEYS, readStored, useStored, writeStored } from "./storage";
 import bodyMap from "@/data/body-map.json";
 import { FEDB_TO_GROUP, MUSCLE_GROUPS, MUSCLES, muscleById, type Muscle } from "@/data/muscles";
 
@@ -25,7 +26,10 @@ export interface Exercise {
   /** Calisthenics progression family and position in it (1 = easiest) */
   family?: string;
   step?: number;
-  source: "free-exercise-db" | "mikon";
+  source: "free-exercise-db" | "mikon" | "custom";
+  /** Custom exercises: specific Mikon muscle ids the user said it targets */
+  targets?: string[];
+  createdAt?: string;
 }
 
 interface ExerciseDB {
@@ -76,13 +80,15 @@ function loadDB() {
   return cache;
 }
 
+/** The shared library plus the user's own exercises. Custom ones update live. */
 export function useExerciseDB() {
-  const [db, setDb] = useState<ExerciseDB | null>(null);
+  const [base, setBase] = useState<ExerciseDB | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const custom = useStored<Exercise[]>(KEYS.customExercises);
   useEffect(() => {
     let live = true;
     loadDB()
-      .then((d) => live && setDb(d))
+      .then((d) => live && setBase(d))
       .catch((e: Error) => {
         cache = null;
         if (live) setError(e.message);
@@ -91,7 +97,44 @@ export function useExerciseDB() {
       live = false;
     };
   }, []);
+  const db = useMemo(
+    () => (base ? { ...base, exercises: [...(custom ?? []), ...base.exercises].sort((x, y) => x.name.localeCompare(y.name)) } : null),
+    [base, custom],
+  );
   return { db, error };
+}
+
+/* ------------------------------------------------------------------ custom exercises */
+
+const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+/** Existing exercises whose name matches (exactly, or nearly) the proposed one. */
+export function findSimilar(name: string, all: Exercise[], ignoreId?: string) {
+  const n = normName(name);
+  if (n.length < 3) return { exact: null as Exercise | null, similar: [] as Exercise[] };
+  const others = all.filter((e) => e.id !== ignoreId);
+  const exact = others.find((e) => normName(e.name) === n) ?? null;
+  const words = n.split(" ").filter((w) => w.length > 2);
+  const similar = exact
+    ? []
+    : others.filter((e) => {
+        const en = normName(e.name);
+        return words.length > 0 && words.every((w) => en.includes(w));
+      }).slice(0, 5);
+  return { exact, similar };
+}
+
+export function saveCustomExercise(ex: Exercise) {
+  const list = readStored<Exercise[]>(KEYS.customExercises) ?? [];
+  const exists = list.some((e) => e.id === ex.id);
+  writeStored(KEYS.customExercises, exists ? list.map((e) => (e.id === ex.id ? ex : e)) : [ex, ...list]);
+}
+
+export function deleteCustomExercise(id: string) {
+  writeStored(
+    KEYS.customExercises,
+    (readStored<Exercise[]>(KEYS.customExercises) ?? []).filter((e) => e.id !== id),
+  );
 }
 
 export const imageUrl = (db: ExerciseDB, path: string) => db.imageBase + path;
@@ -113,6 +156,7 @@ const hits = (m: Muscle, e: Exercise, which: "primary" | "any") =>
   m.exercises.fedb.some((k) => e.primary.includes(k) || (which === "any" && e.secondary.includes(k)));
 
 export function emphasises(m: Muscle, e: Exercise) {
+  if (e.targets?.length) return e.targets.includes(m.id);
   const { emphasis, exclude } = patterns(m);
   return !!emphasis && emphasis.test(e.name) && !exclude?.test(e.name) && hits(m, e, "any");
 }

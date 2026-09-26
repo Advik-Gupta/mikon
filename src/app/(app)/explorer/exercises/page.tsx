@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, X } from "lucide-react";
+import { CreateExerciseModal } from "@/components/explorer/CreateExerciseModal";
+import type { Discipline } from "@/data/activities";
 import { MUSCLE_GROUPS } from "@/data/muscles";
 import { groupsForKeys, searchExercises, titleCase, useExerciseDB, type Exercise } from "@/lib/explorer";
 import { ExerciseThumb, LevelDot } from "@/components/explorer/ExerciseBits";
@@ -67,6 +69,7 @@ export default function ExerciseLibraryPage() {
   const [category, setCategory] = useState("");
   const [discipline, setDiscipline] = useState("");
   const [shown, setShown] = useState(PAGE);
+  const [creating, setCreating] = useState<string | null>(null);
 
   const all = useMemo(() => db?.exercises ?? [], [db]);
   const facets = useMemo(
@@ -122,6 +125,13 @@ export default function ExerciseLibraryPage() {
             <Select label="Any equipment" value={equipment} onChange={update(setEquipment)} options={facets.equipment} />
             <Select label="Any level" value={level} onChange={update(setLevel)} options={facets.level} />
             <Select label="Any type" value={category} onChange={update(setCategory)} options={facets.category} />
+            <button
+              type="button"
+              onClick={() => setCreating(q.trim())}
+              className="flex h-10 items-center gap-1.5 rounded-xl bg-accent px-3.5 text-sm font-semibold text-accent-ink transition hover:bg-[#d4ff4a]"
+            >
+              <Plus className="size-4" strokeWidth={2.5} /> Create exercise
+            </button>
             {filtered && (
               <button type="button" onClick={reset} className="flex h-10 items-center gap-1 rounded-xl px-3 text-sm text-muted hover:bg-surface-2 hover:text-ink">
                 <X className="size-4" /> Clear
@@ -178,8 +188,27 @@ export default function ExerciseLibraryPage() {
             </button>
           )}
           {db && results.length === 0 && (
-            <p className="mt-10 text-center text-sm text-muted">No exercises match these filters.</p>
+            <div className="mt-10 text-center">
+              <p className="text-sm text-muted">No exercises match these filters.</p>
+              <button
+                type="button"
+                onClick={() => setCreating(q.trim())}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink"
+              >
+                <Plus className="size-3.5" /> Create {q.trim() ? `"${q.trim()}"` : "your own"}
+              </button>
+            </div>
           )}
+          <CreateExerciseModal
+            open={creating !== null}
+            onClose={() => setCreating(null)}
+            all={all}
+            initialName={creating ?? ""}
+            initialDiscipline={(discipline || "weights") as Discipline}
+            onSaved={(ex) => router.push(`/explorer?e=${ex.id}`)}
+            onUseExisting={(ex) => router.push(`/explorer?e=${ex.id}`)}
+            useExistingLabel="Open it"
+          />
           <p className="mt-10 text-center text-[11px] text-faint">Exercise photos and instructions: free-exercise-db (public domain).</p>
         </div>
       </div>

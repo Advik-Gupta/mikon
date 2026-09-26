@@ -28,6 +28,7 @@ import { useProfile } from "@/lib/storage";
 import type { CardioSegment, Program, ProgramBlock, SessionDetail, WorkoutEntry } from "@/lib/types";
 import { entryHardSets, entryValue, newEntry, newExercise, SUPERSET_LETTERS } from "@/lib/workout";
 import { ExerciseThumb } from "../../explorer/ExerciseBits";
+import { CreateExerciseModal } from "../../explorer/CreateExerciseModal";
 import { Modal } from "../../Modal";
 import { Button, cn } from "../../ui";
 import { CardioEditor, CardioLibrary, fmtDuration } from "./CardioEditor";
@@ -110,6 +111,8 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
   const [mergeTarget, setMergeTarget] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingMerge | null>(null);
   const [confirmReset, setConfirmReset] = useState<"block" | "day" | null>(null);
+  /** Name to prefill in the create-exercise form; null = closed */
+  const [creating, setCreating] = useState<string | null>(null);
 
   const updateDay = (fn: (blocks: ProgramBlock[]) => ProgramBlock[]) =>
     updateProgram(program.id, (p) => ({ ...p, days: p.days.map((d) => (d.id !== dayId ? d : { ...d, blocks: fn(d.blocks) })) }));
@@ -352,7 +355,13 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
               ) : kind === "session" ? (
                 <SessionLibrary block={block.type} value={session.activity} onPick={(activity) => setSession({ ...session, activity })} />
               ) : db ? (
-                <ExercisePicker all={db.exercises} disciplines={BLOCK_DISCIPLINES[block.type] ?? ["weights"]} blockLabel={bt.label} onAdd={(id) => addExercise(id)} />
+                <ExercisePicker
+                  all={db.exercises}
+                  disciplines={BLOCK_DISCIPLINES[block.type] ?? ["weights"]}
+                  blockLabel={bt.label}
+                  onAdd={(id) => addExercise(id)}
+                  onCreate={(name) => setCreating(name)}
+                />
               ) : (
                 <p className="p-4 text-sm text-muted">Loading exercises…</p>
               )}
@@ -382,6 +391,24 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
           onChange={(next) => setEntries((es) => es.map((e) => (e.id === next.id ? next : e)))}
         />
       )}
+
+      <CreateExerciseModal
+        open={creating !== null}
+        onClose={() => setCreating(null)}
+        all={db?.exercises ?? []}
+        initialName={creating ?? ""}
+        initialDiscipline={(BLOCK_DISCIPLINES[block.type] ?? ["weights"])[0]}
+        onSaved={(ex) => {
+          // Add straight to the workout; the exercise map catches up on the next render.
+          setEntries((es) => [...es, newEntry(ex.id, ex, kind === "mobility" ? 15 : 90)]);
+          setCreating(null);
+        }}
+        onUseExisting={(ex) => {
+          addExercise(ex.id);
+          setCreating(null);
+        }}
+        useExistingLabel="Add that instead"
+      />
 
       <Modal
         open={!!pending}

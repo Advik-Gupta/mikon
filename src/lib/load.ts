@@ -1,7 +1,8 @@
 import { cardioModality, cardioType, DIRECT_SHARE, EDITOR_KIND, PLYO_INTENSITY, sessionActivity, ZONES } from "@/data/activities";
 import { blockType } from "./options";
-import { groupsForKeys, type Exercise } from "./explorer";
-import type { CardioSegment, Program, ProgramBlock } from "./types";
+import { groupsForKeys, musclesForExercise, type Exercise } from "./explorer";
+import { MUSCLE_GROUPS, muscleById } from "@/data/muscles";
+import type { CardioSegment, Program, ProgramBlock, WorkoutExercise } from "./types";
 import { exerciseValue, setValue } from "./workout";
 
 /**
@@ -92,6 +93,16 @@ export function segmentLabel(s: CardioSegment) {
 
 /* ------------------------------------------------------------------ block load */
 
+/** Set equivalents for one exercise in a workout. */
+export function exerciseLoad(ex: Exercise, we: WorkoutExercise) {
+  if (ex.discipline === "mobility") return 0;
+  if (ex.discipline === "plyometrics") {
+    const f = PLYO_INTENSITY[ex.intensity ?? "moderate"].factor;
+    return we.sets.reduce((a, s) => (s.kind === "warmup" ? a : a + (f * Math.min(1.5, Math.max(0.5, (s.reps ?? 6) / 6)) + setValue(s) - 1)), 0);
+  }
+  return exerciseValue(we);
+}
+
 export function addBlockLoad(day: DayLoad, block: ProgramBlock, exercises: Map<string, Exercise>) {
   const kind = EDITOR_KIND[block.type];
   const type = block.type;
@@ -127,15 +138,7 @@ export function addBlockLoad(day: DayLoad, block: ProgramBlock, exercises: Map<s
     for (const we of entry.exercises) {
       const ex = exercises.get(we.exerciseId);
       if (!ex) continue;
-      let v: number;
-      if (ex.discipline === "plyometrics") {
-        const f = PLYO_INTENSITY[ex.intensity ?? "moderate"].factor;
-        v = we.sets.reduce((a, s) => (s.kind === "warmup" ? a : a + (f * Math.min(1.5, Math.max(0.5, (s.reps ?? 6) / 6)) + setValue(s) - 1)), 0);
-      } else if (ex.discipline === "mobility") {
-        v = 0;
-      } else {
-        v = exerciseValue(we);
-      }
+      const v = exerciseLoad(ex, we);
       const primary = groupsForKeys(ex.primary);
       const secondary = groupsForKeys(ex.secondary).filter((g) => !primary.includes(g));
       primary.forEach((g) => add(day, g, v, 0, ex.name, type));
@@ -285,3 +288,86 @@ export const STATE_LABEL: Record<DayState, string> = {
 
 /** Whole sets for display. Fractions are for the maths, not the user. */
 export const shownSets = (v: number) => Math.round(v);
+
+/* ------------------------------------------------------------------ muscle-level usage */
+
+export interface UsageSource {
+  dayIndex: number;
+  label: string;
+  type: string;
+  direct: number;
+  indirect: number;
+}
+
+export interface Usage {
+  direct: number;
+  indirect: number;
+  /** Direct set equivalents per day of the cycle */
+  byDay: number[];
+  sources: UsageSource[];
+}
+
+const emptyUsage = (n: number): Usage => ({ direct: 0, indirect: 0, byDay: Array(n).fill(0), sources: [] });
+
+/**
+ * Per-muscle usage over the cycle. Exercises credit the specific muscles they bias
+ * (e.g. lateral raises → lateral delt); cardio and sessions spread across the group.
+ */
+export function muscleUsage(program: Program, exercises: Map<string, Exercise>, onlyType: string | null) {
+  const n = program.days.length;
+  const out = new Map<string, Usage>();
+  const credit = (muscle: string, dayIndex: number, label: string, type: string, direct: number, indirect: number) => {
+    if (!direct && !indirect) return;
+    let u = out.get(muscle);
+    if (!u) out.set(muscle, (u = emptyUsage(n)));
+    u.direct += direct;
+    u.indirect += indirect;
+    u.byDay[dayIndex] += direct;
+    const src = u.sources.find((s) => s.dayIndex === dayIndex && s.label === label);
+    if (src) {
+      src.direct += direct;
+      src.indirect += indirect;
+    } else u.sources.push({ dayIndex, label, type, direct, indirect });
+  };
+  const spread = (group: string, share: number, se: number, dayIndex: number, label: string, type: string) => {
+    const muscles = MUSCLE_GROUPS.find((g) => g.id === group)?.muscles.filter((m) => !muscleById(m)?.deep) ?? [];
+    muscles.forEach((m) => (share >= DIRECT_SHARE ? credit(m, dayIndex, label, type, se * share, 0) : credit(m, dayIndex, label, type, 0, se * share)));
+  };
+
+  program.days.forEach((day, dayIndex) => {
+    for (const block of day.blocks) {
+      if (onlyType && block.type !== onlyType) continue;
+      const kind = EDITOR_KIND[block.type];
+      if (kind === "cardio") {
+        for (const seg of block.cardio ?? []) {
+          const se = segmentLoad(seg);
+          Object.entries(cardioModality(seg.modality).muscles).forEach(([g, w]) => spread(g, w, se, dayIndex, segmentLabel(seg), block.type));
+        }
+      } else if (kind === "session") {
+        const s = block.session;
+        if (!s?.durationMin) continue;
+        const act = sessionActivity(s.activity);
+        const se = s.durationMin * act.rate * (s.rpe / 7);
+        Object.entries(act.muscles).forEach(([g, w]) => spread(g, w, se, dayIndex, `${act.label} · ${s.durationMin} min`, block.type));
+      } else {
+        for (const entry of block.entries ?? []) {
+          for (const we of entry.exercises) {
+            const ex = exercises.get(we.exerciseId);
+            if (!ex) continue;
+            const v = exerciseLoad(ex, we);
+            const worked = musclesForExercise(ex);
+            worked.primary.forEach((m) => credit(m, dayIndex, ex.name, block.type, v, 0));
+            worked.secondary.forEach((m) => credit(m, dayIndex, ex.name, block.type, 0, v));
+          }
+        }
+      }
+    }
+  });
+  return out;
+}
+
+/** Days in the cycle with at least one direct set. */
+export const frequency = (byDay: number[]) => byDay.filter((v) => v >= 1).length;
+
+/** Scale a per-cycle number to per-week, so targets read the same for any cycle length. */
+export const perWeek = (value: number, cycleDays: number) => (cycleDays ? (value * 7) / cycleDays : value);

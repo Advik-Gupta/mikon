@@ -94,8 +94,14 @@ export function BodyFigure({
   highlight,
   onGroup,
   onMuscle,
+  heatFor,
+  tipFor,
 }: {
   sex: Sex;
+  /** Heatmap mode: colour for a muscle's shapes (group colour on the full body, muscle colour when zoomed) */
+  heatFor?: (muscleId: string, zoomed: boolean) => string | null;
+  /** Extra tooltip line, e.g. "12 sets · 3× a week" */
+  tipFor?: (muscleId: string, zoomed: boolean) => string | null;
   focusGroup: string | null;
   selectedMuscle: string | null;
   highlight?: FigureHighlight | null;
@@ -139,6 +145,12 @@ export function BodyFigure({
 
   const fillFor = (s: Shape): { fill: string; opacity?: number } => {
     const inFocus = !focusGroup || muscleById(s.m)?.group === focusGroup;
+    if (heatFor) {
+      if (!inFocus) return { fill: C.dim };
+      const heat = heatFor(s.m, !!focusGroup);
+      const hovered = focusGroup ? hover?.muscle === s.m : hoverGroup === muscleById(s.m)?.group;
+      return { fill: heat ?? (hovered ? C.hover : focusGroup ? C.inGroup : C.base), opacity: heat ? (hovered ? 1 : 0.85) : 1 };
+    }
     if (hl?.get(s.m) === "primary") return { fill: C.accent };
     if (hl?.get(s.m) === "secondary") return { fill: C.accent, opacity: 0.42 };
     if (selectedShape === s.m) return { fill: selectedIsProxy ? `url(#${uid}-hatch)` : C.accent };
@@ -163,7 +175,9 @@ export function BodyFigure({
   };
 
   const hovered = hover ? muscleById(hover.muscle) : null;
-  const tip = hovered ? (focusGroup && hovered.group === focusGroup ? hovered.name : groupById(hovered.group)?.name) : null;
+  const zoomedTip = !!focusGroup && hovered?.group === focusGroup;
+  const tip = hovered ? (zoomedTip ? hovered.name : groupById(hovered.group)?.name) : null;
+  const tipExtra = hovered && tipFor ? tipFor(hovered.id, zoomedTip) : null;
 
   return (
     <div ref={wrap} className="relative flex h-full w-full items-stretch justify-center gap-2" onMouseLeave={() => setHover(null)}>
@@ -202,7 +216,8 @@ export function BodyFigure({
               ))}
               {view.shapes.map((s, i) => {
                 const f = fillFor(s);
-                const lit = f.fill === C.accent;
+                const lit = f.fill === C.accent && !heatFor;
+                const outlined = !!heatFor && selectedShape === s.m;
                 const inFocus = !focusGroup || muscleById(s.m)?.group === focusGroup;
                 return (
                   <path
@@ -210,9 +225,9 @@ export function BodyFigure({
                     d={s.d}
                     fill={f.fill}
                     fillOpacity={f.opacity ?? 1}
-                    stroke={C.stroke}
-                    strokeOpacity={inFocus ? 0.9 : 0.3}
-                    strokeWidth={1.3}
+                    stroke={outlined ? "#ffffff" : C.stroke}
+                    strokeOpacity={outlined ? 1 : inFocus ? 0.9 : 0.3}
+                    strokeWidth={outlined ? 3 : 1.3}
                     vectorEffect="non-scaling-stroke"
                     filter={lit && (f.opacity ?? 1) === 1 ? `url(#${uid}-glow)` : undefined}
                     className="cursor-pointer transition-[fill,fill-opacity,stroke-opacity] duration-200"
@@ -263,6 +278,7 @@ export function BodyFigure({
           style={{ left: hover.x, top: hover.y }}
         >
           {tip}
+          {tipExtra && <span className="block text-[11px] font-normal text-muted">{tipExtra}</span>}
         </div>
       )}
     </div>

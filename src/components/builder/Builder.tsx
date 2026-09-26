@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, ArrowRight, Check, ChevronLeft, CloudCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronLeft, CloudCheck } from "lucide-react";
+import { ProgramOverview } from "./ProgramOverview";
 import { resizeDays, STEP_ORDER, targetDayCount, updateProgram } from "@/lib/programs";
 import type { BuilderStep, Program } from "@/lib/types";
 import { Button, cn } from "../ui";
@@ -77,6 +78,7 @@ export function Builder({ program }: { program: Program }) {
   const blockParam = useSearchParams().get("block");
   const editingDay = blockParam ? program.days.find((d) => d.blocks.some((b) => b.id === blockParam && b.type !== "recovery")) : undefined;
   const scrollRef = useRef<HTMLDivElement>(null);
+  const overviewRef = useRef<HTMLDivElement>(null);
   const [dir, setDir] = useState(1);
 
   useEffect(() => {
@@ -156,7 +158,23 @@ export function Builder({ program }: { program: Program }) {
       {editingDay && blockParam ? (
         <BlockEditor key={blockParam} program={program} dayId={editingDay.id} blockId={blockParam} />
       ) : isBoard ? (
-        <Board program={program} update={update} goTo={goTo} />
+        <div className="scroll-left scrollbar-thin min-h-0 flex-1 overflow-y-auto">
+          <div>
+            <div className="flex h-[max(520px,calc(100dvh-250px))] flex-col">
+              <Board program={program} update={update} goTo={goTo} />
+            </div>
+            <button
+              type="button"
+              onClick={() => overviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              className="flex w-full items-center justify-center gap-2 border-y border-line bg-surface/60 py-2 text-xs text-muted transition hover:text-ink"
+            >
+              <ChevronDown className="size-3.5" /> Body overview & volume targets
+            </button>
+            <div ref={overviewRef}>
+              <ProgramOverview program={program} />
+            </div>
+          </div>
+        </div>
       ) : (
         <>
           <div ref={scrollRef} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
