@@ -22,9 +22,12 @@ import {
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { AnimatePresence, motion } from "motion/react";
-import { Copy, GripVertical, ListChecks, Moon, Pencil, Plus, Settings2, Trash2, X } from "lucide-react";
+import { Copy, GripVertical, ListChecks, Moon, Pencil, Plus, RotateCcw, Settings2, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { entryValue, fmtSets } from "@/lib/workout";
+import { entryHardSets } from "@/lib/workout";
+import { segmentMinutes } from "@/lib/load";
+import { sessionActivity } from "@/data/activities";
+import { blockHasContent, clearedBlock } from "./workout/BlockEditor";
 import { BLOCK_TYPES, blockType } from "@/lib/options";
 import { cycleSummary, dayLabel, newDay, weekdayOf } from "@/lib/programs";
 import { fmtDuration, freeMinutesByDay } from "@/lib/schedule";
@@ -106,11 +109,16 @@ function BlockFace({
 }
 
 function blockSummary(block: ProgramBlock) {
+  if (block.cardio?.length) {
+    const min = block.cardio.reduce((a, s) => a + segmentMinutes(s), 0);
+    return `${block.cardio.length} segment${block.cardio.length === 1 ? "" : "s"} · ${Math.round(min)} min`;
+  }
+  if (block.session?.durationMin) return `${sessionActivity(block.session.activity).label} · ${block.session.durationMin} min`;
   const entries = block.entries ?? [];
   if (!entries.length) return undefined;
   const exercises = entries.reduce((a, e) => a + e.exercises.length, 0);
-  const sets = entries.reduce((a, e) => a + entryValue(e), 0);
-  return `${exercises} exercise${exercises === 1 ? "" : "s"} · ${fmtSets(sets)} sets`;
+  const sets = entries.reduce((a, e) => a + entryHardSets(e), 0);
+  return `${exercises} exercise${exercises === 1 ? "" : "s"} · ${sets} sets`;
 }
 
 function SortableBlock({ block, onRemove, onOpen }: { block: ProgramBlock; onRemove: () => void; onOpen?: () => void }) {
@@ -172,6 +180,7 @@ function DayColumn({
   onOpenBlock,
   onDuplicate,
   onDelete,
+  onReset,
 }: {
   program: Program;
   day: ProgramDay;
@@ -183,6 +192,7 @@ function DayColumn({
   onOpenBlock: (id: string) => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onReset: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: DAY + day.id });
   const rest = day.blocks.length === 0;
@@ -206,6 +216,11 @@ function DayColumn({
           {freeMin != null && <span className="text-[11px] text-faint">{fmtDuration(freeMin).replace(/ \d+m$/, "")} free</span>}
           <span className="ml-auto flex items-center">
             <span className="flex opacity-0 transition group-hover/day:opacity-100 focus-within:opacity-100">
+            {day.blocks.some(blockHasContent) && (
+              <button type="button" onClick={onReset} className="rounded-md p-1 text-faint hover:bg-surface-2 hover:text-ink" title="Reset day (clear its workouts)" aria-label="Reset day">
+                <RotateCcw className="size-3.5" />
+              </button>
+            )}
             <button type="button" onClick={onDuplicate} className="rounded-md p-1 text-faint hover:bg-surface-2 hover:text-ink" title="Duplicate day" aria-label="Duplicate day">
               <Copy className="size-3.5" />
             </button>
@@ -465,6 +480,10 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
                           return [...ds.slice(0, i + 1), copy, ...ds.slice(i + 1)];
                         })
                       }
+                      onReset={() => {
+                        if (!window.confirm(`Clear everything programmed on ${dayLabel(program, i)}? The activities stay on the board, empty.`)) return;
+                        setDays((ds) => ds.map((x) => (x.id === d.id ? { ...x, blocks: x.blocks.map(clearedBlock) } : x)));
+                      }}
                       onDelete={() => {
                         if (days.length <= 1) return;
                         if (d.blocks.length && !window.confirm(`Delete ${dayLabel(program, i)} and its ${d.blocks.length} block(s)?`)) return;

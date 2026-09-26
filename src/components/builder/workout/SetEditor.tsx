@@ -1,22 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Copy, Flame, Plus, Timer, Trash2, Zap } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Copy, Flame, Plus, Timer, Trash2, Zap } from "lucide-react";
+import { CONTACT_GUIDE, PLYO_INTENSITY, type EditorKind } from "@/data/activities";
 import { kgToLb, lbToKg, round1 } from "@/lib/body";
 import { titleCase, type Exercise } from "@/lib/explorer";
 import type { SetKind, Units, WorkoutEntry, WorkoutExercise, WorkoutSet } from "@/lib/types";
-import {
-  entryValue,
-  exerciseValue,
-  fmtRest,
-  fmtSets,
-  modifierById,
-  newSet,
-  SET_KINDS,
-  SET_MODIFIERS,
-  setValue,
-} from "@/lib/workout";
+import { entryHardSets, entryValue, fmtRest, fmtSets, modifierById, newSet, SET_KINDS, SET_MODIFIERS, setValue } from "@/lib/workout";
 import { ExerciseThumb } from "../../explorer/ExerciseBits";
+import { ExerciseBadge } from "./ExercisePicker";
 import { Modal } from "../../Modal";
 import { Button, cn } from "../../ui";
 
@@ -106,10 +98,27 @@ function TechniqueMenu({ set, onChange }: { set: WorkoutSet; onChange: (mods: st
   );
 }
 
+type Mode = Exclude<EditorKind, "cardio" | "session">;
+
+/** Which columns each activity's set editor shows. */
+const COLUMNS: Record<Mode, { type: boolean; weight: string | null; rpe: boolean; tech: boolean; value: boolean; amount: string }> = {
+  strength: { type: true, weight: "Weight", rpe: true, tech: true, value: true, amount: "Reps" },
+  calisthenics: { type: true, weight: "Added load", rpe: true, tech: true, value: true, amount: "Reps" },
+  plyo: { type: true, weight: null, rpe: false, tech: false, value: false, amount: "Contacts" },
+  mobility: { type: false, weight: null, rpe: false, tech: false, value: false, amount: "Hold" },
+};
+
+function gridFor(mode: Mode) {
+  const c = COLUMNS[mode];
+  return ["34px", c.type && "112px", c.weight && "1fr", "1fr", c.rpe && "76px", c.tech && "auto", c.value && "44px", "auto"].filter(Boolean).join(" ");
+}
+
 function SetRow({
   set,
   label,
   units,
+  mode,
+  timed,
   onChange,
   onDuplicate,
   onDelete,
@@ -118,16 +127,20 @@ function SetRow({
   set: WorkoutSet;
   label: string;
   units: Units;
+  mode: Mode;
+  timed: boolean;
   onChange: (p: Partial<WorkoutSet>) => void;
   onDuplicate: () => void;
   onDelete: () => void;
   prefix?: string;
 }) {
+  const col = COLUMNS[mode];
   const kind = SET_KINDS.find((k) => k.id === set.kind)!;
   const v = setValue(set);
+  const kinds = mode === "plyo" ? SET_KINDS.filter((k) => k.id !== "backoff") : SET_KINDS;
   return (
     <div className="rounded-xl border border-line bg-surface-2/40 p-2">
-      <div className="grid grid-cols-[34px_1fr] items-center gap-2 sm:grid-cols-[34px_112px_1fr_1fr_76px_auto_44px_auto]">
+      <div className="grid items-center gap-2" style={{ gridTemplateColumns: gridFor(mode) }}>
         <span
           className="flex size-8 items-center justify-center rounded-lg font-display text-xs font-bold"
           style={{ background: `color-mix(in srgb, ${kind.color} 20%, transparent)`, color: kind.color }}
@@ -136,47 +149,69 @@ function SetRow({
           {prefix}
           {label}
         </span>
-        <select
-          aria-label="Set type"
-          value={set.kind}
-          onChange={(e) => onChange({ kind: e.target.value as SetKind, modifiers: e.target.value === "warmup" ? [] : set.modifiers })}
-          className="h-9 cursor-pointer rounded-lg border border-line bg-surface-2 px-2 text-xs outline-none hover:border-line-strong focus:border-accent/60"
-        >
-          {SET_KINDS.map((k) => (
-            <option key={k.id} value={k.id}>
-              {k.label}
-            </option>
-          ))}
-        </select>
-        <Num label="Weight" value={toDisplay(set.weight, units)} onChange={(x) => onChange({ weight: fromDisplay(x, units) })} placeholder="BW" suffix={units === "metric" ? "kg" : "lb"} className="col-start-2 sm:col-start-auto" />
-        <Num label="Reps" value={set.reps == null ? "" : String(set.reps)} onChange={(x) => onChange({ reps: x === "" ? null : Math.max(0, Math.round(Number(x))) })} placeholder="–" suffix="reps" className="col-start-2 sm:col-start-auto" />
-        <select
-          aria-label="RPE"
-          value={set.rpe ?? ""}
-          onChange={(e) => onChange({ rpe: e.target.value ? Number(e.target.value) : null })}
-          className={cn(
-            "col-start-2 h-9 cursor-pointer rounded-lg border border-line bg-surface-2 px-2 text-xs outline-none hover:border-line-strong focus:border-accent/60 sm:col-start-auto",
-            set.rpe == null && "text-faint",
-          )}
-          title="Rate of perceived exertion"
-        >
-          <option value="">RPE</option>
-          {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map((r) => (
-            <option key={r} value={r}>
-              RPE {r}
-            </option>
-          ))}
-        </select>
-        <div className="col-start-2 flex items-center gap-1 sm:col-start-auto">
-          <TechniqueMenu set={set} onChange={(modifiers) => onChange({ modifiers })} />
-        </div>
-        <span
-          className={cn("col-start-2 text-center font-display text-xs font-semibold tabular-nums sm:col-start-auto", v === 0 ? "text-faint" : v > 1 ? "text-warn" : "text-ink")}
-          title="Effective sets this counts as"
-        >
-          {fmtSets(v)}
-        </span>
-        <div className="col-start-2 flex sm:col-start-auto">
+        {col.type && (
+          <select
+            aria-label="Set type"
+            value={set.kind}
+            onChange={(e) => onChange({ kind: e.target.value as SetKind, modifiers: e.target.value === "warmup" ? [] : set.modifiers })}
+            className="h-9 min-w-0 cursor-pointer rounded-lg border border-line bg-surface-2 px-2 text-xs outline-none hover:border-line-strong focus:border-accent/60"
+          >
+            {kinds.map((k) => (
+              <option key={k.id} value={k.id}>
+                {k.label}
+              </option>
+            ))}
+          </select>
+        )}
+        {col.weight && (
+          <Num
+            label={col.weight}
+            value={toDisplay(set.weight, units)}
+            onChange={(x) => onChange({ weight: fromDisplay(x, units) })}
+            placeholder={mode === "calisthenics" ? "BW" : "BW"}
+            suffix={units === "metric" ? "kg" : "lb"}
+          />
+        )}
+        {timed ? (
+          <Num
+            label="Hold time"
+            value={set.holdSec == null ? "" : String(set.holdSec)}
+            onChange={(x) => onChange({ holdSec: x === "" ? null : Math.max(0, Math.round(Number(x))) })}
+            placeholder="–"
+            suffix="sec"
+          />
+        ) : (
+          <Num
+            label={col.amount}
+            value={set.reps == null ? "" : String(set.reps)}
+            onChange={(x) => onChange({ reps: x === "" ? null : Math.max(0, Math.round(Number(x))) })}
+            placeholder="–"
+            suffix={mode === "plyo" ? "contacts" : "reps"}
+          />
+        )}
+        {col.rpe && (
+          <select
+            aria-label="RPE"
+            value={set.rpe ?? ""}
+            onChange={(e) => onChange({ rpe: e.target.value ? Number(e.target.value) : null })}
+            className={cn("h-9 cursor-pointer rounded-lg border border-line bg-surface-2 px-2 text-xs outline-none hover:border-line-strong focus:border-accent/60", set.rpe == null && "text-faint")}
+            title="Rate of perceived exertion"
+          >
+            <option value="">RPE</option>
+            {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map((r) => (
+              <option key={r} value={r}>
+                RPE {r}
+              </option>
+            ))}
+          </select>
+        )}
+        {col.tech && <TechniqueMenu set={set} onChange={(modifiers) => onChange({ modifiers })} />}
+        {col.value && (
+          <span className={cn("text-center font-display text-xs font-semibold tabular-nums", v === 0 ? "text-faint" : v > 1 ? "text-warn" : "text-ink")} title="Counts as this many sets">
+            {fmtSets(v)}
+          </span>
+        )}
+        <div className="flex">
           <button type="button" onClick={onDuplicate} className="rounded-lg p-2 text-faint hover:bg-surface-3 hover:text-ink" aria-label="Duplicate set" title="Duplicate">
             <Copy className="size-3.5" />
           </button>
@@ -204,15 +239,27 @@ function setLabels(sets: WorkoutSet[]) {
   return sets.map((s) => (s.kind === "warmup" ? "W" : s.kind === "backoff" ? "B" : String(++n)));
 }
 
-function QuickApply({ units, onApply }: { units: Units; onApply: (weight: number | null | undefined, reps: number | null | undefined) => void }) {
+function QuickApply({
+  units,
+  mode,
+  timed,
+  onApply,
+}: {
+  units: Units;
+  mode: Mode;
+  timed: boolean;
+  onApply: (weight: number | null | undefined, amount: number | undefined) => void;
+}) {
   const [w, setW] = useState("");
   const [r, setR] = useState("");
+  const col = COLUMNS[mode];
+  const amountLabel = timed ? "Seconds" : col.amount;
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-line p-2.5">
       <Zap className="size-3.5 text-accent" />
       <span className="text-xs text-muted">All working sets:</span>
-      <Num label="Weight for all" value={w} onChange={setW} placeholder="Weight" suffix={units === "metric" ? "kg" : "lb"} className="w-28" />
-      <Num label="Reps for all" value={r} onChange={setR} placeholder="Reps" className="w-20" />
+      {col.weight && <Num label={`${col.weight} for all`} value={w} onChange={setW} placeholder={col.weight} suffix={units === "metric" ? "kg" : "lb"} className="w-32" />}
+      <Num label={`${amountLabel} for all`} value={r} onChange={setR} placeholder={amountLabel} className="w-28" />
       <Button
         variant="secondary"
         className="h-9 px-3 text-xs"
@@ -232,7 +279,9 @@ function QuickApply({ units, onApply }: { units: Units; onApply: (weight: number
 export function SetEditor({
   entry,
   letter,
+  mode,
   exercises,
+  allExercises,
   units,
   onChange,
   onClose,
@@ -240,14 +289,18 @@ export function SetEditor({
   entry: WorkoutEntry | null;
   /** The entry's position letter in the workout (A, B, C…) */
   letter: string;
+  mode: Mode;
   exercises: Map<string, Exercise>;
+  allExercises: Exercise[];
   units: Units;
   onChange: (entry: WorkoutEntry) => void;
   onClose: () => void;
 }) {
   if (!entry) return <Modal open={false} onClose={onClose} title="">{null}</Modal>;
+  const col = COLUMNS[mode];
   const superset = entry.exercises.length > 1;
   const name = (we: WorkoutExercise) => exercises.get(we.exerciseId)?.name ?? "Unknown exercise";
+  const isTimed = (we: WorkoutExercise) => mode === "mobility" || exercises.get(we.exerciseId)?.measure === "time";
 
   const patchExercise = (id: string, fn: (we: WorkoutExercise) => WorkoutExercise) =>
     onChange({ ...entry, exercises: entry.exercises.map((we) => (we.id === id ? fn(we) : we)) });
@@ -265,7 +318,7 @@ export function SetEditor({
   /** New sets copy the most relevant existing set so you rarely retype numbers. */
   const addSet = (we: WorkoutExercise, kind: SetKind): WorkoutExercise => {
     const template = [...we.sets].reverse().find((s) => s.kind === kind) ?? [...we.sets].reverse().find((s) => s.kind === "working");
-    const set = newSet(kind, template ? { weight: template.weight, reps: template.reps, rpe: kind === "warmup" ? null : template.rpe, kind } : undefined);
+    const set = newSet(kind, template ? { weight: template.weight, reps: template.reps, holdSec: template.holdSec, rpe: kind === "warmup" ? null : template.rpe, kind } : undefined);
     if (kind === "warmup") {
       const firstWorking = we.sets.findIndex((s) => s.kind !== "warmup");
       const sets = [...we.sets];
@@ -275,17 +328,78 @@ export function SetEditor({
     return { ...we, sets: [...we.sets, set] };
   };
 
-  const applyAll = (weight: number | null | undefined, reps: number | null | undefined) =>
+  const applyAll = (weight: number | null | undefined, amount: number | undefined) =>
     onChange({
       ...entry,
       exercises: entry.exercises.map((we) => ({
         ...we,
-        sets: we.sets.map((s) => (s.kind === "working" ? { ...s, ...(weight !== undefined && { weight }), ...(reps !== undefined && { reps }) } : s)),
+        sets: we.sets.map((s) =>
+          s.kind === "working"
+            ? {
+                ...s,
+                ...(weight !== undefined && { weight }),
+                ...(amount !== undefined && (isTimed(we) ? { holdSec: amount } : { reps: amount })),
+              }
+            : s,
+        ),
       })),
     });
 
+  /** Calisthenics: swap to the next easier/harder step of the same progression. */
+  const neighbour = (we: WorkoutExercise, dir: -1 | 1) => {
+    const ex = exercises.get(we.exerciseId);
+    if (!ex?.family || !ex.step) return null;
+    return allExercises.find((x) => x.family === ex.family && x.step === ex.step! + dir) ?? null;
+  };
+  const familySize = (fam: string) => allExercises.filter((x) => x.family === fam).length;
+
   const rounds = Math.max(...entry.exercises.map((we) => we.sets.length), 0);
-  const total = entryValue(entry);
+  const hard = entryHardSets(entry);
+  const bonus = entryValue(entry) - hard;
+  const contacts = entry.exercises.reduce((a, we) => a + we.sets.filter((s) => s.kind !== "warmup").reduce((b, s) => b + (s.reps ?? 0), 0), 0);
+  const kinds = mode === "plyo" ? SET_KINDS.filter((k) => k.id !== "backoff") : mode === "mobility" ? SET_KINDS.filter((k) => k.id === "working") : SET_KINDS;
+
+  const footer = (
+    <div className="flex items-center justify-between gap-3">
+      <p className="text-sm text-muted">
+        {mode === "plyo" ? (
+          <>
+            <span className="font-display text-lg font-semibold text-ink">{contacts}</span> ground contacts
+            <span className="text-faint"> · {hard} sets</span>
+          </>
+        ) : mode === "mobility" ? (
+          <>
+            <span className="font-display text-lg font-semibold text-ink">{hard}</span> holds
+          </>
+        ) : (
+          <>
+            <span className="font-display text-lg font-semibold text-ink">{hard}</span> sets
+            {bonus > 0 && <span className="ml-1.5 rounded-md bg-warn/10 px-1.5 py-0.5 text-xs text-warn">+{fmtSets(bonus)} from techniques</span>}
+          </>
+        )}
+      </p>
+      <Button onClick={onClose} className="px-6">
+        Done
+      </Button>
+    </div>
+  );
+
+  const header = (
+    <div className="mt-4 hidden gap-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-faint sm:grid" style={{ gridTemplateColumns: gridFor(mode) }}>
+      <span>Set</span>
+      {col.type && <span>Type</span>}
+      {col.weight && <span>{col.weight}</span>}
+      <span>{mode === "mobility" ? "Hold" : entry.exercises.some(isTimed) ? `${col.amount} / hold` : col.amount}</span>
+      {col.rpe && <span>Effort</span>}
+      {col.tech && (
+        <span className="w-9 text-center" title="Intensity techniques">
+          <Flame className="mx-auto size-3" />
+        </span>
+      )}
+      {col.value && <span className="text-center">Counts</span>}
+      <span />
+    </div>
+  );
 
   return (
     <Modal
@@ -294,47 +408,68 @@ export function SetEditor({
       className="max-w-4xl"
       title={superset ? "Superset" : name(entry.exercises[0])}
       subtitle={superset ? entry.exercises.map((we, i) => `${letter}${i + 1} ${name(we)}`).join("  ·  ") : titleCase(exercises.get(entry.exercises[0].exerciseId)?.equipment ?? "")}
-      footer={
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-muted">
-            <span className="font-display text-lg font-semibold text-ink">{fmtSets(total)}</span> effective sets
-            {superset && (
-              <span className="text-faint">
-                {" "}
-                ({entry.exercises.map((we) => fmtSets(exerciseValue(we))).join(" + ")})
-              </span>
-            )}
-          </p>
-          <Button onClick={onClose} className="px-6">
-            Done
-          </Button>
-        </div>
-      }
+      footer={footer}
     >
       {/* Exercises + notes */}
       <div className={cn("grid gap-3", superset && "sm:grid-cols-2")}>
         {entry.exercises.map((we, i) => {
           const ex = exercises.get(we.exerciseId);
+          const easier = neighbour(we, -1);
+          const harder = neighbour(we, 1);
           return (
-            <div key={we.id} className="flex gap-3 rounded-xl border border-line bg-surface-2/50 p-2.5">
-              {ex && <ExerciseThumb exercise={ex} className="size-14 shrink-0 rounded-lg" />}
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">
-                  {superset && (
-                    <span className="mr-1.5 font-display text-accent">
-                      {letter}
-                      {i + 1}
-                    </span>
-                  )}
-                  {name(we)}
-                </p>
-                <input
-                  value={we.notes}
-                  onChange={(e) => patchExercise(we.id, (x) => ({ ...x, notes: e.target.value }))}
-                  placeholder="Notes: tempo, grip, cues…"
-                  className="mt-1.5 h-8 w-full rounded-lg border border-line bg-surface-2 px-2.5 text-xs outline-none placeholder:text-faint hover:border-line-strong focus:border-accent/60"
-                />
+            <div key={we.id} className="rounded-xl border border-line bg-surface-2/50 p-2.5">
+              <div className="flex gap-3">
+                {ex && <ExerciseThumb exercise={ex} className="size-14 shrink-0 rounded-lg" />}
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+                    {superset && (
+                      <span className="font-display text-accent">
+                        {letter}
+                        {i + 1}
+                      </span>
+                    )}
+                    <span className="truncate">{name(we)}</span>
+                    {ex && <ExerciseBadge e={ex} />}
+                  </p>
+                  <input
+                    value={we.notes}
+                    onChange={(e) => patchExercise(we.id, (x) => ({ ...x, notes: e.target.value }))}
+                    placeholder="Notes: tempo, grip, cues…"
+                    className="mt-1.5 h-8 w-full rounded-lg border border-line bg-surface-2 px-2.5 text-xs outline-none placeholder:text-faint hover:border-line-strong focus:border-accent/60"
+                  />
+                </div>
               </div>
+              {ex?.family && ex.step && (
+                <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-violet/10 px-2 py-1.5 text-xs">
+                  <button
+                    type="button"
+                    disabled={!easier}
+                    onClick={() => easier && patchExercise(we.id, (x) => ({ ...x, exerciseId: easier.id }))}
+                    className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-violet hover:bg-violet/15 disabled:opacity-30"
+                    title={easier?.name}
+                  >
+                    <ChevronLeft className="size-3.5" /> Easier
+                  </button>
+                  <span className="text-muted">
+                    {ex.family} progression · step {ex.step} of {familySize(ex.family)}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={!harder}
+                    onClick={() => harder && patchExercise(we.id, (x) => ({ ...x, exerciseId: harder.id }))}
+                    className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-violet hover:bg-violet/15 disabled:opacity-30"
+                    title={harder?.name}
+                  >
+                    Harder <ChevronRight className="size-3.5" />
+                  </button>
+                </div>
+              )}
+              {ex?.discipline === "plyometrics" && ex.intensity && (
+                <p className="mt-2 text-[11px] text-muted">
+                  <span style={{ color: PLYO_INTENSITY[ex.intensity].color }}>{PLYO_INTENSITY[ex.intensity].label} intensity</span> · each contact is a
+                  maximal effort; rest fully between sets.
+                </p>
+              )}
             </div>
           );
         })}
@@ -343,7 +478,7 @@ export function SetEditor({
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Timer className="size-4 text-muted" />
         <span className="text-xs text-muted">Rest {superset ? "after each round" : "between sets"}</span>
-        {RESTS.map((r) => (
+        {(mode === "mobility" ? [15, 30, 45, 60] : RESTS).map((r) => (
           <button
             key={r}
             type="button"
@@ -358,25 +493,22 @@ export function SetEditor({
         ))}
       </div>
 
+      {mode === "plyo" && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-surface-2 px-3 py-2 text-[11px] text-muted">
+          <span className="font-medium text-ink">Contacts per session:</span>
+          {CONTACT_GUIDE.map((g) => (
+            <span key={g.level}>
+              {g.level} {g.range[0]}–{g.range[1]}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="mt-4">
-        <QuickApply units={units} onApply={applyAll} />
+        <QuickApply units={units} mode={mode} timed={entry.exercises.every(isTimed)} onApply={applyAll} />
       </div>
 
-      {/* Sets */}
-      <div className="mt-4 hidden grid-cols-[34px_112px_1fr_1fr_76px_auto_44px_auto] gap-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-faint sm:grid">
-        <span>Set</span>
-        <span>Type</span>
-        <span>Weight</span>
-        <span>Reps</span>
-        <span>Effort</span>
-        <span className="w-9 text-center" title="Intensity techniques">
-          <Flame className="mx-auto size-3" />
-        </span>
-        <span className="text-center" title="Effective sets">
-          Value
-        </span>
-        <span />
-      </div>
+      {header}
 
       {superset ? (
         <div className="mt-2 space-y-3">
@@ -403,6 +535,8 @@ export function SetEditor({
                       prefix={`${letter}${i + 1}`}
                       label=""
                       units={units}
+                      mode={mode}
+                      timed={isTimed(we)}
                       onChange={(p) => patchSet(we.id, s.id, p)}
                       onDuplicate={() => duplicateSet(we.id, s.id)}
                       onDelete={() => deleteSet(we.id, s.id)}
@@ -416,9 +550,11 @@ export function SetEditor({
             <Button variant="secondary" className="h-9 text-xs" onClick={() => onChange({ ...entry, exercises: entry.exercises.map((we) => addSet(we, "working")) })}>
               <Plus className="size-3.5" /> Add round
             </Button>
-            <Button variant="ghost" className="h-9 text-xs" onClick={() => onChange({ ...entry, exercises: entry.exercises.map((we) => addSet(we, "warmup")) })}>
-              <Plus className="size-3.5" /> Warm-up round
-            </Button>
+            {mode !== "mobility" && (
+              <Button variant="ghost" className="h-9 text-xs" onClick={() => onChange({ ...entry, exercises: entry.exercises.map((we) => addSet(we, "warmup")) })}>
+                <Plus className="size-3.5" /> Warm-up round
+              </Button>
+            )}
           </div>
         </div>
       ) : (
@@ -433,6 +569,8 @@ export function SetEditor({
                   set={s}
                   label={labels[i]}
                   units={units}
+                  mode={mode}
+                  timed={isTimed(we)}
                   onChange={(p) => patchSet(we.id, s.id, p)}
                   onDuplicate={() => duplicateSet(we.id, s.id)}
                   onDelete={() => deleteSet(we.id, s.id)}
@@ -440,9 +578,9 @@ export function SetEditor({
               ))}
               {we.sets.length === 0 && <p className="rounded-xl border border-dashed border-line py-6 text-center text-sm text-faint">No sets yet. Add one below.</p>}
               <div className="flex flex-wrap gap-2 pt-1.5">
-                {SET_KINDS.map((k) => (
+                {kinds.map((k) => (
                   <Button key={k.id} variant={k.id === "working" ? "secondary" : "ghost"} className="h-9 text-xs" onClick={() => patchExercise(we.id, (x) => addSet(x, k.id))}>
-                    <Plus className="size-3.5" /> {k.label}
+                    <Plus className="size-3.5" /> {mode === "mobility" ? "Hold" : k.label}
                   </Button>
                 ))}
               </div>

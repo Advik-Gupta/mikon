@@ -17,6 +17,15 @@ export interface Exercise {
   secondary: string[];
   instructions: string[];
   images: string[];
+  discipline: "weights" | "calisthenics" | "plyometrics" | "cardio" | "mobility";
+  /** Timed holds (planks, levers, stretches) vs reps */
+  measure: "reps" | "time";
+  /** Plyometrics only */
+  intensity?: "low" | "moderate" | "high";
+  /** Calisthenics progression family and position in it (1 = easiest) */
+  family?: string;
+  step?: number;
+  source: "free-exercise-db" | "mikon";
 }
 
 interface ExerciseDB {

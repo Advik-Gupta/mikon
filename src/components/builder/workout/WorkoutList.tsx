@@ -10,7 +10,8 @@ import { MUSCLE_GROUPS } from "@/data/muscles";
 import { formatWeight } from "@/lib/body";
 import { groupsForKeys, type Exercise } from "@/lib/explorer";
 import type { Units, WorkoutEntry } from "@/lib/types";
-import { entryValue, exerciseValue, fmtRest, fmtSets, setSummary, SUPERSET_LETTERS } from "@/lib/workout";
+import { entryHardSets, entryValue, fmtRest, setSummary, SUPERSET_LETTERS } from "@/lib/workout";
+import { ExerciseBadge } from "./ExercisePicker";
 import { ExerciseThumb } from "../../explorer/ExerciseBits";
 import { cn } from "../../ui";
 
@@ -60,6 +61,7 @@ function Menu({ items }: { items: { label: string; icon: typeof Copy; onClick: (
 
 function EntryCard({
   entry,
+  unitLabel,
   index,
   isLast,
   exercises,
@@ -74,6 +76,7 @@ function EntryCard({
   onRemoveFromSuperset,
 }: {
   entry: WorkoutEntry;
+  unitLabel: string;
   index: number;
   isLast: boolean;
   exercises: Map<string, Exercise>;
@@ -91,7 +94,8 @@ function EntryCard({
   const { setNodeRef: setMergeRef } = useDroppable({ id: MERGE + entry.id });
   const superset = entry.exercises.length > 1;
   const letter = SUPERSET_LETTERS[index] ?? String(index + 1);
-  const value = entryValue(entry);
+  const hard = entryHardSets(entry);
+  const bonus = entryValue(entry) - hard;
 
   return (
     <div
@@ -124,9 +128,14 @@ function EntryCard({
                 {fmtRest(entry.restSec)}
               </span>
             )}
-            <span className="rounded-md bg-surface-2 px-1.5 py-0.5 font-display text-[11px] font-semibold tabular-nums" title="Effective sets">
-              {fmtSets(value)} sets
+            <span className="rounded-md bg-surface-2 px-1.5 py-0.5 font-display text-[11px] font-semibold tabular-nums">
+              {hard} {unitLabel}
             </span>
+            {bonus > 0 && (
+              <span className="rounded-md bg-warn/10 px-1.5 py-0.5 text-[10px] font-medium text-warn" title="Intensity techniques add fatigue on top">
+                +techniques
+              </span>
+            )}
             <button
               type="button"
               onPointerDown={(e) => e.stopPropagation()}
@@ -166,10 +175,10 @@ function EntryCard({
                       {superset && <span className="font-display text-xs text-violet">{letter}{i + 1}</span>}
                       <span className="truncate">{ex?.name ?? "Unknown exercise"}</span>
                     </span>
-                    <span className="block truncate text-xs text-muted">{setSummary(we.sets, (kg) => formatWeight(kg, units))}</span>
-                    <span className="block truncate text-[11px] text-faint">
-                      {groups.join(", ")}
-                      {superset && ` · ${fmtSets(exerciseValue(we))} sets`}
+                    <span className="block truncate text-xs text-muted">{setSummary(we.sets, (kg) => formatWeight(kg, units), ex?.discipline === "plyometrics" ? " contacts" : "")}</span>
+                    <span className="flex items-center gap-1.5 truncate text-[11px] text-faint">
+                      {ex && <ExerciseBadge e={ex} />}
+                      <span className="truncate">{groups.join(", ")}</span>
                     </span>
                   </span>
                   {superset && (
@@ -211,6 +220,7 @@ function EntryCard({
 
 export function WorkoutList({
   entries,
+  unitLabel = "sets",
   exercises,
   units,
   activeId,
@@ -219,6 +229,8 @@ export function WorkoutList({
   onChange,
 }: {
   entries: WorkoutEntry[];
+  /** "sets" or "holds" etc. */
+  unitLabel?: string;
   exercises: Map<string, Exercise>;
   units: Units;
   activeId: string | null;
@@ -242,6 +254,7 @@ export function WorkoutList({
               <motion.div key={entry.id} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }}>
                 <EntryCard
                   entry={entry}
+                  unitLabel={unitLabel}
                   index={i}
                   isLast={i === entries.length - 1}
                   exercises={exercises}

@@ -5,23 +5,28 @@ import { useDraggable } from "@dnd-kit/core";
 import { AnimatePresence, motion } from "motion/react";
 import { GripVertical, Plus, Search } from "lucide-react";
 import { MUSCLE_GROUPS } from "@/data/muscles";
-import { blockType } from "@/lib/options";
+import { PLYO_INTENSITY, type Discipline } from "@/data/activities";
 import { groupsForKeys, searchExercises, titleCase, type Exercise } from "@/lib/explorer";
 import { ExerciseImages, ExerciseThumb, LevelDot } from "../../explorer/ExerciseBits";
 import { cn } from "../../ui";
 
 export const LIB = "lib:";
 
-/** Which exercise-db categories suit each block type. */
-const SUITED: Partial<Record<string, (e: Exercise) => boolean>> = {
-  weightlifting: (e) => ["strength", "powerlifting", "olympic weightlifting", "strongman"].includes(e.category),
-  calisthenics: (e) => e.category === "strength" && e.equipment === "body only",
-  plyometrics: (e) => e.category === "plyometrics",
-  cardio: (e) => e.category === "cardio",
-  mobility: (e) => e.category === "stretching",
-  hiit: (e) => ["plyometrics", "cardio", "strongman"].includes(e.category) || e.equipment === "kettlebells",
-  functional: (e) => ["strongman", "olympic weightlifting", "plyometrics"].includes(e.category) || e.equipment === "kettlebells",
-};
+export function ExerciseBadge({ e }: { e: Exercise }) {
+  if (e.discipline === "plyometrics" && e.intensity) {
+    const i = PLYO_INTENSITY[e.intensity];
+    return (
+      <span className="rounded px-1 py-px text-[10px] font-medium" style={{ background: `color-mix(in srgb, ${i.color} 18%, transparent)`, color: i.color }}>
+        {i.label}
+      </span>
+    );
+  }
+  if (e.family && e.step) {
+    return <span className="rounded bg-violet/15 px-1 py-px text-[10px] font-medium text-violet">{e.family} · {e.step}</span>;
+  }
+  if (e.measure === "time") return <span className="rounded bg-surface-3 px-1 py-px text-[10px] text-muted">Hold</span>;
+  return null;
+}
 
 function PickerRow({ e, onAdd, open, onToggle }: { e: Exercise; onAdd: () => void; open: boolean; onToggle: () => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: LIB + e.id, data: { exerciseId: e.id } });
@@ -41,7 +46,8 @@ function PickerRow({ e, onAdd, open, onToggle }: { e: Exercise; onAdd: () => voi
             <span className="block truncate text-[13px] font-medium">{e.name}</span>
             <span className="flex items-center gap-1.5 truncate text-[11px] text-muted">
               <LevelDot level={e.level} />
-              {groups.join(", ")}
+              <ExerciseBadge e={e} />
+              <span className="truncate">{groups.join(", ")}</span>
             </span>
           </span>
           <GripVertical className="size-4 shrink-0 text-faint" />
@@ -77,23 +83,39 @@ function PickerRow({ e, onAdd, open, onToggle }: { e: Exercise; onAdd: () => voi
   );
 }
 
-export function ExercisePicker({ all, type, onAdd }: { all: Exercise[]; type: string; onAdd: (id: string) => void }) {
+export function ExercisePicker({
+  all,
+  disciplines,
+  blockLabel,
+  onAdd,
+}: {
+  all: Exercise[];
+  disciplines: Discipline[];
+  blockLabel: string;
+  onAdd: (id: string) => void;
+}) {
   const [q, setQ] = useState("");
   const [group, setGroup] = useState("");
   const [equipment, setEquipment] = useState("");
+  const [family, setFamily] = useState("");
   const [suitedOnly, setSuitedOnly] = useState(true);
   const [shown, setShown] = useState(40);
   const [open, setOpen] = useState<string | null>(null);
-  const suited = SUITED[type];
 
-  const equipmentList = useMemo(() => [...new Set(all.map((e) => e.equipment))].sort(), [all]);
+  const pool = useMemo(() => (suitedOnly ? all.filter((e) => disciplines.includes(e.discipline)) : all), [all, disciplines, suitedOnly]);
+  const equipmentList = useMemo(() => [...new Set(pool.map((e) => e.equipment))].sort(), [pool]);
+  const families = useMemo(() => [...new Set(pool.map((e) => e.family).filter(Boolean))] as string[], [pool]);
   const results = useMemo(() => {
-    let list = q.trim() ? searchExercises(q, all) : all;
-    if (suited && suitedOnly) list = list.filter(suited);
+    let list = q.trim() ? searchExercises(q, pool) : pool;
     if (group) list = list.filter((e) => groupsForKeys(e.primary).includes(group));
     if (equipment) list = list.filter((e) => e.equipment === equipment);
+    if (family) list = list.filter((e) => e.family === family).sort((a, b) => (a.step ?? 0) - (b.step ?? 0));
+    else if (disciplines.includes("calisthenics") && !q.trim()) {
+      // Progressions first, in order, then everything else.
+      list = [...list].sort((a, b) => (a.family ?? "~").localeCompare(b.family ?? "~") || (a.step ?? 0) - (b.step ?? 0));
+    }
     return list;
-  }, [all, q, group, equipment, suited, suitedOnly]);
+  }, [pool, q, group, equipment, family, disciplines]);
 
   const select = "h-9 min-w-0 flex-1 cursor-pointer rounded-lg border border-line bg-surface-2 px-2 text-xs outline-none hover:border-line-strong focus:border-accent/60";
 
@@ -130,14 +152,22 @@ export function ExercisePicker({ all, type, onAdd }: { all: Exercise[]; type: st
             ))}
           </select>
         </div>
-        {suited && (
-          <label className="flex cursor-pointer items-center justify-between text-xs text-muted">
-            <span>
-              Only exercises suited to <span className="text-ink">{blockType(type).label}</span>
-            </span>
-            <input type="checkbox" checked={suitedOnly} onChange={(e) => setSuitedOnly(e.target.checked)} className="accent-[#c6f432]" />
-          </label>
+        {families.length > 0 && (
+          <select aria-label="Progression" value={family} onChange={(e) => setFamily(e.target.value)} className={cn(select, "w-full", family ? "text-ink" : "text-muted")}>
+            <option value="">All progressions</option>
+            {families.map((f) => (
+              <option key={f} value={f}>
+                {f} progression
+              </option>
+            ))}
+          </select>
         )}
+        <label className="flex cursor-pointer items-center justify-between text-xs text-muted">
+          <span>
+            Only exercises suited to <span className="text-ink">{blockLabel}</span>
+          </span>
+          <input type="checkbox" checked={suitedOnly} onChange={(e) => setSuitedOnly(e.target.checked)} className="accent-[#c6f432]" />
+        </label>
       </div>
       <p className="px-3 pt-2 text-[11px] text-faint">
         {results.length} exercises · drag into the workout or tap +

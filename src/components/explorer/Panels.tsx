@@ -383,7 +383,11 @@ function MuscleChips({ ids, nav, strong }: { ids: string[]; nav: ExplorerNav; st
 
 export function ExercisePanel({ nav, exercise }: { nav: ExplorerNav; exercise: Exercise }) {
   const worked = musclesForExercise(exercise);
+  const { db } = useExerciseDB();
+  const ladder = exercise.family ? (db?.exercises ?? []).filter((e) => e.family === exercise.family).sort((a, b) => (a.step ?? 0) - (b.step ?? 0)) : [];
   const meta = [
+    { label: "Discipline", value: exercise.discipline },
+    ...(exercise.intensity ? [{ label: "Intensity", value: exercise.intensity }] : []),
     { label: "Level", value: exercise.level, dot: true },
     { label: "Equipment", value: exercise.equipment },
     { label: "Type", value: exercise.category },
@@ -398,8 +402,14 @@ export function ExercisePanel({ nav, exercise }: { nav: ExplorerNav; exercise: E
       </button>
       <h2 className="font-display text-3xl font-semibold tracking-tight">{exercise.name}</h2>
 
-      <ExerciseImages exercise={exercise} className="mt-5 aspect-[4/3] w-full rounded-2xl border border-line" />
-      <p className="mt-2 text-[11px] text-faint">Start and end positions, alternating.</p>
+      {exercise.images.length ? (
+        <>
+          <ExerciseImages exercise={exercise} className="mt-5 aspect-[4/3] w-full rounded-2xl border border-line" />
+          <p className="mt-2 text-[11px] text-faint">Start and end positions, alternating.</p>
+        </>
+      ) : (
+        <ExerciseImages exercise={exercise} className="mt-5 h-36 w-full rounded-2xl border border-line" />
+      )}
 
       <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {meta.map((x) => (
@@ -412,6 +422,31 @@ export function ExercisePanel({ nav, exercise }: { nav: ExplorerNav; exercise: E
           </div>
         ))}
       </div>
+
+      {ladder.length > 1 && (
+        <Section title={`${exercise.family} progression`} icon={Layers}>
+          <ol className="space-y-1">
+            {ladder.map((e) => (
+              <li key={e.id}>
+                <button
+                  type="button"
+                  onClick={() => nav.openExercise(e.id)}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm transition",
+                    e.id === exercise.id ? "border-violet/50 bg-violet/10 text-ink" : "border-line text-muted hover:border-line-strong hover:text-ink",
+                  )}
+                >
+                  <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-full font-display text-[11px] font-bold", e.id === exercise.id ? "bg-violet text-accent-ink" : "bg-surface-3")}>
+                    {e.step}
+                  </span>
+                  <span className="flex-1">{e.name}</span>
+                  <LevelDot level={e.level} />
+                </button>
+              </li>
+            ))}
+          </ol>
+        </Section>
+      )}
 
       <Section title="Primary muscles" icon={Crosshair}>
         <MuscleChips ids={worked.primary} nav={nav} strong />
@@ -433,7 +468,9 @@ export function ExercisePanel({ nav, exercise }: { nav: ExplorerNav; exercise: E
         </ol>
       </Section>
 
-      <p className="mt-8 border-t border-line pt-4 text-[11px] text-faint">Photos and instructions: free-exercise-db (public domain).</p>
+      <p className="mt-8 border-t border-line pt-4 text-[11px] text-faint">
+        {exercise.source === "mikon" ? "Written for Mikon." : "Photos and instructions: free-exercise-db (public domain)."}
+      </p>
     </div>
   );
 }

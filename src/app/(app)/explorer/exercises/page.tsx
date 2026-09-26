@@ -6,6 +6,8 @@ import { Search, SlidersHorizontal, X } from "lucide-react";
 import { MUSCLE_GROUPS } from "@/data/muscles";
 import { groupsForKeys, searchExercises, titleCase, useExerciseDB, type Exercise } from "@/lib/explorer";
 import { ExerciseThumb, LevelDot } from "@/components/explorer/ExerciseBits";
+import { ExerciseBadge } from "@/components/builder/workout/ExercisePicker";
+import { DISCIPLINES } from "@/data/activities";
 import { ExplorerTabs } from "@/components/explorer/ExplorerTabs";
 import { cn } from "@/components/ui";
 
@@ -47,7 +49,7 @@ function Card({ e, onOpen }: { e: Exercise; onOpen: () => void }) {
       <div className="p-3">
         <p className="line-clamp-2 text-sm font-medium leading-snug">{e.name}</p>
         <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted">
-          <LevelDot level={e.level} /> {titleCase(e.equipment)}
+          <LevelDot level={e.level} /> {titleCase(e.equipment)} <ExerciseBadge e={e} />
         </p>
         <p className="mt-1 truncate text-[11px] text-accent">{groups.join(" · ")}</p>
       </div>
@@ -63,6 +65,7 @@ export default function ExerciseLibraryPage() {
   const [equipment, setEquipment] = useState("");
   const [level, setLevel] = useState("");
   const [category, setCategory] = useState("");
+  const [discipline, setDiscipline] = useState("");
   const [shown, setShown] = useState(PAGE);
 
   const all = useMemo(() => db?.exercises ?? [], [db]);
@@ -81,11 +84,14 @@ export default function ExerciseLibraryPage() {
     if (equipment) list = list.filter((e) => e.equipment === equipment);
     if (level) list = list.filter((e) => e.level === level);
     if (category) list = list.filter((e) => e.category === category);
+    if (discipline) list = list.filter((e) => e.discipline === discipline);
+    if (discipline === "calisthenics" && !q.trim()) list = [...list].sort((a, b) => (a.family ?? "~").localeCompare(b.family ?? "~") || (a.step ?? 0) - (b.step ?? 0));
     return list;
-  }, [all, q, group, equipment, level, category]);
+  }, [all, q, group, equipment, level, category, discipline]);
 
-  const filtered = !!(group || equipment || level || category);
+  const filtered = !!(group || equipment || level || category || discipline);
   const reset = () => {
+    setDiscipline("");
     setGroup("");
     setEquipment("");
     setLevel("");
@@ -121,6 +127,24 @@ export default function ExerciseLibraryPage() {
                 <X className="size-4" /> Clear
               </button>
             )}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {[{ id: "", label: "All", icon: null }, ...DISCIPLINES].map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => update(setDiscipline)(d.id)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                  discipline === d.id ? "border-accent/60 bg-accent/10 text-accent" : "border-line text-muted hover:text-ink",
+                )}
+              >
+                {d.icon && <d.icon className="size-3.5" />}
+                {d.label}
+                <span className="opacity-60">{d.id ? all.filter((e) => e.discipline === d.id).length : all.length}</span>
+              </button>
+            ))}
           </div>
 
           <p className="mt-4 text-sm text-muted">

@@ -1,5 +1,5 @@
-import { groupsForKeys, type Exercise } from "./explorer";
-import type { Program, ProgramDay, SetKind, WorkoutEntry, WorkoutExercise, WorkoutSet } from "./types";
+import type { Exercise } from "./explorer";
+import type { SetKind, WorkoutEntry, WorkoutExercise, WorkoutSet } from "./types";
 
 export const SET_KINDS: { id: SetKind; label: string; short: string; color: string; hint: string }[] = [
   { id: "warmup", label: "Warm-up", short: "W", color: "#8a919c", hint: "Doesn't count toward volume" },
@@ -27,16 +27,30 @@ export function newSet(kind: SetKind = "working", from?: Partial<WorkoutSet>): W
   return { id: crypto.randomUUID(), kind, weight: null, reps: null, rpe: null, modifiers: [], ...from, ...(from ? { id: crypto.randomUUID() } : {}) };
 }
 
-export function newExercise(exerciseId: string): WorkoutExercise {
-  return {
-    id: crypto.randomUUID(),
-    exerciseId,
-    notes: "",
-    sets: [newSet("working", { reps: 10 }), newSet("working", { reps: 10 }), newSet("working", { reps: 10 })],
-  };
+/** Sensible starting sets for the kind of exercise. */
+export function defaultSets(ex?: Exercise): WorkoutSet[] {
+  const make = (n: number, from: Partial<WorkoutSet>) => Array.from({ length: n }, () => newSet("working", from));
+  if (!ex) return make(3, { reps: 10 });
+  if (ex.discipline === "mobility") return make(2, { holdSec: 30 });
+  if (ex.discipline === "plyometrics") return make(3, { reps: ex.intensity === "high" ? 4 : ex.intensity === "low" ? 10 : 6 });
+  if (ex.measure === "time") return make(3, { holdSec: 20 });
+  if (ex.discipline === "calisthenics") return make(3, { reps: 8 });
+  return make(3, { reps: 10 });
 }
 
-export const newEntry = (exerciseId: string): WorkoutEntry => ({ id: crypto.randomUUID(), exercises: [newExercise(exerciseId)], restSec: 90 });
+export function newExercise(exerciseId: string, ex?: Exercise): WorkoutExercise {
+  return { id: crypto.randomUUID(), exerciseId, notes: "", sets: defaultSets(ex) };
+}
+
+export const newEntry = (exerciseId: string, ex?: Exercise, restSec = 90): WorkoutEntry => ({
+  id: crypto.randomUUID(),
+  exercises: [newExercise(exerciseId, ex)],
+  restSec,
+});
+
+/** Non-warm-up sets: what the user thinks of as "sets". */
+export const hardSets = (sets: WorkoutSet[]) => sets.filter((s) => s.kind !== "warmup").length;
+export const entryHardSets = (e: WorkoutEntry) => e.exercises.reduce((a, x) => a + hardSets(x.sets), 0);
 
 /** Effective sets for fatigue/volume: warm-ups are free, techniques add on top. */
 export function setValue(s: WorkoutSet) {
@@ -48,95 +62,23 @@ export const exerciseValue = (e: WorkoutExercise) => e.sets.reduce((a, s) => a +
 export const entryValue = (e: WorkoutEntry) => e.exercises.reduce((a, x) => a + exerciseValue(x), 0);
 export const fmtSets = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0$/, ""));
 
-/* ------------------------------------------------------------------ volume */
-
-export interface GroupVolume {
-  total: number;
-  /** dayId → effective sets */
-  byDay: Map<string, number>;
-  /** exercise name → effective sets (this group only) */
-  byExercise: Map<string, number>;
-}
-
-/** Effective sets per muscle group for the whole cycle. Secondary groups count half. */
-export function programVolume(program: Program, exercises: Map<string, Exercise>, blockType: string | null) {
-  const out = new Map<string, GroupVolume>();
-  const add = (group: string, day: ProgramDay, name: string, v: number) => {
-    if (!v) return;
-    let g = out.get(group);
-    if (!g) out.set(group, (g = { total: 0, byDay: new Map(), byExercise: new Map() }));
-    g.total += v;
-    g.byDay.set(day.id, (g.byDay.get(day.id) ?? 0) + v);
-    g.byExercise.set(name, (g.byExercise.get(name) ?? 0) + v);
-  };
-  for (const day of program.days) {
-    for (const block of day.blocks) {
-      if (blockType && block.type !== blockType) continue;
-      for (const entry of block.entries ?? []) {
-        for (const we of entry.exercises) {
-          const ex = exercises.get(we.exerciseId);
-          if (!ex) continue;
-          const v = exerciseValue(we);
-          const primary = groupsForKeys(ex.primary);
-          const secondary = groupsForKeys(ex.secondary).filter((g) => !primary.includes(g));
-          primary.forEach((g) => add(g, day, ex.name, v));
-          secondary.forEach((g) => add(g, day, ex.name, v * 0.5));
-        }
-      }
-    }
-  }
-  return out;
-}
-
-/* ------------------------------------------------------------------ heat colour */
-
-/** Colour stops by weekly effective sets: very light green → green (5) → yellow (10–15) → red (20+). */
-const STOPS: [number, [number, number, number]][] = [
-  [0.5, [220, 252, 231]],
-  [5, [74, 222, 128]],
-  [10, [250, 204, 21]],
-  [15, [251, 146, 60]],
-  [20, [239, 68, 68]],
-  [30, [185, 28, 28]],
-];
-
-export function heatColor(sets: number) {
-  if (sets <= 0) return null;
-  if (sets <= STOPS[0][0]) return `rgb(${STOPS[0][1].join(",")})`;
-  for (let i = 1; i < STOPS.length; i++) {
-    const [x1, c1] = STOPS[i];
-    const [x0, c0] = STOPS[i - 1];
-    if (sets <= x1) {
-      const t = (sets - x0) / (x1 - x0);
-      return `rgb(${c0.map((c, k) => Math.round(c + (c1[k] - c) * t)).join(",")})`;
-    }
-  }
-  return `rgb(${STOPS[STOPS.length - 1][1].join(",")})`;
-}
-
-export const HEAT_LEGEND = [0, 1, 5, 10, 15, 20, 30];
-
-export function heatLabel(sets: number) {
-  if (sets <= 0) return "Not trained";
-  if (sets < 5) return "Light";
-  if (sets < 10) return "Moderate";
-  if (sets <= 20) return "High";
-  return "Very high";
-}
-
 /* ------------------------------------------------------------------ summaries */
 
-/** "2 warm-up · 3×8 @ 80 kg · 1 back-off" */
-export function setSummary(sets: WorkoutSet[], fmtWeight: (kg: number) => string) {
+/** "2 warm-up · 3×8 @ 80 kg · 1 back-off", or "3×30s" for holds */
+export function setSummary(sets: WorkoutSet[], fmtWeight: (kg: number) => string, unit = "") {
   const warm = sets.filter((s) => s.kind === "warmup").length;
   const back = sets.filter((s) => s.kind === "backoff").length;
   const working = sets.filter((s) => s.kind === "working");
   const parts: string[] = [];
   if (warm) parts.push(`${warm} warm-up`);
   if (working.length) {
-    const reps = [...new Set(working.map((s) => s.reps))];
+    const timed = working.some((s) => s.holdSec != null && s.reps == null);
+    const vals = working.map((s) => (timed ? (s.holdSec ?? 0) : (s.reps ?? 0)));
+    const lo = Math.min(...vals);
+    const hi = Math.max(...vals);
+    const amount = lo === hi ? `${lo || "?"}` : `${lo}–${hi}`;
+    let w = `${working.length}×${amount}${timed ? "s" : unit}`;
     const weights = [...new Set(working.map((s) => s.weight))];
-    let w = `${working.length}×${reps.length === 1 ? (reps[0] ?? "?") : `${Math.min(...reps.map((r) => r ?? 0))}–${Math.max(...reps.map((r) => r ?? 0))}`}`;
     if (weights.length === 1 && weights[0] != null) w += ` @ ${fmtWeight(weights[0])}`;
     parts.push(w);
   }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChevronRight, Dumbbell } from "lucide-react";
+import { DISCIPLINES } from "@/data/activities";
 import { imageUrl, titleCase, useExerciseDB, type Exercise } from "@/lib/explorer";
 import { cn } from "../ui";
 
@@ -25,9 +26,12 @@ export function ExerciseImages({ exercise, className, animate = true }: { exerci
   }, [animate, count]);
 
   if (!db || !count) {
+    const d = DISCIPLINES.find((x) => x.id === exercise.discipline);
+    const Icon = d?.icon ?? Dumbbell;
     return (
-      <div className={cn("flex items-center justify-center bg-surface-2 text-faint", className)}>
-        <Dumbbell className="size-6" />
+      <div className={cn("flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-surface-2 to-surface-3 text-muted", className)}>
+        <Icon className="size-1/3 max-h-10 max-w-10 opacity-70" />
+        {animate && exercise.family && <span className="text-[11px]">{exercise.family} progression</span>}
       </div>
     );
   }

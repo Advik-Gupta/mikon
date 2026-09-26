@@ -126,6 +126,8 @@ export interface WorkoutSet {
   /** kg; null = bodyweight / not set */
   weight: number | null;
   reps: number | null;
+  /** For timed exercises (holds, planks, stretches), seconds */
+  holdSec?: number | null;
   /** Rate of perceived exertion, 6–10 */
   rpe: number | null;
   /** SET_MODIFIERS ids, e.g. "dropset", "partials" */
@@ -148,11 +150,45 @@ export interface WorkoutEntry {
   restSec: number | null;
 }
 
+/** One piece of a cardio session: a steady effort, or a set of intervals. */
+export interface CardioSegment {
+  id: string;
+  /** CARDIO_MODALITIES id: run, cycle, row… */
+  modality: string;
+  /** CARDIO_TYPES id: easy, long, tempo, intervals… */
+  type: string;
+  kind: "steady" | "intervals";
+  /** Heart-rate / effort zone, 1–5 */
+  zone: number;
+  /** Steady: total minutes and/or km */
+  durationMin: number | null;
+  distanceKm: number | null;
+  /** Intervals: reps × work (time or distance) with rest between */
+  reps: number | null;
+  workSec: number | null;
+  workDistanceM: number | null;
+  restSec: number | null;
+  notes: string;
+}
+
+/** Sport, combat and outdoor blocks: one session described by duration and effort. */
+export interface SessionDetail {
+  /** SESSION_ACTIVITIES id */
+  activity: string;
+  durationMin: number | null;
+  /** 1–10 */
+  rpe: number;
+  notes: string;
+}
+
 export interface ProgramBlock {
   id: string;
   /** BLOCK_TYPES id */
   type: string;
+  /** Exercise-based blocks: weights, calisthenics, plyometrics, mobility, HIIT, functional */
   entries?: WorkoutEntry[];
+  cardio?: CardioSegment[];
+  session?: SessionDetail;
 }
 
 export interface ProgramDay {
