@@ -6,13 +6,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Bell, Menu, Search } from "lucide-react";
 import { useProfile } from "@/lib/storage";
-import { LogoMark } from "@/components/graphics/Logo";
+import { SessionScreen, useSession } from "@/components/SessionGate";
 import { Avatar } from "@/components/shell/Avatar";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { titleFor } from "@/components/shell/nav";
 import { Toaster } from "@/components/Toaster";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const session = useSession();
   const profile = useProfile();
   const router = useRouter();
   const pathname = usePathname();
@@ -22,15 +23,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (profile === null) router.replace("/onboarding");
   }, [profile, router]);
 
-  if (!profile) {
-    return (
-      <div className="flex h-dvh items-center justify-center">
-        <div className="animate-pulse">
-          <LogoMark size={40} />
-        </div>
-      </div>
-    );
-  }
+  if (!profile) return <SessionScreen status={session.status} retry={session.retry} />;
 
   return (
     <div className="flex h-dvh overflow-hidden">

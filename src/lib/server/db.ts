@@ -1,0 +1,28 @@
+import "server-only";
+import { MongoClient, type Db } from "mongodb";
+import { env } from "./env";
+
+const globalForMongo = globalThis as unknown as { mongo?: Promise<MongoClient>; indexed?: Promise<void> };
+
+function client() {
+  globalForMongo.mongo ??= new MongoClient(env.MONGODB_URI, { maxPoolSize: 10, serverSelectionTimeoutMS: 8000 }).connect();
+  return globalForMongo.mongo;
+}
+
+async function ensureIndexes(db: Db) {
+  await Promise.all([
+    db.collection("users").createIndex({ email: 1 }, { unique: true }),
+    db.collection("profiles").createIndex({ userId: 1 }, { unique: true }),
+    db.collection("programs").createIndex({ userId: 1, id: 1 }, { unique: true }),
+    db.collection("custom_exercises").createIndex({ userId: 1, id: 1 }, { unique: true }),
+    db.collection("exercises").createIndex({ id: 1 }, { unique: true }),
+    db.collection("rate_limits").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
+  ]);
+}
+
+export async function getDb() {
+  const db = (await client()).db(env.MONGODB_DB);
+  globalForMongo.indexed ??= ensureIndexes(db);
+  await globalForMongo.indexed;
+  return db;
+}

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { Folder, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
-import { KEYS, usePrograms, useStored, writeStored } from "@/lib/storage";
+import { Folder, LogOut, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
+import { KEYS, logout, usePrograms, useStored, writeStored } from "@/lib/storage";
 import { Logo, LogoMark } from "../graphics/Logo";
 import { cn } from "../ui";
 import { FOOTER_NAV, MAIN_NAV, type NavItem } from "./nav";
@@ -125,6 +125,18 @@ export function Sidebar({ mobile, onNavigate }: { mobile?: boolean; onNavigate?:
         {FOOTER_NAV.map((item) => (
           <NavLink key={item.href} item={item} active={isActive(item.href)} collapsed={collapsed} onNavigate={onNavigate} />
         ))}
+        <button
+          type="button"
+          onClick={logout}
+          title={collapsed ? "Log out" : undefined}
+          className={cn(
+            "flex h-9 w-full items-center gap-3 rounded-lg px-2.5 text-sm text-muted transition hover:bg-surface-2 hover:text-ink",
+            collapsed && "justify-center px-0",
+          )}
+        >
+          <LogOut className="size-[18px] shrink-0" />
+          {!collapsed && "Log out"}
+        </button>
         {collapsed && (
           <button
             type="button"

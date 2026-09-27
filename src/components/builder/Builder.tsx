@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronLeft, CloudCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronLeft, CloudCheck, CloudOff, Loader2 } from "lucide-react";
+import { useSaveStatus } from "@/lib/storage";
 import { ProgramOverview } from "./ProgramOverview";
 import { useProgramAdvice } from "@/lib/advice";
 import { resizeDays, STEP_ORDER, targetDayCount, updateProgram } from "@/lib/programs";
@@ -51,21 +52,30 @@ function timeAgo(iso: string, now: number) {
 }
 
 function SavedIndicator({ updatedAt }: { updatedAt: string }) {
+  const status = useSaveStatus();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 10_000);
     return () => clearInterval(t);
   }, []);
+  if (status === "saving") {
+    return (
+      <span className="hidden items-center gap-1.5 text-xs text-muted sm:flex">
+        <Loader2 className="size-4 animate-spin" /> Saving…
+      </span>
+    );
+  }
+  if (status === "error") {
+    return (
+      <span className="hidden items-center gap-1.5 text-xs text-warn sm:flex" title="Changes are kept and will retry">
+        <CloudOff className="size-4" /> Offline, retrying
+      </span>
+    );
+  }
   return (
-    <motion.span
-      key={updatedAt}
-      initial={{ opacity: 0.4 }}
-      animate={{ opacity: 1 }}
-      className="hidden items-center gap-1.5 text-xs text-muted sm:flex"
-      title="Everything is saved automatically on this device"
-    >
+    <span className="hidden items-center gap-1.5 text-xs text-muted sm:flex" title="Saved to your account">
       <CloudCheck className="size-4 text-accent" /> Saved {timeAgo(updatedAt, Math.max(now, new Date(updatedAt).getTime()))}
-    </motion.span>
+    </span>
   );
 }
 

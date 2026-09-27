@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CalendarCheck, Mail, MapPin, Pencil, RotateCcw } from "lucide-react";
+import { CalendarCheck, LogOut, Mail, MapPin, Pencil, RotateCcw } from "lucide-react";
 import { age, bmi, bmiLabel, displayName, fatBand, formatHeight, formatWeight, round1 } from "@/lib/body";
 import type { InjurySeverity } from "@/lib/types";
-import { resetAll, useProfile } from "@/lib/storage";
+import { logout, resetAll, useProfile } from "@/lib/storage";
 import { BodyMap, SEVERITY_COLOR } from "@/components/graphics/BodyMap";
 import { ProfileSections } from "@/components/profile/ProfileSections";
 import { Avatar } from "@/components/shell/Avatar";
@@ -32,7 +32,7 @@ export default function ProfilePage() {
   const location = [p.address.city, p.address.country].filter(Boolean).join(", ");
 
   const reset = () => {
-    if (window.confirm("Reset Mikon? This clears your profile and programs from this device.")) {
+    if (window.confirm("Reset all your data? Your profile, programs and custom exercises will be deleted and you'll start onboarding again. Your account stays.")) {
       resetAll();
     }
   };
@@ -70,8 +70,11 @@ export default function ProfilePage() {
             <Button variant="secondary" onClick={() => router.push("/onboarding?edit=personal")}>
               <Pencil className="size-4" /> Edit profile
             </Button>
-            <Button variant="ghost" onClick={reset} title="Clear all local data">
+            <Button variant="ghost" onClick={reset} title="Reset my data">
               <RotateCcw className="size-4" />
+            </Button>
+            <Button variant="ghost" onClick={logout} title="Log out">
+              <LogOut className="size-4" />
             </Button>
           </div>
         </div>

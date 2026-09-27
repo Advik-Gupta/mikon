@@ -1,5 +1,5 @@
 /**
- * Builds public/data/exercises.json from free-exercise-db
+ * Builds scripts/data/exercises.json from free-exercise-db
  * (https://github.com/yuhonas/free-exercise-db). That dataset is released under the
  * Unlicense (public domain), including its instructions and photos.
  *
@@ -10,7 +10,7 @@
  * a `measure` (reps or time), and plyometrics get an `intensity`. Mikon's curated calisthenics
  * progressions and plyometric drills (scripts/data/curated-exercises.mjs) are merged in.
  *
- * Run: node scripts/build-exercises.mjs
+ * Run: node scripts/build-exercises.mjs, then npm run db:seed
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import { CURATED } from "./data/curated-exercises.mjs";
@@ -68,9 +68,9 @@ const exercises = raw
   .concat(CURATED)
   .sort((a, b) => a.name.localeCompare(b.name));
 
-await mkdir(new URL("../public/data/", import.meta.url), { recursive: true });
+await mkdir(new URL("./data/", import.meta.url), { recursive: true });
 await writeFile(
-  new URL("../public/data/exercises.json", import.meta.url),
+  new URL("./data/exercises.json", import.meta.url),
   JSON.stringify({ source: `free-exercise-db@${COMMIT} (Unlicense)`, imageBase: IMAGE_BASE, exercises }),
 );
 console.log(`wrote ${exercises.length} exercises`);

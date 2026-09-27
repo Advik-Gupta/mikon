@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight, Check, ClipboardList, X } from "lucide-react";
 import { defaultBodyFat, navyBodyFat } from "@/lib/body";
-import { KEYS, readStored, saveProfile, writeStored } from "@/lib/storage";
+import { KEYS, readStored, saveProfile, useSessionUser, writeStored } from "@/lib/storage";
 import type { Profile } from "@/lib/types";
 import { Logo, LogoMark } from "../graphics/Logo";
 import { ProfileSections, type StepId } from "../profile/ProfileSections";
@@ -111,6 +111,7 @@ function finalize(p: Profile): Profile {
 
 export function Onboarding({ editProfile, editStep }: { editProfile?: Profile; editStep?: string }) {
   const router = useRouter();
+  const account = useSessionUser();
   const editing = !!editProfile;
 
   const [state, setState] = useState<Draft>(() => {
@@ -118,7 +119,12 @@ export function Onboarding({ editProfile, editStep }: { editProfile?: Profile; e
       const idx = Math.max(1, STEPS.findIndex((s) => s.id === editStep));
       return { step: idx, furthest: STEPS.length - 1, profile: editProfile };
     }
-    return readStored<Draft>(KEYS.draft) ?? { step: 0, furthest: 0, profile: emptyProfile() };
+    const fresh = emptyProfile();
+    if (account) {
+      const [first, ...rest] = account.name.split(" ");
+      fresh.personal = { ...fresh.personal, firstName: first ?? "", lastName: rest.join(" "), email: account.email };
+    }
+    return readStored<Draft>(KEYS.draft) ?? { step: 0, furthest: 0, profile: fresh };
   });
   const [dir, setDir] = useState(1);
   const [done, setDone] = useState(false);

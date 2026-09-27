@@ -76,7 +76,7 @@ export function displayMuscle(id: string, sex: Sex) {
 
 let cache: Promise<ExerciseDB> | null = null;
 function loadDB() {
-  cache ??= fetch("/data/exercises.json").then((r) => {
+  cache ??= fetch("/api/exercises").then((r) => {
     if (!r.ok) throw new Error(`Failed to load exercises (${r.status})`);
     return r.json();
   });
