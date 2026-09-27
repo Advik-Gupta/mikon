@@ -144,13 +144,23 @@ function EntryCard({
             >
               <Pencil className="size-3.5" /> Sets
             </button>
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={onDelete}
+              className="rounded-lg p-1.5 text-faint transition hover:bg-danger/10 hover:text-danger"
+              aria-label={superset ? "Remove superset" : "Remove exercise"}
+              title={superset ? "Remove superset" : "Remove exercise"}
+            >
+              <Trash2 className="size-4" />
+            </button>
             <Menu
               items={[
                 { label: "Edit sets", icon: Pencil, onClick: onEdit },
                 { label: "Superset with next", icon: Link2, onClick: onSupersetNext, hidden: isLast },
                 { label: "Split superset", icon: Unlink, onClick: onSplit, hidden: !superset },
                 { label: "Duplicate", icon: Copy, onClick: onDuplicate },
-                { label: "Delete", icon: Trash2, onClick: onDelete, danger: true },
+                { label: "Remove", icon: Trash2, onClick: onDelete, danger: true },
               ]}
             />
           </span>

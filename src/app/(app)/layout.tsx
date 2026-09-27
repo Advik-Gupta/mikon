@@ -10,6 +10,7 @@ import { LogoMark } from "@/components/graphics/Logo";
 import { Avatar } from "@/components/shell/Avatar";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { titleFor } from "@/components/shell/nav";
+import { Toaster } from "@/components/Toaster";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const profile = useProfile();
@@ -91,6 +92,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">{children}</main>
+        <Toaster />
       </div>
     </div>
   );

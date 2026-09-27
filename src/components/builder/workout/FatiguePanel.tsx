@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState, type MouseEvent } from "react";
+import { MuscleShape } from "@/components/graphics/MuscleShape";
+import { useId, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Activity, CalendarRange, Sun } from "lucide-react";
 import { groupById, muscleById } from "@/data/muscles";
 import { BODY, type Exercise, type Sex, type View } from "@/lib/explorer";
@@ -72,6 +73,7 @@ export function FatiguePanel({
   initialType: string;
 }) {
   const wrap = useRef<HTMLDivElement>(null);
+  const uid = useId().replace(/:/g, "");
   const [hover, setHover] = useState<{ group: string; x: number; y: number; w: number } | null>(null);
   const [side, setSide] = useState<View>("front");
   const [mode, setMode] = useState<"day" | "cycle">("day");
@@ -296,9 +298,10 @@ export function FatiguePanel({
             const c = colorFor(group);
             const hovered = hover?.group === group;
             return (
-              <path
+              <MuscleShape
                 key={i}
-                d={s.d}
+                shape={s}
+                clipKey={`${uid}-${i}`}
                 fill={c.fill}
                 fillOpacity={hovered ? Math.min(1, c.opacity + 0.1) : c.opacity}
                 stroke={c.alert ? "#ffffff" : hovered ? "#ffffff" : STROKE}

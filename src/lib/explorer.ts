@@ -45,6 +45,9 @@ export interface Shape {
   m: string;
   s: "l" | "r";
   b: [number, number, number, number];
+  /** Clip rect when one drawn shape holds two muscles, with the dividing x */
+  c?: [number, number, number, number];
+  k?: number;
 }
 
 export interface FigureView {

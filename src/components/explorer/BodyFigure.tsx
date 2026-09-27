@@ -1,5 +1,6 @@
 "use client";
 
+import { MuscleShape } from "@/components/graphics/MuscleShape";
 import { useId, useMemo, useRef, useState, type MouseEvent } from "react";
 import { motion } from "motion/react";
 import { groupById, muscleById } from "@/data/muscles";
@@ -220,9 +221,10 @@ export function BodyFigure({
                 const outlined = !!heatFor && selectedShape === s.m;
                 const inFocus = !focusGroup || muscleById(s.m)?.group === focusGroup;
                 return (
-                  <path
+                  <MuscleShape
                     key={i}
-                    d={s.d}
+                    shape={s}
+                    clipKey={`${uid}-${v}-${i}`}
                     fill={f.fill}
                     fillOpacity={f.opacity ?? 1}
                     stroke={outlined ? "#ffffff" : C.stroke}

@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronLeft, CloudCheck } from "lucide-react";
 import { ProgramOverview } from "./ProgramOverview";
+import { useProgramAdvice } from "@/lib/advice";
 import { resizeDays, STEP_ORDER, targetDayCount, updateProgram } from "@/lib/programs";
 import type { BuilderStep, Program } from "@/lib/types";
 import { Button, cn } from "../ui";
@@ -69,6 +70,7 @@ function SavedIndicator({ updatedAt }: { updatedAt: string }) {
 }
 
 export function Builder({ program }: { program: Program }) {
+  useProgramAdvice(program);
   const update: ProgramUpdate = (fn) => updateProgram(program.id, fn);
   const idx = STEP_ORDER.indexOf(program.step);
   const current = STEPS[idx];

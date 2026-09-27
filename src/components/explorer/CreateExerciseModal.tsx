@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { MuscleShape } from "@/components/graphics/MuscleShape";
+import { useId, useMemo, useState, type ReactNode } from "react";
 import { AlertTriangle, Check, Info, Plus } from "lucide-react";
 import { DISCIPLINES, type Discipline } from "@/data/activities";
 import { FEDB_TO_GROUP, MUSCLE_GROUPS, muscleById } from "@/data/muscles";
@@ -43,6 +44,7 @@ function Label({ children, hint }: { children: ReactNode; hint?: string }) {
 
 /** Click a muscle group once for primary, again for secondary, again to clear. */
 function MusclePicker({ roles, onToggle, sex }: { roles: Record<string, Role>; onToggle: (group: string) => void; sex: Sex }) {
+  const uid = useId().replace(/:/g, "");
   const [hover, setHover] = useState<string | null>(null);
   return (
     <div>
@@ -58,9 +60,10 @@ function MusclePicker({ roles, onToggle, sex }: { roles: Record<string, Role>; o
                 const g = muscleById(s.m)?.group ?? "";
                 const role = roles[g];
                 return (
-                  <path
+                  <MuscleShape
                     key={i}
-                    d={s.d}
+                    shape={s}
+                    clipKey={`${uid}-${v}-${i}`}
                     fill={role ? "#c6f432" : hover === g ? "#5b6470" : "#3a4049"}
                     fillOpacity={role === "secondary" ? 0.4 : 1}
                     stroke="#d9dde3"
@@ -73,7 +76,7 @@ function MusclePicker({ roles, onToggle, sex }: { roles: Record<string, Role>; o
                     onMouseLeave={() => setHover(null)}
                   >
                     <title>{MUSCLE_GROUPS.find((x) => x.id === g)?.name}</title>
-                  </path>
+                  </MuscleShape>
                 );
               })}
             </svg>

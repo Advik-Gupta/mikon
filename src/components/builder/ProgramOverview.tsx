@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Activity, ArrowLeft, Check, ChevronRight, Maximize2, Plus, Target, Trash2, TrendingDown, TrendingUp, X } from "lucide-react";
 import { groupById, MUSCLE_GROUPS, muscleById } from "@/data/muscles";
 import { useExerciseDB, type Sex } from "@/lib/explorer";
@@ -160,7 +160,6 @@ function TargetRow({
   const freqDiff = t.minFreq != null ? current.freq - t.minFreq : null;
   const met = (setsDiff == null || setsDiff >= 0) && (freqDiff == null || freqDiff >= 0);
   const input = "h-9 rounded-lg border border-line bg-surface-2 px-2.5 text-sm tabular-nums outline-none hover:border-line-strong focus:border-accent/60";
-  const value = t.kind === "group" ? t.ref : `m:${t.ref}`;
 
   return (
     <tr className="border-t border-line align-middle">
@@ -169,26 +168,10 @@ function TargetRow({
           <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-full", met ? "bg-accent/15 text-accent" : "bg-danger/15 text-danger")}>
             {met ? <Check className="size-3.5" strokeWidth={3} /> : <X className="size-3.5" strokeWidth={3} />}
           </span>
-          <select
-            aria-label="Muscle or group"
-            value={value}
-            onChange={(e) => {
-              const v = e.target.value;
-              onChange(v.startsWith("m:") ? { kind: "muscle", ref: v.slice(2) } : { kind: "group", ref: v });
-            }}
-            className={cn(input, "w-full min-w-40 cursor-pointer")}
-          >
-            {MUSCLE_GROUPS.map((g) => (
-              <optgroup key={g.id} label={g.name}>
-                <option value={g.id}>{g.name} (whole group)</option>
-                {g.muscles.map((m) => (
-                  <option key={m} value={`m:${m}`}>
-                    {muscleById(m)?.name}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+          <span className="min-w-40 flex-1 truncate text-sm font-medium">
+            {t.kind === "group" ? groupById(t.ref)?.name : muscleById(t.ref)?.name}
+            <span className="ml-1.5 text-[11px] font-normal text-faint">{t.kind === "group" ? "group" : groupById(muscleById(t.ref)?.group ?? "")?.name}</span>
+          </span>
           <button type="button" onClick={onFocus} className="rounded-md p-1 text-faint hover:bg-surface-2 hover:text-ink" title="Show on the figure" aria-label="Show on the figure">
             <Maximize2 className="size-3.5" />
           </button>
@@ -242,6 +225,9 @@ export function ProgramOverview({ program }: { program: Program }) {
   const [filter, setFilter] = useState<string>("all");
   const [group, setGroup] = useState<string | null>(null);
   const [muscle, setMuscle] = useState<string | null>(null);
+  const [picking, setPicking] = useState<"group" | "muscle" | null>(null);
+  const figureRef = useRef<HTMLElement>(null);
+  const targetsRef = useRef<HTMLElement>(null);
 
   const types = [...new Set(program.days.flatMap((d) => d.blocks.map((b) => b.type)))].filter((t) => t !== "recovery" && t !== "mobility");
   const active = filter === "all" || types.includes(filter) ? filter : "all";
@@ -263,18 +249,32 @@ export function ProgramOverview({ program }: { program: Program }) {
     return u ? cycleColor(wk(u.direct + INDIRECT * u.indirect)) : null;
   };
 
+  const targets = program.volumeTargets ?? [];
+  const setTargets = (fn: (t: VolumeTarget[]) => VolumeTarget[]) => updateProgram(program.id, (p) => ({ ...p, volumeTargets: fn(p.volumeTargets ?? []) }));
+  const addPicked = (kind: "group" | "muscle", ref: string) => {
+    if (!targets.some((t) => t.kind === kind && t.ref === ref)) {
+      setTargets((ts) => [...ts, { id: crypto.randomUUID(), kind, ref, minSets: kind === "group" ? 10 : 6, minFreq: 2 }]);
+    }
+    setPicking(null);
+    setTimeout(() => targetsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 150);
+  };
   const openGroup = (id: string) => {
+    if (picking === "group") return addPicked("group", id);
     setGroup(id);
     setMuscle(null);
   };
   const openMuscle = (id: string) => {
+    if (picking) return addPicked("muscle", id);
     setGroup(muscleById(id)?.group ?? null);
     setMuscle(id);
   };
+  const startPicking = () => {
+    setPicking("group");
+    setGroup(null);
+    setMuscle(null);
+    figureRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
 
-  /* targets */
-  const targets = program.volumeTargets ?? [];
-  const setTargets = (fn: (t: VolumeTarget[]) => VolumeTarget[]) => updateProgram(program.id, (p) => ({ ...p, volumeTargets: fn(p.volumeTargets ?? []) }));
   const currentFor = (t: VolumeTarget) => {
     if (t.kind === "group") {
       const g = all.groups.get(t.ref);
@@ -287,11 +287,6 @@ export function ProgramOverview({ program }: { program: Program }) {
     const c = currentFor(t);
     return (t.minSets == null || round(c.sets) >= t.minSets) && (t.minFreq == null || c.freq >= t.minFreq);
   }).length;
-  const addTarget = () => {
-    const used = new Set(targets.filter((t) => t.kind === "group").map((t) => t.ref));
-    const next = MUSCLE_GROUPS.find((g) => !used.has(g.id)) ?? MUSCLE_GROUPS[0];
-    setTargets((ts) => [...ts, { id: crypto.randomUUID(), kind: "group", ref: next.id, minSets: 10, minFreq: 2 }]);
-  };
   const addAllMajor = () => {
     const used = new Set(targets.filter((t) => t.kind === "group").map((t) => t.ref));
     const major = ["chest", "lats", "traps", "shoulders", "biceps", "triceps", "quads", "hamstrings", "glutes", "calves", "core"].filter((g) => !used.has(g));
@@ -407,8 +402,8 @@ export function ProgramOverview({ program }: { program: Program }) {
 
   return (
     <div className="space-y-6 px-4 pb-16 pt-8 sm:px-6">
-      {/* Body overview */}
-      <section className="rounded-3xl border border-line bg-surface">
+      {picking && <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-[2px]" onClick={() => setPicking(null)} aria-hidden />}
+      <section ref={figureRef} className={cn("rounded-3xl border bg-surface transition", picking ? "relative z-50 border-accent/60 shadow-[0_0_0_6px_rgb(198_244_50/0.12)]" : "border-line")}>
         <header className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-4">
           <div>
             <h2 className="font-display text-xl font-semibold tracking-tight">Your body this cycle</h2>
@@ -433,7 +428,34 @@ export function ProgramOverview({ program }: { program: Program }) {
         </header>
         <div className="grid lg:grid-cols-[minmax(0,1.25fr)_minmax(320px,1fr)]">
           <div className="board-grid relative h-[640px] border-b border-line lg:border-b-0 lg:border-r">
-            <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-3">
+            {picking && (
+              <div className="absolute inset-x-3 top-3 z-20 flex flex-wrap items-center gap-2 rounded-xl border border-accent/50 bg-surface/95 px-3 py-2 shadow-xl backdrop-blur">
+                <Target className="size-4 shrink-0 text-accent" />
+                <span className="flex-1 text-xs">
+                  {picking === "group"
+                    ? "Click a muscle group to add it as a target."
+                    : group
+                      ? "Now click the muscle you want to target."
+                      : "Click a group to zoom in, then click a muscle."}
+                </span>
+                <div className="flex rounded-lg border border-line bg-surface-2 p-0.5 text-[11px]">
+                  {(["group", "muscle"] as const).map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => setPicking(k)}
+                      className={cn("rounded-md px-2 py-0.5 font-medium capitalize", picking === k ? "bg-ink text-bg" : "text-muted hover:text-ink")}
+                    >
+                      {k}
+                    </button>
+                  ))}
+                </div>
+                <button type="button" onClick={() => setPicking(null)} className="rounded-md px-2 py-1 text-xs text-muted hover:bg-surface-2 hover:text-ink">
+                  Cancel
+                </button>
+              </div>
+            )}
+            <div className={cn("absolute inset-x-0 top-0 z-10 flex items-center justify-between p-3", picking && "invisible")}>
               {group ? (
                 <button
                   type="button"
@@ -470,12 +492,11 @@ export function ProgramOverview({ program }: { program: Program }) {
               <span>30+ sets/wk</span>
             </div>
           </div>
-          <div className="scrollbar-thin max-h-[640px] overflow-y-auto p-5">{panel}</div>
+          <div className={cn("scrollbar-thin max-h-[640px] overflow-y-auto p-5 transition", picking && "pointer-events-none opacity-30")}>{panel}</div>
         </div>
       </section>
 
-      {/* Targets */}
-      <section className="rounded-3xl border border-line bg-surface">
+      <section ref={targetsRef} className="rounded-3xl border border-line bg-surface">
         <header className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-4">
           <span className="flex size-9 items-center justify-center rounded-xl bg-accent/12 text-accent">
             <Target className="size-4.5" />
@@ -523,7 +544,7 @@ export function ProgramOverview({ program }: { program: Program }) {
         <div className="flex flex-wrap items-center gap-2 px-5 py-4">
           <button
             type="button"
-            onClick={addTarget}
+            onClick={startPicking}
             className="flex items-center gap-1.5 rounded-xl border border-line bg-surface-2 px-3 py-2 text-sm font-medium transition hover:border-line-strong"
           >
             <Plus className="size-4" /> Add target

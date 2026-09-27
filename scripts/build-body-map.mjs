@@ -192,7 +192,17 @@ async function buildView(file, viewBox, view) {
       const list = bySide[side];
       if (!list.length) continue;
       const muscles = assign(view, slug, list, lat);
-      list.forEach((s, i) => shapes.push({ d: s.d, m: muscles[i], s: side[0], b: s.b.map(round) }));
+      list.forEach((s, i) => {
+        // Front shoulders drawn as one shape get split into anterior and lateral heads.
+        const splitDelt = view === "front" && slug === "deltoids" && list.length === 1;
+        if (!splitDelt) return shapes.push({ d: s.d, m: muscles[i], s: side[0], b: s.b.map(round) });
+        const [x0, y0, x1, y1] = s.b;
+        const cut = side === "left" ? x0 + (x1 - x0) * 0.42 : x1 - (x1 - x0) * 0.42;
+        const outer = side === "left" ? [x0, y0, cut, y1] : [cut, y0, x1, y1];
+        const inner = side === "left" ? [cut, y0, x1, y1] : [x0, y0, cut, y1];
+        shapes.push({ d: s.d, m: "deltoid-lateral", s: side[0], b: outer.map(round), c: outer.map(round), k: round(cut) });
+        shapes.push({ d: s.d, m: "deltoid-anterior", s: side[0], b: inner.map(round), c: inner.map(round), k: round(cut) });
+      });
     }
   }
   return { viewBox: viewBox.split(" ").map(Number), silhouette, hair, shapes };
