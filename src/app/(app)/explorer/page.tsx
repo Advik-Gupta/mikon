@@ -44,7 +44,7 @@ function Explorer() {
       />
       <div className="grid min-h-0 flex-1 grid-rows-[minmax(360px,55vh)_1fr] lg:grid-cols-2 lg:grid-rows-1">
         {/* Figure */}
-        <div className="board-grid relative min-h-0 border-b border-line lg:border-b-0 lg:border-r">
+        <div data-tour="explorer-figure" className="board-grid relative min-h-0 border-b border-line lg:border-b-0 lg:border-r">
           <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-3 sm:p-4">
             {focusGroup || exercise ? (
               <button

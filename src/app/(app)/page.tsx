@@ -110,7 +110,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="columns-1 gap-6 md:columns-2 xl:columns-3">
+        <div data-tour="home-board" className="columns-1 gap-6 md:columns-2 xl:columns-3">
           {/* Primary CTA */}
           <PinCard tilt={-1}>
             <div className="mb-5 flex items-center justify-between">

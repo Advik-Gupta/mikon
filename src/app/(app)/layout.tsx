@@ -11,6 +11,7 @@ import { Avatar } from "@/components/shell/Avatar";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { titleFor } from "@/components/shell/nav";
 import { Toaster } from "@/components/Toaster";
+import { Tour } from "@/components/tour/Tour";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const session = useSession();
@@ -77,6 +78,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
             <Link
               href="/profile"
+              data-tour="avatar"
               className="rounded-full ring-2 ring-transparent ring-offset-2 ring-offset-bg transition hover:ring-accent/60"
               aria-label="Your profile"
             >
@@ -86,6 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
         <main className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">{children}</main>
         <Toaster />
+        <Tour />
       </div>
     </div>
   );

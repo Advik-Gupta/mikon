@@ -67,7 +67,7 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => router.push("/onboarding?edit=personal")}>
+            <Button variant="secondary" data-tour="profile-edit" onClick={() => router.push("/onboarding?edit=personal")}>
               <Pencil className="size-4" /> Edit profile
             </Button>
             <Button variant="ghost" onClick={reset} title="Reset my data">
@@ -81,7 +81,7 @@ export default function ProfilePage() {
       </section>
 
       {/* Stats */}
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div data-tour="profile-stats" className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Stat label="Age" value={a != null ? `${a}` : "—"} />
         <Stat label="Height" value={formatHeight(p.body.heightCm, u)} />
         <Stat label="Weight" value={formatWeight(p.body.weightKg, u)} />

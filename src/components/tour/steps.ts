@@ -1,0 +1,88 @@
+export interface TourStep {
+  id: string;
+  route: string;
+  /** data-tour attribute of the element to spotlight; none means a centred card */
+  target?: string;
+  place?: "right" | "left" | "top" | "bottom";
+  title: string;
+  body: string;
+  next?: string;
+}
+
+/** Post signup walkthrough. Add a step here whenever a new area of the app ships. */
+export const TOUR: TourStep[] = [
+  {
+    id: "welcome",
+    route: "/",
+    title: "Welcome to Mikon, {name}",
+    body: "A quick one minute look around before you build your first program.",
+    next: "Show me",
+  },
+  {
+    id: "board",
+    route: "/",
+    target: "home-board",
+    place: "top",
+    title: "Your board",
+    body: "Your focus, your week and your body at a glance. Programs you build get pinned here too.",
+  },
+  {
+    id: "nav",
+    route: "/",
+    target: "nav",
+    place: "right",
+    title: "Everything lives here",
+    body: "Jump between your programs and the explorer. New areas like the calendar and progress will appear here as they launch.",
+  },
+  {
+    id: "avatar",
+    route: "/",
+    target: "avatar",
+    place: "left",
+    title: "Your profile",
+    body: "Everything you told us during onboarding. Let's take a look.",
+    next: "Open profile",
+  },
+  {
+    id: "profile-stats",
+    route: "/profile",
+    target: "profile-stats",
+    place: "bottom",
+    title: "Your numbers",
+    body: "Body stats, injuries, goals and schedule. Programs use all of this to keep your training safe and realistic.",
+  },
+  {
+    id: "profile-edit",
+    route: "/profile",
+    target: "profile-edit",
+    place: "left",
+    title: "Change anything, anytime",
+    body: "Edit any section whenever things change. Your programs adapt to the latest version.",
+    next: "Next: Explorer",
+  },
+  {
+    id: "explorer-figure",
+    route: "/explorer",
+    target: "explorer-figure",
+    place: "right",
+    title: "Explore your body",
+    body: "Click any muscle group to zoom in, then pick a muscle to see what it does and the exercises that train it.",
+  },
+  {
+    id: "explorer-tabs",
+    route: "/explorer",
+    target: "explorer-tabs",
+    place: "bottom",
+    title: "Hundreds of exercises",
+    body: "Browse the full library with filters, or create your own exercises when something is missing.",
+    next: "Last step",
+  },
+  {
+    id: "new-program",
+    route: "/",
+    target: "new-program",
+    place: "right",
+    title: "Build your first program",
+    body: "Set your goals, lay out your week and drag in your training. Mikon keeps an eye on volume and fatigue as you go.",
+  },
+];

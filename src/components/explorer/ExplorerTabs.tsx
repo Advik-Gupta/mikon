@@ -15,7 +15,7 @@ const TABS = [
 export function ExplorerTabs({ right }: { right?: ReactNode }) {
   const pathname = usePathname();
   return (
-    <div className="flex h-12 shrink-0 items-center gap-1 border-b border-line px-4 sm:px-6">
+    <div data-tour="explorer-tabs" className="flex h-12 shrink-0 items-center gap-1 border-b border-line px-4 sm:px-6">
       {TABS.map((t) => {
         const active = pathname === t.href;
         return (

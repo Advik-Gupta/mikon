@@ -70,6 +70,7 @@ export function Sidebar({ mobile, onNavigate }: { mobile?: boolean; onNavigate?:
       <Link
         href="/programs/new"
         onClick={onNavigate}
+        data-tour="new-program"
         title={collapsed ? "New program" : undefined}
         className={cn(
           "mt-2 flex h-10 items-center justify-center gap-2 rounded-xl bg-accent text-sm font-semibold text-accent-ink transition hover:bg-[#d4ff4a] active:scale-[0.98]",
@@ -79,7 +80,7 @@ export function Sidebar({ mobile, onNavigate }: { mobile?: boolean; onNavigate?:
         {!collapsed && "New program"}
       </Link>
 
-      <nav className="mt-6 space-y-0.5">
+      <nav data-tour="nav" className="mt-6 space-y-0.5">
         {!collapsed && <p className="mb-2 px-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-faint">Main</p>}
         {MAIN_NAV.map((item) => (
           <NavLink key={item.href} item={item} active={isActive(item.href)} collapsed={collapsed} onNavigate={onNavigate} />
