@@ -101,7 +101,6 @@ export function Builder({ program }: { program: Program }) {
     const to = STEP_ORDER.indexOf(step);
     if (firstBlocked !== -1 && to > firstBlocked) return;
     if (step === "board") {
-      // Line the board up with the chosen structure before opening it.
       const n = targetDayCount(program);
       const dropped = program.days.slice(n).filter((d) => d.blocks.length).length;
       if (dropped && !window.confirm(`The new structure has ${n} days. ${dropped} day(s) at the end with blocks on them will be removed. Continue?`)) return;
@@ -117,7 +116,6 @@ export function Builder({ program }: { program: Program }) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
       <div className={cn("border-b border-line px-4 pt-4 sm:px-8", editingDay && "pb-4")}>
         <div className="flex items-center gap-3">
           <Link href="/programs" className="rounded-lg p-1.5 text-muted hover:bg-surface-2 hover:text-ink" aria-label="All programs">
@@ -134,7 +132,6 @@ export function Builder({ program }: { program: Program }) {
           <SavedIndicator updatedAt={program.updatedAt} />
         </div>
 
-        {/* Stepper */}
         <nav hidden={!!editingDay} className="scrollbar-thin -mb-px mt-4 flex gap-1 overflow-x-auto">
           {STEPS.map((s, i) => {
             const active = i === idx;

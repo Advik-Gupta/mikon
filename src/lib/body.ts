@@ -6,19 +6,19 @@ export const kgToLb = (kg: number) => kg * 2.20462;
 export const lbToKg = (lb: number) => lb / 2.20462;
 
 export function formatHeight(cm: number | null, units: Units) {
-  if (cm == null) return "—";
+  if (cm == null) return "-";
   if (units === "metric") return `${Math.round(cm)} cm`;
   const total = Math.round(cmToIn(cm));
   return `${Math.floor(total / 12)}′ ${total % 12}″`;
 }
 
 export function formatWeight(kg: number | null, units: Units) {
-  if (kg == null) return "—";
+  if (kg == null) return "-";
   return units === "metric" ? `${round1(kg)} kg` : `${Math.round(kgToLb(kg))} lb`;
 }
 
 export function formatLength(cm: number | null, units: Units) {
-  if (cm == null) return "—";
+  if (cm == null) return "-";
   return units === "metric" ? `${round1(cm)} cm` : `${round1(cmToIn(cm))} in`;
 }
 
@@ -37,7 +37,6 @@ export function bmiLabel(v: number) {
   return "Obese range";
 }
 
-/** US Navy circumference method. Returns null when inputs are insufficient or nonsensical. */
 export function navyBodyFat(
   sex: Sex,
   heightCm: number | null,
@@ -117,9 +116,8 @@ export function initials(p: Profile) {
   return (a + b).toUpperCase() || "M";
 }
 
-/** Seconds → "1:42:05" or "24:30" */
 export function fmtClock(sec: number | null) {
-  if (sec == null) return "—";
+  if (sec == null) return "-";
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
   const s = sec % 60;

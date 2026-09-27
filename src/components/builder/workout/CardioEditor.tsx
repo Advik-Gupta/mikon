@@ -163,13 +163,13 @@ function SegmentCard({
         <div className="mt-3.5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           {seg.kind === "steady" ? (
             <>
-              <Field label="Duration" value={seg.durationMin} onChange={(durationMin) => onChange({ durationMin })} suffix="min" placeholder="—" />
+              <Field label="Duration" value={seg.durationMin} onChange={(durationMin) => onChange({ durationMin })} suffix="min" placeholder="-" />
               <Field
                 label="Distance"
                 value={toDist(seg.distanceKm)}
                 onChange={(v) => onChange({ distanceKm: fromDist(v) })}
                 suffix={distUnit}
-                placeholder={seg.durationMin ? `≈${toDist(segmentDistanceKm(seg))?.toFixed(seg.modality === "swim" ? 0 : 1)}` : "—"}
+                placeholder={seg.durationMin ? `≈${toDist(segmentDistanceKm(seg))?.toFixed(seg.modality === "swim" ? 0 : 1)}` : "-"}
                 step={0.1}
               />
             </>

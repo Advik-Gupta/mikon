@@ -26,12 +26,10 @@ export function fmtDuration(min: number) {
   return m ? `${h}h ${m}m` : `${h}h`;
 }
 
-/** True when the given minute of the day falls inside sleep time. */
 export function isAsleep(min: number, wake: number, sleep: number) {
   return sleep > wake ? min < wake || min >= sleep : min >= sleep && min < wake;
 }
 
-/** Free (awake and uncommitted) minutes for each day, Monday first. */
 export function freeMinutesByDay(s: Profile["schedule"]) {
   return Array.from({ length: 7 }, (_, day) => {
     let free = 0;
@@ -53,5 +51,4 @@ export function daysLabel(days: number[]) {
   return [...days].sort((a, b) => a - b).map((d) => names[d]).join(", ");
 }
 
-/** Time options for selects, every 30 minutes. */
 export const TIME_OPTIONS = Array.from({ length: DAY_MIN / SNAP + 1 }, (_, i) => i * SNAP);

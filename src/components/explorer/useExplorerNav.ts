@@ -5,7 +5,6 @@ import { muscleById } from "@/data/muscles";
 import { useProfile } from "@/lib/storage";
 import type { Sex } from "@/lib/explorer";
 
-/** Explorer state lives in the URL so it's shareable and works with the back button. */
 export function useExplorerNav() {
   const router = useRouter();
   const params = useSearchParams();

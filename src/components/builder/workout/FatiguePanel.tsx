@@ -79,7 +79,6 @@ export function FatiguePanel({
   const [mode, setMode] = useState<"day" | "cycle">("day");
   const [filter, setFilter] = useState<string>("all");
 
-  // Views for every activity that appears anywhere in the cycle.
   const types = [...new Set(program.days.flatMap((d) => d.blocks.map((b) => b.type)))].filter((t) => t !== "recovery" && t !== "mobility");
   const active = filter === "all" || types.includes(filter) ? filter : "all";
 
@@ -110,7 +109,6 @@ export function FatiguePanel({
     if (group && r) setHover({ group, x: e.clientX - r.left, y: e.clientY - r.top, w: r.width });
   };
 
-  // Quick list of the most loaded groups.
   const top = useMemo(() => {
     const rows =
       mode === "cycle"
@@ -126,7 +124,6 @@ export function FatiguePanel({
   const legend = mode === "cycle" ? CYCLE_LEGEND : DAY_LEGEND;
   const ramp = mode === "cycle" ? cycleColor : dayColor;
 
-  /* ---------------------------------------------------------------- tooltip */
   const tip = (() => {
     if (!hover) return null;
     const name = groupById(hover.group)?.name;
@@ -221,7 +218,6 @@ export function FatiguePanel({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Mode + activity filters */}
       <div className="mb-2 grid grid-cols-2 gap-1 rounded-xl border border-line bg-surface-2 p-1">
         {(
           [
@@ -284,7 +280,6 @@ export function FatiguePanel({
         </div>
       </div>
 
-      {/* Figure */}
       <div ref={wrap} className="relative min-h-0 flex-1" onMouseLeave={() => setHover(null)}>
         <svg viewBox={BODY[sex][side].viewBox.join(" ")} className="h-full w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label={`Fatigue map, ${side}`}>
           {BODY[sex][side].hair.map((d, i) => (
@@ -325,7 +320,6 @@ export function FatiguePanel({
         )}
       </div>
 
-      {/* Legend */}
       <div className="mt-2 px-1">
         <div
           className="h-2 rounded-full"
@@ -348,7 +342,6 @@ export function FatiguePanel({
         )}
       </div>
 
-      {/* Top loads */}
       <div className="mt-3 border-t border-line pt-2.5">
         <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
           {mode === "day" ? `${label(dayIndex)} · with carry-over` : `Sets ${cycleName}`}

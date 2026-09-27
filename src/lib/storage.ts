@@ -4,12 +4,6 @@ import { useSyncExternalStore } from "react";
 import { migrateProfile } from "./migrate";
 import type { Profile, Program } from "./types";
 
-/**
- * Client store. User data (profile, draft, programs, custom exercises) is loaded from the
- * server once per session and every write is saved back. UI preferences stay in localStorage.
- * Hooks return `undefined` until the session has loaded and `null` when nothing is saved.
- */
-
 export const KEYS = {
   profile: "mikon.profile.v1",
   draft: "mikon.onboarding-draft.v1",
@@ -43,8 +37,6 @@ function subscribe(cb: () => void) {
 function emit() {
   listeners.forEach((l) => l());
 }
-
-/* ------------------------------------------------------------------ server io */
 
 async function api(method: string, url: string, body?: unknown, keepalive = false) {
   const res = await fetch(url, {
@@ -118,8 +110,6 @@ function persist(key: string, prev: unknown, next: unknown) {
   }
 }
 
-/* ------------------------------------------------------------------ session */
-
 let hydrating: Promise<"ok" | "unauthorized" | "error"> | null = null;
 
 export function hydrate() {
@@ -171,8 +161,6 @@ export async function logout() {
   await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
   window.location.replace("/login");
 }
-
-/* ------------------------------------------------------------------ store api */
 
 export function readStored<T>(key: string): T | null {
   if (SYNCED.has(key)) return (memory.get(key) as T | undefined) ?? null;

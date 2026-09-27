@@ -38,7 +38,6 @@ export function Modal({
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 p-0 backdrop-blur-sm sm:items-center sm:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          // Stop catching clicks as soon as it starts closing, so the page underneath is usable immediately.
           exit={{ opacity: 0, pointerEvents: "none" }}
           onMouseDown={(e) => e.target === e.currentTarget && onClose()}
         >

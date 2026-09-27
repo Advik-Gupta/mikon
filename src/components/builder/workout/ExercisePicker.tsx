@@ -95,7 +95,6 @@ export function ExercisePicker({
   disciplines: Discipline[];
   blockLabel: string;
   onAdd: (id: string) => void;
-  /** Open the create-exercise form, prefilled with the search text */
   onCreate?: (name: string) => void;
 }) {
   const [q, setQ] = useState("");
@@ -115,7 +114,6 @@ export function ExercisePicker({
     if (equipment) list = list.filter((e) => e.equipment === equipment);
     if (family) list = list.filter((e) => e.family === family).sort((a, b) => (a.step ?? 0) - (b.step ?? 0));
     else if (disciplines.includes("calisthenics") && !q.trim()) {
-      // Progressions first, in order, then everything else.
       list = [...list].sort((a, b) => (a.family ?? "~").localeCompare(b.family ?? "~") || (a.step ?? 0) - (b.step ?? 0));
     }
     return list;

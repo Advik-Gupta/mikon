@@ -10,7 +10,6 @@ const STEP_LABEL: Record<Program["step"], string> = {
   board: "Building the board",
 };
 
-/** Tiny board: one column per day, stacked colour bars per block. */
 export function MiniBoard({ program }: { program: Program }) {
   const days = program.days.length ? program.days : Array.from({ length: 7 }, (_, i) => ({ id: String(i), title: "", blocks: [] }));
   return (
@@ -28,7 +27,6 @@ export function MiniBoard({ program }: { program: Program }) {
 
 export function programMeta(p: Program) {
   const major = p.goals.filter((g) => g.tier === "major").map((g) => labelOf(GOALS, g.id));
-  // The board isn't the end: later builder stages (sessions, exercises) come after it.
   const progress = (STEP_ORDER.indexOf(p.step) + 1) / (STEP_ORDER.length + 1);
   return { major, progress, stepLabel: STEP_LABEL[p.step], cycle: p.days.length ? cycleSummary(p) : null };
 }

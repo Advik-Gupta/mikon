@@ -33,7 +33,6 @@ export function createProgram(profile: Profile | null | undefined): Program {
     updatedAt: now,
     status: "draft",
     step: "goals",
-    // Seed priorities from the profile: top two become major focuses.
     goals: ranked.map((id, i) => ({ id, tier: i < 2 ? "major" : "secondary" })),
     targets: [],
     blockTypes: blockTypes.length > 1 ? blockTypes : BLOCK_TYPES.map((b) => b.id),
@@ -67,7 +66,6 @@ export function useProgram(id: string) {
   return list?.find((p) => p.id === id) ?? null;
 }
 
-/** Number of days the board should have for a structure. Freeform keeps whatever exists. */
 export function targetDayCount(p: Program) {
   const { cycle, cycleDays } = p.structure;
   if (cycle === "weekly" || cycle === "biweekly") return CYCLE_DAYS[cycle];
@@ -87,7 +85,6 @@ export function dayLabel(p: Program, i: number) {
   return `Day ${i + 1}`;
 }
 
-/** Weekday index (0 = Mon) when the board lines up with real weekdays, else null. */
 export function weekdayOf(p: Program, i: number) {
   const { cycle } = p.structure;
   if ((cycle === "weekly" && p.days.length === 7) || (cycle === "biweekly" && p.days.length === 14)) return i % 7;

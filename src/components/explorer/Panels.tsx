@@ -22,8 +22,6 @@ import { CreateExerciseModal } from "./CreateExerciseModal";
 import { ExerciseImages, ExerciseList, LevelDot } from "./ExerciseBits";
 import type { ExplorerNav } from "./useExplorerNav";
 
-/* ------------------------------------------------------------------ shared bits */
-
 function Crumbs({ items }: { items: { label: string; onClick?: () => void }[] }) {
   return (
     <nav className="mb-4 flex flex-wrap items-center gap-1 text-xs text-muted">
@@ -67,8 +65,6 @@ function Loading() {
     </div>
   );
 }
-
-/* ------------------------------------------------------------------ overview */
 
 export function OverviewPanel({ nav }: { nav: ExplorerNav }) {
   const { db } = useExerciseDB();
@@ -172,8 +168,6 @@ function MuscleLink({ title, sub, deep, onClick }: { title: string; sub?: string
   );
 }
 
-/* ------------------------------------------------------------------ group */
-
 export function GroupPanel({ nav, groupId }: { nav: ExplorerNav; groupId: string }) {
   const g = groupById(groupId);
   const { db } = useExerciseDB();
@@ -202,8 +196,6 @@ export function GroupPanel({ nav, groupId }: { nav: ExplorerNav; groupId: string
   );
 }
 
-/* ------------------------------------------------------------------ muscle */
-
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="rounded-xl border border-line bg-surface p-3.5">
@@ -228,7 +220,6 @@ export function MusclePanel({ nav, muscleId }: { nav: ExplorerNav; muscleId: str
   }, [db, m]);
   if (!m) return null;
   const g = groupById(m.group)!;
-  // Only mention the stand-in shape when this figure doesn't draw the muscle itself.
   const beneath = m.beneath && !DRAWN[nav.sex].has(m.id) ? muscleById(m.beneath) : null;
   const siblings = g.muscles.filter((id) => id !== m.id);
 
@@ -350,8 +341,6 @@ export function MusclePanel({ nav, muscleId }: { nav: ExplorerNav; muscleId: str
     </div>
   );
 }
-
-/* ------------------------------------------------------------------ exercise */
 
 function MuscleChips({ ids, nav, strong }: { ids: string[]; nav: ExplorerNav; strong?: boolean }) {
   if (!ids.length) return <p className="text-sm text-faint">None listed</p>;

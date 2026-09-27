@@ -58,7 +58,6 @@ function PinTitle({ icon: Icon, children }: { icon: typeof Pin; children: ReactN
 }
 
 function ProgramIllustration() {
-  // Stylised week grid: a program's microcycle
   const cells = [3, 0, 2, 0, 3, 1, 0, 2, 0, 3, 0, 2, 1, 0, 3, 0, 2, 0, 3, 1, 0];
   return (
     <div className="grid grid-cols-7 gap-1.5">
@@ -111,13 +110,12 @@ export default function HomePage() {
         </div>
 
         <div data-tour="home-board" className="columns-1 gap-6 md:columns-2 xl:columns-3">
-          {/* Primary CTA */}
           <PinCard tilt={-1}>
             <div className="mb-5 flex items-center justify-between">
               <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
                 <Sparkles className="size-3.5" /> Start here
               </span>
-              <span className="font-mono text-[11px] text-faint">WK 1 — 3</span>
+              <span className="font-mono text-[11px] text-faint">WK 1-3</span>
             </div>
             <ProgramIllustration />
             <h3 className="mt-6 font-display text-2xl font-semibold tracking-tight">
@@ -163,7 +161,6 @@ export default function HomePage() {
             );
           })}
 
-          {/* Focus */}
           <PinCard tilt={1.2} pinColor="#5aaeff" delay={0.05}>
             <PinTitle icon={Crosshair}>Your focus</PinTitle>
             {primary && (
@@ -206,7 +203,6 @@ export default function HomePage() {
             </div>
           </PinCard>
 
-          {/* Week */}
           <PinCard tilt={-0.6} pinColor="#a78bfa" delay={0.1}>
             <PinTitle icon={CalendarDays}>Your week</PinTitle>
             <div className="flex gap-1.5">
@@ -235,7 +231,6 @@ export default function HomePage() {
             </p>
           </PinCard>
 
-          {/* Body */}
           <PinCard tilt={0.8} pinColor="#ffb547" delay={0.15}>
             <PinTitle icon={Ruler}>Body snapshot</PinTitle>
             <div className="flex items-center gap-5">
@@ -252,7 +247,7 @@ export default function HomePage() {
                 <div>
                   <dt className="text-xs text-muted">Body fat</dt>
                   <dd className="font-display text-lg font-semibold">
-                    {profile.body.bodyFat != null ? `${round1(profile.body.bodyFat)}%` : "—"}
+                    {profile.body.bodyFat != null ? `${round1(profile.body.bodyFat)}%` : "-"}
                   </dd>
                 </div>
               </dl>

@@ -30,12 +30,10 @@ export function WeekCalendar({
   selectedId: string | null;
   onChange: (blocks: BusyBlock[]) => void;
   onSelect: (id: string | null) => void;
-  /** Category given to newly drawn blocks */
   newCategory: string;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
-  // Keep latest props for the window listeners without re-binding on every render.
   const latest = useRef({ blocks, onChange, onSelect, newCategory });
   useLayoutEffect(() => {
     latest.current = { blocks, onChange, onSelect, newCategory };
@@ -43,7 +41,6 @@ export function WeekCalendar({
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: Math.max(0, (wakeMin / 60 - 0.5) * HOUR_PX) });
-    // Only on mount: don't yank the view around while the user edits wake time.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -75,7 +72,6 @@ export function WeekCalendar({
     const onUp = () => {
       const { blocks, onChange, onSelect, newCategory } = latest.current;
       if (drag.kind === "create") {
-        // A tap (no drag) creates a one-hour block, which also makes this usable on touch screens.
         let start = Math.min(drag.anchor, drag.current);
         let end = Math.max(drag.anchor, drag.current);
         if (!drag.moved || end - start < MIN_LEN) {
@@ -137,7 +133,6 @@ export function WeekCalendar({
 
   return (
     <div className={cn("overflow-hidden rounded-2xl border border-line bg-surface select-none", drag && "cursor-grabbing")}>
-      {/* Day header */}
       <div className="grid grid-cols-[44px_repeat(7,1fr)] border-b border-line bg-surface-2/60">
         <span />
         {WEEKDAYS.map((d, i) => (
@@ -149,7 +144,6 @@ export function WeekCalendar({
 
       <div ref={scrollRef} className="scrollbar-thin relative h-[520px] overflow-y-auto">
         <div className="relative grid grid-cols-[44px_repeat(7,1fr)]" style={{ height: 24 * HOUR_PX }}>
-          {/* Time gutter */}
           <div className="relative">
             {Array.from({ length: 23 }, (_, i) => i + 1).map((h) => (
               <span
@@ -169,12 +163,10 @@ export function WeekCalendar({
               className="relative cursor-crosshair border-l border-line"
               onPointerDown={(e) => startCreate(e, day)}
             >
-              {/* hour lines */}
               {Array.from({ length: 24 }, (_, h) => (
                 <span key={h} className="pointer-events-none absolute inset-x-0 border-t border-line/60" style={{ top: h * HOUR_PX }} />
               ))}
 
-              {/* sleep shading */}
               {sleepBands.map(([s, e]) =>
                 e > s ? (
                   <div

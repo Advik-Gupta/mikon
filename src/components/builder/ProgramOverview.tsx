@@ -119,11 +119,8 @@ function Sources({ program, u }: { program: Program; u: Usage }) {
   );
 }
 
-/* ------------------------------------------------------------------ targets */
-
-/** "+3 sets over", "2 days under" or "on target". */
 function Diff({ d, unit }: { d: number | null; unit: string }) {
-  if (d == null) return <span className="text-faint">—</span>;
+  if (d == null) return <span className="text-faint">-</span>;
   if (d === 0)
     return (
       <span className="flex items-center justify-end gap-1 text-accent">
@@ -183,7 +180,7 @@ function TargetRow({
           min={0}
           aria-label="Minimum sets per week"
           value={t.minSets ?? ""}
-          placeholder="—"
+          placeholder="-"
           onChange={(e) => onChange({ minSets: e.target.value === "" ? null : Math.max(0, Math.round(Number(e.target.value))) })}
           className={cn(input, "w-20")}
         />
@@ -199,7 +196,7 @@ function TargetRow({
           max={7}
           aria-label="Minimum sessions per week"
           value={t.minFreq ?? ""}
-          placeholder="—"
+          placeholder="-"
           onChange={(e) => onChange({ minFreq: e.target.value === "" ? null : Math.max(0, Math.min(14, Math.round(Number(e.target.value)))) })}
           className={cn(input, "w-16")}
         />
@@ -216,8 +213,6 @@ function TargetRow({
     </tr>
   );
 }
-
-/* ------------------------------------------------------------------ main */
 
 export function ProgramOverview({ program }: { program: Program }) {
   const profile = useProfile();
@@ -293,7 +288,6 @@ export function ProgramOverview({ program }: { program: Program }) {
     setTargets((ts) => [...ts, ...major.map((ref) => ({ id: crypto.randomUUID(), kind: "group" as const, ref, minSets: 10, minFreq: 2 }))]);
   };
 
-  /* info panel */
   const g = group ? groups.get(group) : null;
   const m = muscle ? muscleById(muscle) : null;
   const u = muscle ? muscles.get(muscle) : null;

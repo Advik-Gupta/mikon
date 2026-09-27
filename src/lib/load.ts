@@ -5,28 +5,14 @@ import { MUSCLE_GROUPS, muscleById } from "@/data/muscles";
 import type { CardioSegment, Program, ProgramBlock, WorkoutExercise } from "./types";
 import { exerciseValue, setValue } from "./workout";
 
-/**
- * Training load, in "set equivalents" per muscle group.
- *
- * - direct: work where the group is a prime mover. This is what the UI shows as "sets".
- * - indirect: stabilising / secondary work. It only tints the figure and adds to fatigue.
- *
- * Fatigue blends the two (indirect at INDIRECT_WEIGHT) and, per day, carries over from the
- * previous days with a decay, so back-to-back sessions on the same muscle read as hot.
- */
-
 export const INDIRECT_WEIGHT = 0.35;
-/** Direct sets on one day after which the muscle needs a gap day before it's trained again. */
 export const GAP_DAY_THRESHOLD = 6;
-/** Carry-over of fatigue from 1, 2 and 3 days earlier */
 const CARRY = [0.6, 0.3, 0.1];
 
 export interface GroupLoad {
   direct: number;
   indirect: number;
-  /** label (exercise or session) → direct set equivalents */
   sources: Map<string, { direct: number; indirect: number; type: string }>;
-  /** block type → direct set equivalents */
   byType: Map<string, number>;
 }
 
@@ -44,8 +30,6 @@ function add(day: DayLoad, group: string, direct: number, indirect: number, labe
   g.sources.set(label, s);
   if (direct) g.byType.set(type, (g.byType.get(type) ?? 0) + direct);
 }
-
-/* ------------------------------------------------------------------ cardio helpers */
 
 export function segmentMinutes(s: CardioSegment) {
   const mod = cardioModality(s.modality);
@@ -69,7 +53,6 @@ export function segmentDistanceKm(s: CardioSegment) {
   return reps * work;
 }
 
-/** Load of one cardio segment; interval rest counts as very easy work. */
 export function segmentLoad(s: CardioSegment) {
   const mod = cardioModality(s.modality);
   const factor = ZONES[s.zone - 1]?.factor ?? 1;
@@ -91,9 +74,6 @@ export function segmentLabel(s: CardioSegment) {
   return `${mod.label} · ${t.label.toLowerCase()} ${Math.round(segmentMinutes(s))} min`;
 }
 
-/* ------------------------------------------------------------------ block load */
-
-/** Set equivalents for one exercise in a workout. */
 export function exerciseLoad(ex: Exercise, we: WorkoutExercise) {
   if (ex.discipline === "mobility") return 0;
   if (ex.discipline === "plyometrics") {
@@ -147,7 +127,6 @@ export function addBlockLoad(day: DayLoad, block: ProgramBlock, exercises: Map<s
   }
 }
 
-/** Load per day of the cycle, optionally for one activity type only. */
 export function cycleLoads(program: Program, exercises: Map<string, Exercise>, onlyType: string | null): DayLoad[] {
   return program.days.map((d) => {
     const day: DayLoad = new Map();
@@ -158,7 +137,6 @@ export function cycleLoads(program: Program, exercises: Map<string, Exercise>, o
 
 export const fatigueOf = (g?: GroupLoad) => (g ? g.direct + INDIRECT_WEIGHT * g.indirect : 0);
 
-/** Sum of every day in the cycle. */
 export function cycleTotals(days: DayLoad[]): DayLoad {
   const out: DayLoad = new Map();
   days.forEach((day) =>
@@ -167,20 +145,16 @@ export function cycleTotals(days: DayLoad[]): DayLoad {
   return out;
 }
 
-/* ------------------------------------------------------------------ day readiness */
-
 export type DayState = "fresh" | "light" | "moderate" | "high" | "recovering" | "conflict";
 
 export interface DayStatus {
   state: DayState;
-  /** Carry-over-weighted fatigue for colouring. Never shown to the user. */
   score: number;
   today?: GroupLoad;
   prevIndex: number;
   prevDirect: number;
   nextIndex: number;
   nextDirect: number;
-  /** Same-day stacking across different activities, e.g. long run + leg day */
   stacked: string[];
 }
 
@@ -230,8 +204,6 @@ export function dayStatuses(days: DayLoad[], index: number): Map<string, DayStat
   return out;
 }
 
-/* ------------------------------------------------------------------ colour */
-
 type RGB = [number, number, number];
 const ramp = (stops: [number, RGB][]) => (v: number) => {
   if (v <= 0.15) return null;
@@ -254,7 +226,6 @@ const ORANGE: RGB = [251, 146, 60];
 const RED: RGB = [239, 68, 68];
 const DEEP: RGB = [185, 28, 28];
 
-/** Whole-cycle volume: light green from ~1 set, green 5, yellow 10–15, red 20+. */
 export const cycleColor = ramp([
   [0.5, LIGHT],
   [5, GREEN],
@@ -264,7 +235,6 @@ export const cycleColor = ramp([
   [30, DEEP],
 ]);
 
-/** One day, including carry-over from the previous days. */
 export const dayColor = ramp([
   [0.5, LIGHT],
   [3, GREEN],
@@ -286,10 +256,7 @@ export const STATE_LABEL: Record<DayState, string> = {
   conflict: "Needs a gap day",
 };
 
-/** Whole sets for display. Fractions are for the maths, not the user. */
 export const shownSets = (v: number) => Math.round(v);
-
-/* ------------------------------------------------------------------ muscle-level usage */
 
 export interface UsageSource {
   dayIndex: number;
@@ -302,17 +269,12 @@ export interface UsageSource {
 export interface Usage {
   direct: number;
   indirect: number;
-  /** Direct set equivalents per day of the cycle */
   byDay: number[];
   sources: UsageSource[];
 }
 
 const emptyUsage = (n: number): Usage => ({ direct: 0, indirect: 0, byDay: Array(n).fill(0), sources: [] });
 
-/**
- * Per-muscle usage over the cycle. Exercises credit the specific muscles they bias
- * (e.g. lateral raises → lateral delt); cardio and sessions spread across the group.
- */
 export function muscleUsage(program: Program, exercises: Map<string, Exercise>, onlyType: string | null) {
   const n = program.days.length;
   const out = new Map<string, Usage>();
@@ -366,8 +328,6 @@ export function muscleUsage(program: Program, exercises: Map<string, Exercise>, 
   return out;
 }
 
-/** Days in the cycle with at least one direct set. */
 export const frequency = (byDay: number[]) => byDay.filter((v) => v >= 1).length;
 
-/** Scale a per-cycle number to per-week, so targets read the same for any cycle length. */
 export const perWeek = (value: number, cycleDays: number) => (cycleDays ? (value * 7) / cycleDays : value);

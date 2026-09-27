@@ -39,7 +39,6 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8">
-      {/* Header */}
       <section className="relative overflow-hidden rounded-3xl border border-line bg-surface">
         <div className="board-grid h-28 bg-gradient-to-br from-accent/20 via-surface-2 to-info/10" />
         <div className="flex flex-wrap items-end justify-between gap-4 px-6 pb-6">
@@ -80,15 +79,14 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* Stats */}
       <div data-tour="profile-stats" className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <Stat label="Age" value={a != null ? `${a}` : "—"} />
+        <Stat label="Age" value={a != null ? `${a}` : "-"} />
         <Stat label="Height" value={formatHeight(p.body.heightCm, u)} />
         <Stat label="Weight" value={formatWeight(p.body.weightKg, u)} />
-        <Stat label="BMI" value={b != null ? `${b}` : "—"} sub={b != null ? bmiLabel(b) : undefined} />
+        <Stat label="BMI" value={b != null ? `${b}` : "-"} sub={b != null ? bmiLabel(b) : undefined} />
         <Stat
           label="Body fat"
-          value={p.body.bodyFat != null ? `${round1(p.body.bodyFat)}%` : "—"}
+          value={p.body.bodyFat != null ? `${round1(p.body.bodyFat)}%` : "-"}
           sub={band?.label}
         />
       </div>

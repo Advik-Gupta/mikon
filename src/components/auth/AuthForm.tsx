@@ -21,7 +21,6 @@ function strength(pw: string) {
 const STRENGTH = ["Too short", "Weak", "Fair", "Good", "Strong"];
 const STRENGTH_COLOR = ["#ff5c5c", "#ff9a3c", "#ffb547", "#8be04e", "#c6f432"];
 
-/** Only allow redirects back into the app, never to another site. */
 const safeNext = (next: string | null) => (next && next.startsWith("/") && !next.startsWith("//") ? next : "/");
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {

@@ -1,7 +1,6 @@
 import type { ReactNode, SVGProps } from "react";
 
 export interface FigureShape {
-  /** Half-widths in the 200×400 viewBox */
   shoulder: number;
   waist: number;
   hip: number;
@@ -12,7 +11,6 @@ export const DEFAULT_SHAPE: FigureShape = { shoulder: 42, waist: 26, hip: 30, li
 
 type Pt = [number, number];
 
-/** Closed Catmull-Rom spline through points → smooth SVG path. */
 function smoothClosed(pts: Pt[]) {
   const n = pts.length;
   let d = `M ${pts[0][0]} ${pts[0][1]}`;
@@ -52,7 +50,6 @@ interface FigureProps extends Omit<SVGProps<SVGSVGElement>, "children"> {
   children?: ReactNode;
 }
 
-/** Stylized mannequin. Person's left is on the viewer's right in the front view. */
 export function Figure({
   shape = DEFAULT_SHAPE,
   view = "front",

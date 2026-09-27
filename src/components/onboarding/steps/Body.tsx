@@ -27,7 +27,6 @@ export function BodyMetricsStep({ draft, update }: StepProps) {
   const b = draft.body;
   const set = (patch: Partial<typeof b>) => update("body", patch);
   const bmiValue = bmi(b.heightCm, b.weightKg);
-  // BMI gauge spans 15–40
   const gaugePct = bmiValue ? Math.min(100, Math.max(0, ((bmiValue - 15) / 25) * 100)) : null;
 
   return (
@@ -57,7 +56,7 @@ export function BodyMetricsStep({ draft, update }: StepProps) {
           <span className="text-xs font-semibold uppercase tracking-[0.14em] text-faint">Body mass index</span>
           <span className="text-sm text-muted">{bmiValue ? bmiLabel(bmiValue) : "Enter height & weight"}</span>
         </div>
-        <div className="mt-2 font-display text-3xl font-semibold tabular-nums">{bmiValue ?? "—"}</div>
+        <div className="mt-2 font-display text-3xl font-semibold tabular-nums">{bmiValue ?? "-"}</div>
         <div className="relative mt-3 h-2 rounded-full bg-gradient-to-r from-info via-accent via-45% to-danger">
           {gaugePct != null && (
             <motion.span
@@ -131,7 +130,7 @@ export function CompositionStep({ draft, update }: StepProps) {
         <div>
           <div className="flex items-end gap-3">
             <span className="font-display text-6xl font-semibold tabular-nums tracking-tight">
-              {bf != null ? round1(bf) : "—"}
+              {bf != null ? round1(bf) : "-"}
               <span className="text-3xl text-muted">%</span>
             </span>
             {bf != null && (

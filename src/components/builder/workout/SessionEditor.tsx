@@ -14,7 +14,6 @@ export function defaultSession(block: string): SessionDetail {
   return { activity: first.id, durationMin: 60, rpe: 6, notes: "" };
 }
 
-/** Sport, combat and outdoor sessions: what, how long, how hard. */
 export function SessionEditor({ block, session, onChange }: { block: string; session: SessionDetail; onChange: (s: SessionDetail) => void }) {
   const act = sessionActivity(session.activity);
   const se = (session.durationMin ?? 0) * act.rate * (session.rpe / 7);

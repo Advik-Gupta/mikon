@@ -3,7 +3,6 @@ import { getDb } from "@/lib/server/db";
 import { handler, HttpError, requireUser } from "@/lib/server/http";
 import { findUser, publicUser } from "@/lib/server/users";
 
-/** Everything the app needs for a signed in user, in one request. */
 export const GET = handler(async (req: NextRequest) => {
   const userId = await requireUser(req);
   const user = await findUser(userId);

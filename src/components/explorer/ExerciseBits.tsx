@@ -12,7 +12,6 @@ export function LevelDot({ level }: { level: string }) {
   return <span className="size-1.5 shrink-0 rounded-full" style={{ background: LEVEL_COLOR[level] ?? "#8a919c" }} title={titleCase(level)} />;
 }
 
-/** Two-frame photo sequence that alternates like a GIF to show the movement. */
 export function ExerciseImages({ exercise, className, animate = true }: { exercise: Exercise; className?: string; animate?: boolean }) {
   const { db } = useExerciseDB();
   const [frame, setFrame] = useState(0);

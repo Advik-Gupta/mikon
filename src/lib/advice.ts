@@ -9,7 +9,6 @@ import { blockType } from "./options";
 import { dayLabel } from "./programs";
 import type { Program } from "./types";
 
-/** Hard sets for one muscle group in one session before extra sets are mostly fatigue. */
 export const SESSION_SET_CAP = 10;
 const STACK_MIN = 3;
 
@@ -81,7 +80,6 @@ export function programAdvice(program: Program, exercises: Map<string, Exercise>
   return out;
 }
 
-/** Toasts advice the moment a change introduces it. Existing issues stay quiet on load. */
 export function useProgramAdvice(program: Program) {
   const { db } = useExerciseDB();
   const exercises = useMemo(() => new Map((db?.exercises ?? []).map((e) => [e.id, e])), [db]);

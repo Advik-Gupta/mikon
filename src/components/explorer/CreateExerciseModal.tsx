@@ -10,7 +10,6 @@ import { useProfile } from "@/lib/storage";
 import { Modal } from "../Modal";
 import { Button, Chip, cn, Input, Segmented, Textarea } from "../ui";
 
-/** Canonical exercise-db muscle key for each Mikon group, so custom exercises plug into all the maths. */
 const GROUP_TO_FEDB: Record<string, string> = {
   core: "abdominals",
   glutes: "glutes",
@@ -42,7 +41,6 @@ function Label({ children, hint }: { children: ReactNode; hint?: string }) {
   );
 }
 
-/** Click a muscle group once for primary, again for secondary, again to clear. */
 function MusclePicker({ roles, onToggle, sex }: { roles: Record<string, Role>; onToggle: (group: string) => void; sex: Sex }) {
   const uid = useId().replace(/:/g, "");
   const [hover, setHover] = useState<string | null>(null);
@@ -114,7 +112,6 @@ export function CreateExerciseModal({
   initialDiscipline?: Discipline;
   editing?: Exercise | null;
   onSaved: (ex: Exercise) => void;
-  /** Offered when the name already exists in the library */
   onUseExisting?: (ex: Exercise) => void;
   useExistingLabel?: string;
 }) {
@@ -185,7 +182,6 @@ function CreateExerciseForm({
       if (!r[g]) next[g] = "primary";
       else if (r[g] === "primary") next[g] = "secondary";
       else delete next[g];
-      // Specific muscles only make sense within primary groups.
       setTargets((t) => t.filter((id) => next[muscleById(id)?.group ?? ""] === "primary"));
       return next;
     });

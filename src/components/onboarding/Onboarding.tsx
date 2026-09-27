@@ -25,7 +25,6 @@ interface StepDef {
   phase: number;
   title: string;
   Comp: ComponentType<StepProps & { goTo: (id: StepId) => void }>;
-  /** Returns a message explaining what's missing, or null when the step can be continued. */
   blocker?: (d: Profile) => string | null;
 }
 
@@ -153,7 +152,6 @@ export function Onboarding({ editProfile, editStep }: { editProfile?: Profile; e
 
   const goTo = (id: StepId) => go(STEPS.findIndex((s) => s.id === id));
 
-  // First step (in order) that still has a blocker — you can't jump past it.
   const firstBlocked = STEPS.findIndex((s) => s.blocker?.(draft));
   const canReach = (i: number) => i <= furthest && (firstBlocked === -1 || i <= firstBlocked);
 
@@ -163,7 +161,6 @@ export function Onboarding({ editProfile, editStep }: { editProfile?: Profile; e
       router.push("/profile");
       return;
     }
-    // Save after the success overlay: the onboarding gate redirects as soon as a profile exists.
     setDone(true);
     setTimeout(() => {
       saveProfile(finalize({ ...draft, createdAt: new Date().toISOString() }));
@@ -177,7 +174,6 @@ export function Onboarding({ editProfile, editStep }: { editProfile?: Profile; e
 
   return (
     <div className="flex h-dvh overflow-hidden bg-bg">
-      {/* Progress rail */}
       <aside className="hidden w-72 shrink-0 flex-col border-r border-line bg-surface/50 p-6 lg:flex">
         <Logo />
         <nav className="mt-12 flex-1 space-y-7">
@@ -230,7 +226,6 @@ export function Onboarding({ editProfile, editStep }: { editProfile?: Profile; e
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Mobile header + progress */}
         <div className="border-b border-line px-5 py-3 lg:hidden">
           <div className="flex items-center justify-between">
             <LogoMark size={24} />
@@ -267,7 +262,6 @@ export function Onboarding({ editProfile, editStep }: { editProfile?: Profile; e
           </div>
         </div>
 
-        {/* Footer nav */}
         <footer className="border-t border-line bg-bg/80 px-5 py-4 backdrop-blur sm:px-10">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
             <Button variant="ghost" onClick={() => go(step - 1)} disabled={step === 0} className={cn(step === 0 && "invisible")}>

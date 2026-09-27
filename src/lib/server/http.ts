@@ -17,7 +17,6 @@ export class HttpError extends Error {
 
 export const fail = (status: number, message: string) => NextResponse.json({ error: message }, { status });
 
-/** Wraps a route handler with consistent error responses. Unexpected errors never leak details. */
 export function handler<A extends unknown[]>(fn: (...args: A) => Promise<Response>) {
   return async (...args: A) => {
     try {
@@ -34,13 +33,11 @@ export function clientIp(req: NextRequest) {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "local";
 }
 
-/** Blocks cross-site writes: mutating requests must come from this origin. */
 export function assertSameOrigin(req: NextRequest) {
   const origin = req.headers.get("origin");
   if (origin && origin !== req.nextUrl.origin) throw new HttpError(403, "Forbidden");
 }
 
-/** Fixed-window limiter stored in Mongo, so it holds across server instances. */
 export async function rateLimit(bucket: string, max: number, windowSec: number) {
   const db = await getDb();
   const now = Date.now();
@@ -59,7 +56,6 @@ export async function rateLimit(bucket: string, max: number, windowSec: number) 
   }
 }
 
-/** Rejects keys that could be read as Mongo operators or dotted paths. */
 function assertSafeKeys(value: unknown, depth = 0): void {
   if (depth > 40) throw new HttpError(400, "Payload too deep");
   if (Array.isArray(value)) return value.forEach((v) => assertSafeKeys(v, depth + 1));
@@ -94,7 +90,6 @@ export function assertId(id: string) {
   if (!ID.test(id)) throw new HttpError(400, "Invalid id");
 }
 
-/** Authenticated user id for API routes, with a per-user request budget. */
 export async function requireUser(req: NextRequest) {
   const userId = await verifySession(req.cookies.get(SESSION_COOKIE)?.value, env.JWT_SECRET);
   if (!userId) throw new HttpError(401, "Not signed in");

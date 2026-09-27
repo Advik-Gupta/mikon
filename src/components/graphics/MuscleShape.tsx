@@ -1,7 +1,6 @@
 import type { SVGProps } from "react";
 import type { Shape } from "@/lib/explorer";
 
-/** A muscle's shape. Shapes that share one outline with another muscle are clipped and divided. */
 export function MuscleShape({ shape, clipKey, ...props }: { shape: Shape; clipKey: string } & Omit<SVGProps<SVGPathElement>, "d">) {
   if (!shape.c) return <path d={shape.d} {...props} />;
   const [x0, y0, x1, y1] = shape.c;

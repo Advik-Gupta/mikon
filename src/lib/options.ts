@@ -59,13 +59,11 @@ export interface BodyRegion {
   id: string;
   label: string;
   view: "front" | "back";
-  /** Hotspot position in the 200×400 figure viewBox */
   x: number;
   y: number;
 }
 
 export const BODY_REGIONS: BodyRegion[] = [
-  // front
   { id: "neck", label: "Neck", view: "front", x: 100, y: 78 },
   { id: "shoulder-l", label: "Left shoulder", view: "front", x: 138, y: 98 },
   { id: "shoulder-r", label: "Right shoulder", view: "front", x: 62, y: 98 },
@@ -83,7 +81,6 @@ export const BODY_REGIONS: BodyRegion[] = [
   { id: "knee-r", label: "Right knee", view: "front", x: 84, y: 290 },
   { id: "ankle-l", label: "Left ankle / foot", view: "front", x: 114, y: 372 },
   { id: "ankle-r", label: "Right ankle / foot", view: "front", x: 86, y: 372 },
-  // back
   { id: "upper-back", label: "Upper back", view: "back", x: 100, y: 118 },
   { id: "rotator-l", label: "Left rotator cuff", view: "back", x: 62, y: 104 },
   { id: "rotator-r", label: "Right rotator cuff", view: "back", x: 138, y: 104 },
@@ -152,7 +149,6 @@ export const MODALITIES: Option[] = [
   { id: "sports", label: "Sports", icon: Trophy, description: "Train for a sport you play" },
 ];
 
-/** Maps discipline ids from the first onboarding version onto the broad ones. */
 export const LEGACY_MODALITIES: Record<string, string> = {
   powerlifting: "strength",
   olympic: "strength",
@@ -207,7 +203,6 @@ export const GOALS: Option[] = [
   { id: "consistency", label: "Build a habit", icon: CalendarCheck },
 ];
 
-/** Goals where a target body weight makes sense */
 export const WEIGHT_GOALS = ["build-muscle", "lose-fat", "recomp", "compete"];
 
 export const TIMEFRAMES: Option[] = [
@@ -252,7 +247,6 @@ export const RECORDS: RecordDef[] = [
   { id: "marathon", label: "Marathon", short: "Marathon", kind: "run" },
 ];
 
-/** Building blocks for program days. Strength, power and hypertrophy all live under weightlifting. */
 export const BLOCK_TYPES: (Option & { color: string })[] = [
   { id: "weightlifting", label: "Weightlifting", icon: Dumbbell, color: "#c6f432", description: "Strength, power & hypertrophy" },
   { id: "calisthenics", label: "Calisthenics", icon: PersonStanding, color: "#5ed1a0", description: "Bodyweight strength & skills" },
@@ -269,7 +263,6 @@ export const BLOCK_TYPES: (Option & { color: string })[] = [
 
 export const blockType = (id: string) => BLOCK_TYPES.find((b) => b.id === id) ?? BLOCK_TYPES[BLOCK_TYPES.length - 1];
 
-/** Profile disciplines → program block types */
 export const MODALITY_TO_BLOCK: Record<string, string> = {
   strength: "weightlifting",
   hypertrophy: "weightlifting",
@@ -288,9 +281,7 @@ export interface TargetMetric {
   id: string;
   label: string;
   kind: "weight" | "time" | "percent";
-  /** Which profile record, if any, supplies the current value */
   record?: string;
-  /** Goals this target is a natural fit for */
   goals: string[];
 }
 

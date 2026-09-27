@@ -1,7 +1,6 @@
 export interface TourStep {
   id: string;
   route: string;
-  /** data-tour attribute of the element to spotlight; none means a centred card */
   target?: string;
   place?: "right" | "left" | "top" | "bottom";
   title: string;
@@ -9,7 +8,6 @@ export interface TourStep {
   next?: string;
 }
 
-/** Post signup walkthrough. Add a step here whenever a new area of the app ships. */
 export const TOUR: TourStep[] = [
   {
     id: "welcome",

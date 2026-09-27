@@ -13,21 +13,16 @@ export interface Exercise {
   equipment: string;
   mechanic: string | null;
   force: string | null;
-  /** free-exercise-db muscle keys */
   primary: string[];
   secondary: string[];
   instructions: string[];
   images: string[];
   discipline: "weights" | "calisthenics" | "plyometrics" | "cardio" | "mobility";
-  /** Timed holds (planks, levers, stretches) vs reps */
   measure: "reps" | "time";
-  /** Plyometrics only */
   intensity?: "low" | "moderate" | "high";
-  /** Calisthenics progression family and position in it (1 = easiest) */
   family?: string;
   step?: number;
   source: "free-exercise-db" | "mikon" | "custom";
-  /** Custom exercises: specific Mikon muscle ids the user said it targets */
   targets?: string[];
   createdAt?: string;
 }
@@ -45,7 +40,6 @@ export interface Shape {
   m: string;
   s: "l" | "r";
   b: [number, number, number, number];
-  /** Clip rect when one drawn shape holds two muscles, with the dividing x */
   c?: [number, number, number, number];
   k?: number;
 }
@@ -59,20 +53,16 @@ export interface FigureView {
 
 export const BODY = bodyMap as unknown as Record<Sex, Record<View, FigureView>>;
 
-/** Muscles with at least one shape on each figure. The figures differ slightly by sex. */
 export const DRAWN: Record<Sex, Set<string>> = {
   male: new Set((["front", "back"] as View[]).flatMap((v) => BODY.male[v].shapes.map((x) => x.m))),
   female: new Set((["front", "back"] as View[]).flatMap((v) => BODY.female[v].shapes.map((x) => x.m))),
 };
 
-/** Where a muscle shows on a figure: itself, or the drawn muscle it sits beneath or beside. */
 export function displayMuscle(id: string, sex: Sex) {
   if (DRAWN[sex].has(id)) return id;
   const m = muscleById(id);
   return m?.beneath && DRAWN[sex].has(m.beneath) ? m.beneath : null;
 }
-
-/* ------------------------------------------------------------------ exercise data */
 
 let cache: Promise<ExerciseDB> | null = null;
 function loadDB() {
@@ -83,7 +73,6 @@ function loadDB() {
   return cache;
 }
 
-/** The shared library plus the user's own exercises. Custom ones update live. */
 export function useExerciseDB() {
   const [base, setBase] = useState<ExerciseDB | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -107,11 +96,8 @@ export function useExerciseDB() {
   return { db, error };
 }
 
-/* ------------------------------------------------------------------ custom exercises */
-
 const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
-/** Existing exercises whose name matches (exactly, or nearly) the proposed one. */
 export function findSimilar(name: string, all: Exercise[], ignoreId?: string) {
   const n = normName(name);
   if (n.length < 3) return { exact: null as Exercise | null, similar: [] as Exercise[] };
@@ -142,8 +128,6 @@ export function deleteCustomExercise(id: string) {
 
 export const imageUrl = (db: ExerciseDB, path: string) => db.imageBase + path;
 
-/* ------------------------------------------------------------------ matching */
-
 const rx = (src?: string) => (src ? new RegExp(src, "i") : null);
 const regexCache = new Map<string, { emphasis: RegExp | null; exclude: RegExp | null }>();
 function patterns(m: Muscle) {
@@ -164,7 +148,6 @@ export function emphasises(m: Muscle, e: Exercise) {
   return !!emphasis && emphasis.test(e.name) && !exclude?.test(e.name) && hits(m, e, "any");
 }
 
-/** Exercises for a muscle: ones that bias it by name, then others where its region is a prime mover. */
 export function exercisesForMuscle(m: Muscle, all: Exercise[]) {
   const emphasis: Exercise[] = [];
   const general: Exercise[] = [];
@@ -191,7 +174,6 @@ export function exercisesForGroup(groupId: string, all: Exercise[]) {
   return all.filter((e) => e.category !== "stretching" && e.primary.some((k) => keys.includes(k)));
 }
 
-/** Which Mikon muscles an exercise works, most specific first. */
 export function musclesForExercise(e: Exercise) {
   const resolve = (keys: string[]) => {
     const out = new Set<string>();
@@ -208,8 +190,6 @@ export function musclesForExercise(e: Exercise) {
 }
 
 export const groupsForKeys = (keys: string[]) => [...new Set(keys.map((k) => FEDB_TO_GROUP[k]).filter(Boolean))];
-
-/* ------------------------------------------------------------------ search */
 
 const norm = (s: string) => s.toLowerCase().normalize("NFKD");
 

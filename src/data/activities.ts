@@ -14,14 +14,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-/**
- * Load coefficients turn non-lifting work into "set equivalents" per muscle group, so a long
- * run and a leg day can be compared on the same scale. They are deliberately simple
- * heuristics, tuned so that e.g. a 90-minute easy run ≈ 6 hard leg sets.
- */
-
-/* ------------------------------------------------------------------ editors */
-
 export type EditorKind = "strength" | "calisthenics" | "plyo" | "mobility" | "cardio" | "session";
 
 export const EDITOR_KIND: Record<string, EditorKind | undefined> = {
@@ -47,7 +39,6 @@ export const DISCIPLINES: { id: Discipline; label: string; icon: LucideIcon }[] 
   { id: "mobility", label: "Mobility", icon: Wind },
 ];
 
-/** Which exercise disciplines each block type draws from in the library. */
 export const BLOCK_DISCIPLINES: Record<string, Discipline[]> = {
   weightlifting: ["weights"],
   calisthenics: ["calisthenics"],
@@ -57,34 +48,25 @@ export const BLOCK_DISCIPLINES: Record<string, Discipline[]> = {
   functional: ["weights", "calisthenics", "plyometrics"],
 };
 
-/* ------------------------------------------------------------------ plyometrics */
-
 export const PLYO_INTENSITY: Record<string, { label: string; factor: number; color: string }> = {
   low: { label: "Low", factor: 0.35, color: "#5ed1a0" },
   moderate: { label: "Moderate", factor: 0.6, color: "#ffb547" },
   high: { label: "High", factor: 0.9, color: "#ff6b6b" },
 };
 
-/** Ground contacts per session, by training age (common coaching guidance). */
 export const CONTACT_GUIDE = [
   { level: "Beginner", range: [80, 100] },
   { level: "Intermediate", range: [100, 120] },
   { level: "Advanced", range: [120, 140] },
 ];
 
-/* ------------------------------------------------------------------ cardio */
-
 export interface CardioModality {
   id: string;
   label: string;
   icon: LucideIcon;
-  /** Set equivalents per minute at zone factor 1 */
   rate: number;
-  /** Mikon muscle group → share of the load. ≥ 0.6 counts as direct work. */
   muscles: Record<string, number>;
-  /** km per minute at zones 1–5, used to fill in distance, time and pace */
   speed: [number, number, number, number, number];
-  /** How pace is shown */
   pace: "per-km" | "kmh" | "per-500m" | "per-100m";
 }
 
@@ -126,7 +108,6 @@ export const CARDIO_TYPES: { id: string; label: string; kind: "steady" | "interv
 
 export const cardioType = (id: string) => CARDIO_TYPES.find((t) => t.id === id) ?? CARDIO_TYPES[0];
 
-/** Ready-made sessions for the cardio library. */
 export const CARDIO_TEMPLATES: { label: string; detail: string; segments: Partial<import("@/lib/types").CardioSegment>[] }[] = [
   { label: "Easy run", detail: "40 min · Z2", segments: [{ modality: "run", type: "easy", kind: "steady", zone: 2, durationMin: 40 }] },
   { label: "Long run", detail: "90 min · Z2", segments: [{ modality: "run", type: "long", kind: "steady", zone: 2, durationMin: 90 }] },
@@ -147,13 +128,10 @@ export const CARDIO_TEMPLATES: { label: string; detail: string; segments: Partia
   { label: "Air bike sprints", detail: "10 × 20 s", segments: [{ modality: "airbike", type: "sprints", kind: "intervals", zone: 5, reps: 10, workSec: 20, restSec: 40 }] },
 ];
 
-/* ------------------------------------------------------------------ sessions */
-
 export interface SessionActivity {
   id: string;
   label: string;
   block: "sport" | "combat" | "outdoor";
-  /** Set equivalents per minute at RPE 7 */
   rate: number;
   muscles: Record<string, number>;
 }
@@ -185,5 +163,4 @@ export const sessionActivity = (id: string) => SESSION_ACTIVITIES.find((a) => a.
 
 export const SESSION_ICON: Record<string, LucideIcon> = { sport: Trophy, combat: Swords, outdoor: Mountain };
 
-/** Share of a muscle's load that counts as direct work (shown as sets); the rest is indirect. */
 export const DIRECT_SHARE = 0.6;

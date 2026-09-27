@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { LogoMark } from "./graphics/Logo";
 import { hydrate } from "@/lib/storage";
 
-/** Loads the signed in user's data before rendering the app. */
 export function useSession() {
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");

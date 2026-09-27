@@ -38,12 +38,10 @@ const labelText = (id: string) => {
   return m?.short ?? m?.name ?? id;
 };
 
-/** Zoomed viewBox and leader-line labels for one group on one view. */
 function focusLayout(view: FigureView, groupId: string) {
   const own = new Set(groupById(groupId)?.muscles.filter((m) => view.shapes.some((s) => s.m === m)));
   let shapes = view.shapes.filter((s) => own.has(s.m));
   if (!shapes.length) return null;
-  // Limbs are far apart: zoom on the viewer-right limb only. Central groups keep both sides.
   if (union(shapes.map((s) => s.b))[2] - union(shapes.map((s) => s.b))[0] > view.viewBox[2] * 0.45) {
     shapes = shapes.filter((s) => s.s === "r");
   }
@@ -53,11 +51,9 @@ function focusLayout(view: FigureView, groupId: string) {
   const size = Math.max(w, h);
   const pad = size * 0.22;
   const font = Math.max(9, Math.min(size * 0.06, 26));
-  // Size the label column to the longest label so nothing is clipped.
   const longest = Math.max(...[...own].map((m) => labelText(m).length));
   const labelW = font * (longest * 0.58 + 2);
 
-  // One label per muscle, anchored on its largest shape (prefer the viewer-right side).
   const labels: Label[] = [...own]
     .map((m) => {
       const mine = shapes.filter((s) => s.m === m);
@@ -72,7 +68,6 @@ function focusLayout(view: FigureView, groupId: string) {
     l.y = Math.max(l.ay, prev + gap);
     prev = l.y;
   }
-  // Re-centre the label column vertically on the group.
   const shift = labels.length ? (b[1] + b[3]) / 2 - (labels[0].y + labels[labels.length - 1].y) / 2 : 0;
   labels.forEach((l) => (l.y += shift));
 
@@ -99,9 +94,7 @@ export function BodyFigure({
   tipFor,
 }: {
   sex: Sex;
-  /** Heatmap mode: colour for a muscle's shapes (group colour on the full body, muscle colour when zoomed) */
   heatFor?: (muscleId: string, zoomed: boolean) => string | null;
-  /** Extra tooltip line, e.g. "12 sets · 3× a week" */
   tipFor?: (muscleId: string, zoomed: boolean) => string | null;
   focusGroup: string | null;
   selectedMuscle: string | null;
@@ -130,7 +123,6 @@ export function BodyFigure({
 
   const hl = useMemo(() => {
     if (!highlight) return null;
-    // Deep muscles aren't lit through the muscle above them: that would overstate what's working.
     const shown = (m: string) => (muscleById(m)?.deep ? null : displayMuscle(m, sex));
     const map = new Map<string, "primary" | "secondary">();
     highlight.secondary.forEach((m) => {

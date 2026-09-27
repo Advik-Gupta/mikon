@@ -78,7 +78,7 @@ function Rows({ rows }: { rows: [string, ReactNode][] }) {
       {rows.map(([k, v]) => (
         <div key={k} className="contents">
           <dt className="text-muted">{k}</dt>
-          <dd className="text-right text-ink">{v || <span className="text-faint">—</span>}</dd>
+          <dd className="text-right text-ink">{v || <span className="text-faint">-</span>}</dd>
         </div>
       ))}
     </dl>
@@ -196,7 +196,7 @@ export function ProfileSections({ profile: p, onEdit }: { profile: Profile; onEd
               <div key={r.id} className="rounded-xl bg-surface-2 px-3 py-2">
                 <p className="text-[11px] text-muted">{r.short}</p>
                 <p className={`font-display text-sm font-semibold tabular-nums ${rec?.value == null ? "text-faint" : ""}`}>
-                  {rec?.never ? "Never" : rec?.value == null ? "—" : r.kind === "lift" ? formatWeight(rec.value, u) : fmtClock(rec.value)}
+                  {rec?.never ? "Never" : rec?.value == null ? "-" : r.kind === "lift" ? formatWeight(rec.value, u) : fmtClock(rec.value)}
                 </p>
               </div>
             );

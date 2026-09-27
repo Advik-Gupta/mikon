@@ -17,7 +17,6 @@ const TIER_STYLE: Record<GoalTier, { ring: string; badge: string }> = {
   minor: { ring: "border-line-strong", badge: "bg-surface-3 text-ink" },
 };
 
-/** Keep goals grouped by tier (major → secondary → minor), preserving order within each tier. */
 const sortByTier = (goals: ProgramGoal[]) =>
   TIER_ORDER.flatMap((t) => goals.filter((g) => g.tier === t));
 

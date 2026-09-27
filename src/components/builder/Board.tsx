@@ -37,13 +37,8 @@ import { cn } from "../ui";
 import type { BuilderStepProps } from "./Builder";
 
 const PALETTE = "palette:";
-/** Palette ids are `palette:<variant>:<type>`: the desktop sidebar and mobile strip each need unique ids. */
 const paletteType = (id: string | null | undefined) => (id?.startsWith(PALETTE) ? id.split(":")[2] : undefined);
 const DAY = "day:";
-
-/* ------------------------------------------------------------------ */
-/* Block visuals                                                        */
-/* ------------------------------------------------------------------ */
 
 function BlockFace({
   type,
@@ -165,10 +160,6 @@ function PaletteItem({ type, variant }: { type: string; variant: "side" | "strip
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Day column                                                           */
-/* ------------------------------------------------------------------ */
-
 function DayColumn({
   program,
   day,
@@ -272,10 +263,6 @@ function DayColumn({
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Board                                                                */
-/* ------------------------------------------------------------------ */
-
 export function Board({ program, update, goTo }: BuilderStepProps) {
   const router = useRouter();
   const profile = useProfile();
@@ -295,7 +282,6 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
 
   const setDays = (fn: (days: ProgramDay[]) => ProgramDay[]) => update((p) => ({ ...p, days: fn(p.days) }));
 
-  /** Adding or removing days breaks a weekly/two-week template, so the cycle becomes custom. */
   const setDayCount = (fn: (days: ProgramDay[]) => ProgramDay[]) =>
     update((p) => {
       const next = fn(p.days);
@@ -303,11 +289,6 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
       return { ...p, days: next, structure: { ...p.structure, cycle, cycleDays: next.length } };
     });
 
-  /**
-   * Pointer-first collision: the column under the cursor wins, then the block under the cursor
-   * within it. Below a column's last block means "append". Corner-based detection picks the
-   * wrong column because day columns are much taller than blocks.
-   */
   const collision: CollisionDetection = (args) => {
     const hits = pointerWithin(args);
     const dayHit = hits.find((h) => String(h.id).startsWith(DAY));
@@ -337,7 +318,6 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
     }
     const from = dayOf(activeKey);
     if (!overId || !from || !to || from === to) return;
-    // Move the block into the new day as it's dragged across, so the column reflows live.
     setDays((ds) => {
       const block = ds.find((d) => d.id === from)!.blocks.find((b) => b.id === activeKey)!;
       return ds.map((d) => {
@@ -403,7 +383,6 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
       }}
     >
       <div className="flex min-h-0 flex-1">
-        {/* Block palette */}
         <aside className="scrollbar-thin hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-line bg-surface/40 p-4 md:flex">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-faint">Blocks</p>
           <p className="mb-4 mt-1 text-xs text-muted">Drag onto any day.</p>
@@ -422,7 +401,6 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          {/* Toolbar */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line px-4 py-3 sm:px-6">
             <button
               type="button"
@@ -448,7 +426,6 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
             </div>
           </div>
 
-          {/* Mobile palette */}
           <div className="scrollbar-thin flex gap-2 overflow-x-auto border-b border-line px-4 py-3 md:hidden">
             {palette.map((b) => (
               <div key={b.id} className="w-44 shrink-0">
@@ -457,7 +434,6 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
             ))}
           </div>
 
-          {/* Columns */}
           <div className="board-grid scrollbar-thin min-h-0 flex-1 overflow-x-auto overflow-y-auto">
             <div className="flex min-h-full w-max min-w-full items-stretch gap-4 p-4 sm:p-6">
               <AnimatePresence initial={false}>

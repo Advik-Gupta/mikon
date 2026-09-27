@@ -18,7 +18,6 @@ function Explorer() {
   const exercise = useMemo(() => (nav.exercise ? db?.exercises.find((e) => e.id === nav.exercise) ?? null : null), [db, nav.exercise]);
   const highlight = useMemo(() => (exercise ? musclesForExercise(exercise) : null), [exercise]);
 
-  // Exercise view shows the whole body lit up; otherwise zoom to the selected group.
   const focusGroup = exercise ? null : nav.group && groupById(nav.group) ? nav.group : null;
   const selectedMuscle = exercise ? null : nav.muscle && muscleById(nav.muscle) ? nav.muscle : null;
   const panelKey = exercise ? `e:${exercise.id}` : selectedMuscle ? `m:${selectedMuscle}` : focusGroup ? `g:${focusGroup}` : "home";
@@ -43,7 +42,6 @@ function Explorer() {
         }
       />
       <div className="grid min-h-0 flex-1 grid-rows-[minmax(360px,55vh)_1fr] lg:grid-cols-2 lg:grid-rows-1">
-        {/* Figure */}
         <div data-tour="explorer-figure" className="board-grid relative min-h-0 border-b border-line lg:border-b-0 lg:border-r">
           <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-3 sm:p-4">
             {focusGroup || exercise ? (
@@ -83,7 +81,6 @@ function Explorer() {
           </div>
         </div>
 
-        {/* Info panel */}
         <div ref={panelRef} className="scrollbar-thin min-h-0 overflow-y-auto">
           <div className="mx-auto max-w-2xl px-5 py-6 sm:px-8 sm:py-8">
             {error && <p className="mb-4 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">{error}</p>}

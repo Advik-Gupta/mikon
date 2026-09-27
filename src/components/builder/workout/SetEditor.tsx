@@ -100,7 +100,6 @@ function TechniqueMenu({ set, onChange }: { set: WorkoutSet; onChange: (mods: st
 
 type Mode = Exclude<EditorKind, "cardio" | "session">;
 
-/** Which columns each activity's set editor shows. */
 const COLUMNS: Record<Mode, { type: boolean; weight: string | null; rpe: boolean; tech: boolean; value: boolean; amount: string }> = {
   strength: { type: true, weight: "Weight", rpe: true, tech: true, value: true, amount: "Reps" },
   calisthenics: { type: true, weight: "Added load", rpe: true, tech: true, value: true, amount: "Reps" },
@@ -233,7 +232,6 @@ function SetRow({
   );
 }
 
-/** Label sets W, 1, 2, 3…, B so working sets keep their own numbering. */
 function setLabels(sets: WorkoutSet[]) {
   let n = 0;
   return sets.map((s) => (s.kind === "warmup" ? "W" : s.kind === "backoff" ? "B" : String(++n)));
@@ -287,7 +285,6 @@ export function SetEditor({
   onClose,
 }: {
   entry: WorkoutEntry | null;
-  /** The entry's position letter in the workout (A, B, C…) */
   letter: string;
   mode: Mode;
   exercises: Map<string, Exercise>;
@@ -315,7 +312,6 @@ export function SetEditor({
     });
   const deleteSet = (exId: string, setId: string) => patchExercise(exId, (we) => ({ ...we, sets: we.sets.filter((s) => s.id !== setId) }));
 
-  /** New sets copy the most relevant existing set so you rarely retype numbers. */
   const addSet = (we: WorkoutExercise, kind: SetKind): WorkoutExercise => {
     const template = [...we.sets].reverse().find((s) => s.kind === kind) ?? [...we.sets].reverse().find((s) => s.kind === "working");
     const set = newSet(kind, template ? { weight: template.weight, reps: template.reps, holdSec: template.holdSec, rpe: kind === "warmup" ? null : template.rpe, kind } : undefined);
@@ -345,7 +341,6 @@ export function SetEditor({
       })),
     });
 
-  /** Calisthenics: swap to the next easier/harder step of the same progression. */
   const neighbour = (we: WorkoutExercise, dir: -1 | 1) => {
     const ex = exercises.get(we.exerciseId);
     if (!ex?.family || !ex.step) return null;
@@ -410,7 +405,6 @@ export function SetEditor({
       subtitle={superset ? entry.exercises.map((we, i) => `${letter}${i + 1} ${name(we)}`).join("  ·  ") : titleCase(exercises.get(entry.exercises[0].exerciseId)?.equipment ?? "")}
       footer={footer}
     >
-      {/* Exercises + notes */}
       <div className={cn("grid gap-3", superset && "sm:grid-cols-2")}>
         {entry.exercises.map((we, i) => {
           const ex = exercises.get(we.exerciseId);

@@ -2,7 +2,6 @@ import { busyCategory, WEEKDAYS } from "@/lib/options";
 import { DAY_MIN, fmtDuration, freeMinutesByDay } from "@/lib/schedule";
 import type { Profile } from "@/lib/types";
 
-/** Read-only week overview: commitments per day plus free waking time. */
 export function WeekMini({ schedule: s, height = 150 }: { schedule: Profile["schedule"]; height?: number }) {
   const free = freeMinutesByDay(s);
   const px = height / DAY_MIN;

@@ -6,7 +6,6 @@ import { createProgram } from "@/lib/programs";
 import { readStored, KEYS } from "@/lib/storage";
 import type { Profile } from "@/lib/types";
 
-/** Creates a draft program and hands off to the builder. */
 export default function NewProgramPage() {
   const router = useRouter();
   const created = useRef(false);

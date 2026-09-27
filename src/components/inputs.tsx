@@ -49,7 +49,6 @@ export function WeightInput({ kg, units, onChange, disabled }: { kg: number | nu
   );
 }
 
-/** h:mm:ss entry, stored as total seconds. */
 export function DurationInput({
   seconds,
   onChange,

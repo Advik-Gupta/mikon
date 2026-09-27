@@ -1,11 +1,3 @@
-/**
- * Muscle database. Anatomy is written for Mikon from standard anatomical references
- * (origins, insertions, actions and innervation are anatomical facts, not copied text).
- *
- * `exercises.fedb` lists the free-exercise-db muscle keys an exercise must hit for it to
- * count as training this muscle; `exercises.emphasis` is a case-insensitive regex on the
- * exercise name that marks exercises which specifically bias this muscle.
- */
 
 export type RegionId = "upper" | "arms" | "core" | "lower";
 
@@ -14,20 +6,16 @@ export interface MuscleGroup {
   name: string;
   region: RegionId;
   summary: string;
-  /** Ordered muscle ids, superficial first */
   muscles: string[];
 }
 
 export interface Muscle {
   id: string;
   name: string;
-  /** Compact name for figure labels */
   short?: string;
   aka?: string[];
   group: string;
-  /** Not visible on the surface figure */
   deep?: boolean;
-  /** Muscles not drawn on the figure point at the drawn muscle they sit beneath or beside */
   beneath?: string;
   parts?: { name: string; note: string }[];
   origin: string;
@@ -168,7 +156,6 @@ const FOREARM_EXT = "reverse.*wrist|wrist.*reverse|palms.?down|reverse.*curl|rev
 const CALF = "calf|donkey|jump|rope|sprint|skip|bound";
 
 export const MUSCLES: Muscle[] = [
-  // ------------------------------------------------------------------ Neck
   {
     id: "sternocleidomastoid",
     name: "Sternocleidomastoid",
@@ -228,7 +215,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["traps", "neck"], emphasis: "shrug|side" },
   },
 
-  // ------------------------------------------------------------------ Shoulders
   {
     id: "deltoid-anterior",
     name: "Anterior deltoid",
@@ -331,7 +317,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["shoulders", "chest"], emphasis: "internal rotation" },
   },
 
-  // ------------------------------------------------------------------ Chest
   {
     id: "pectoralis-major",
     name: "Pectoralis major",
@@ -377,7 +362,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["chest"], emphasis: "dip|decline|push.?up" },
   },
 
-  // ------------------------------------------------------------------ Traps & mid back
   {
     id: "trapezius",
     name: "Trapezius",
@@ -412,7 +396,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["middle back", "lats"], emphasis: "row|face pull|reverse fl|pull.?apart|retraction" },
   },
 
-  // ------------------------------------------------------------------ Lats
   {
     id: "latissimus-dorsi",
     name: "Latissimus dorsi",
@@ -440,7 +423,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["lats"], emphasis: "pull.?up|chin.?up|pulldown|pull.?down|row|pullover" },
   },
 
-  // ------------------------------------------------------------------ Biceps
   {
     id: "biceps-brachii",
     name: "Biceps brachii",
@@ -487,7 +469,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["chest", "shoulders"], emphasis: "front raise|fly|flye" },
   },
 
-  // ------------------------------------------------------------------ Triceps
   {
     id: "triceps-long",
     name: "Triceps (long head)",
@@ -540,7 +521,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["triceps"], emphasis: "extension|pushdown|kickback" },
   },
 
-  // ------------------------------------------------------------------ Forearms
   {
     id: "brachioradialis",
     name: "Brachioradialis",
@@ -647,7 +627,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["forearms"], emphasis: FOREARM_EXT },
   },
 
-  // ------------------------------------------------------------------ Core
   {
     id: "rectus-abdominis",
     name: "Rectus abdominis",
@@ -703,7 +682,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["abdominals"], emphasis: "plank|vacuum|dead.?bug|hollow|rollout|roller|pallof|carry" },
   },
 
-  // ------------------------------------------------------------------ Lower back
   {
     id: "erector-spinae",
     name: "Erector spinae",
@@ -747,7 +725,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["lower back"], emphasis: "bird dog|hyperextension|superman|back extension" },
   },
 
-  // ------------------------------------------------------------------ Glutes & hips
   {
     id: "gluteus-maximus",
     name: "Gluteus maximus",
@@ -832,7 +809,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["glutes", "abductors"], emphasis: "piriformis|external rotation|clam|pigeon|hip circle" },
   },
 
-  // ------------------------------------------------------------------ Quads
   {
     id: "rectus-femoris",
     name: "Rectus femoris",
@@ -886,7 +862,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["quadriceps"], emphasis: "squat|leg press|leg extension" },
   },
 
-  // ------------------------------------------------------------------ Hamstrings
   {
     id: "biceps-femoris",
     name: "Biceps femoris",
@@ -929,7 +904,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["hamstrings"], emphasis: "curl|romanian|stiff|good morning|nordic|deadlift" },
   },
 
-  // ------------------------------------------------------------------ Adductors
   {
     id: "adductor-magnus",
     name: "Adductor magnus",
@@ -984,7 +958,6 @@ export const MUSCLES: Muscle[] = [
     exercises: { fedb: ["quadriceps", "adductors"], emphasis: "leg raise|hip flex|butterfly|step.?up" },
   },
 
-  // ------------------------------------------------------------------ Calves & shins
   {
     id: "gastrocnemius-medial",
     name: "Gastrocnemius (medial head)",
@@ -1055,7 +1028,6 @@ export const MUSCLES: Muscle[] = [
 export const muscleById = (id: string) => MUSCLES.find((m) => m.id === id);
 export const groupById = (id: string) => MUSCLE_GROUPS.find((g) => g.id === id);
 
-/** free-exercise-db muscle keys → Mikon muscle group */
 export const FEDB_TO_GROUP: Record<string, string> = {
   abdominals: "core",
   abductors: "glutes",

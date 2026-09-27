@@ -7,10 +7,6 @@ export const SET_KINDS: { id: SetKind; label: string; short: string; color: stri
   { id: "backoff", label: "Back-off", short: "B", color: "#5aaeff", hint: "Lighter set after top sets. Counts as 1 set" },
 ];
 
-/**
- * Intensity techniques that add fatigue on top of the set itself.
- * `value` is extra effective sets, so a working set with a drop set counts as 1.75.
- */
 export const SET_MODIFIERS: { id: string; label: string; value: number; hint: string }[] = [
   { id: "dropset", label: "Drop set", value: 0.75, hint: "Reduce the weight and continue straight away" },
   { id: "restpause", label: "Rest-pause", value: 0.75, hint: "Short rests of 10–20s for extra reps" },
@@ -27,7 +23,6 @@ export function newSet(kind: SetKind = "working", from?: Partial<WorkoutSet>): W
   return { id: crypto.randomUUID(), kind, weight: null, reps: null, rpe: null, modifiers: [], ...from, ...(from ? { id: crypto.randomUUID() } : {}) };
 }
 
-/** Sensible starting sets for the kind of exercise. */
 export function defaultSets(ex?: Exercise): WorkoutSet[] {
   const make = (n: number, from: Partial<WorkoutSet>) => Array.from({ length: n }, () => newSet("working", from));
   if (!ex) return make(3, { reps: 10 });
@@ -48,11 +43,9 @@ export const newEntry = (exerciseId: string, ex?: Exercise, restSec = 90): Worko
   restSec,
 });
 
-/** Non-warm-up sets: what the user thinks of as "sets". */
 export const hardSets = (sets: WorkoutSet[]) => sets.filter((s) => s.kind !== "warmup").length;
 export const entryHardSets = (e: WorkoutEntry) => e.exercises.reduce((a, x) => a + hardSets(x.sets), 0);
 
-/** Effective sets for fatigue/volume: warm-ups are free, techniques add on top. */
 export function setValue(s: WorkoutSet) {
   if (s.kind === "warmup") return 0;
   return 1 + s.modifiers.reduce((a, id) => a + (modifierById(id)?.value ?? 0), 0);
@@ -62,9 +55,6 @@ export const exerciseValue = (e: WorkoutExercise) => e.sets.reduce((a, s) => a +
 export const entryValue = (e: WorkoutEntry) => e.exercises.reduce((a, x) => a + exerciseValue(x), 0);
 export const fmtSets = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0$/, ""));
 
-/* ------------------------------------------------------------------ summaries */
-
-/** "2 warm-up · 3×8 @ 80 kg · 1 back-off", or "3×30s" for holds */
 export function setSummary(sets: WorkoutSet[], fmtWeight: (kg: number) => string, unit = "") {
   const warm = sets.filter((s) => s.kind === "warmup").length;
   const back = sets.filter((s) => s.kind === "backoff").length;
@@ -88,7 +78,6 @@ export function setSummary(sets: WorkoutSet[], fmtWeight: (kg: number) => string
 
 export const SUPERSET_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-/** 45 → "45s", 90 → "1:30", 120 → "2 min" */
 export function fmtRest(sec: number) {
   if (sec < 60) return `${sec}s`;
   const m = Math.floor(sec / 60);

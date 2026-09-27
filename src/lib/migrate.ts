@@ -6,7 +6,6 @@ type Legacy = Profile & {
   schedule: Partial<Profile["schedule"]>;
 };
 
-/** Upgrades profiles saved by earlier versions of onboarding to the current shape. */
 export function migrateProfile(raw: Profile): Profile {
   const p = raw as Legacy;
   const goals = p.goals ?? {};

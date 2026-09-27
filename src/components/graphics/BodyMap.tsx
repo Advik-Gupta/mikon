@@ -17,7 +17,6 @@ export function BodyMap({
   onToggle,
   className,
 }: {
-  /** region id → severity */
   marked: Record<string, InjurySeverity>;
   onToggle?: (regionId: string) => void;
   className?: string;

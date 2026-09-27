@@ -211,7 +211,6 @@ function EntryCard({
           </div>
         </button>
 
-        {/* Superset drop zone: the middle of the card, only while dragging something else */}
         <div
           ref={setMergeRef}
           className={cn(
@@ -239,7 +238,6 @@ export function WorkoutList({
   onChange,
 }: {
   entries: WorkoutEntry[];
-  /** "sets" or "holds" etc. */
   unitLabel?: string;
   exercises: Map<string, Exercise>;
   units: Units;

@@ -40,12 +40,10 @@ import { MERGE, WORKOUT, WorkoutList } from "./WorkoutList";
 
 interface PendingMerge {
   targetId: string;
-  /** Existing entry being dropped, or a library exercise */
   sourceEntryId?: string;
   exerciseId?: string;
 }
 
-/** Strip a block back to empty: keeps its place on the board, drops its content. */
 export const clearedBlock = (b: ProgramBlock): ProgramBlock => ({ id: b.id, type: b.type });
 export const blockHasContent = (b: ProgramBlock) => !!(b.entries?.length || b.cardio?.length || b.session);
 
@@ -111,7 +109,6 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
   const [mergeTarget, setMergeTarget] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingMerge | null>(null);
   const [confirmReset, setConfirmReset] = useState<"block" | "day" | null>(null);
-  /** Name to prefill in the create-exercise form; null = closed */
   const [creating, setCreating] = useState<string | null>(null);
 
   const updateDay = (fn: (blocks: ProgramBlock[]) => ProgramBlock[]) =>
@@ -135,14 +132,12 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
     setEditing(null);
   };
 
-  /* ---------------------------------------------------------------- dnd (exercise blocks) */
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 160, tolerance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  /** Only drop inside the workout column. The middle of a card means "superset", elsewhere means "place here". */
   const collision: CollisionDetection = (args) => {
     const hits = pointerWithin(args);
     if (!hits.some((h) => h.id === WORKOUT)) return [];
@@ -178,7 +173,6 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
       return;
     }
     const from = entries.findIndex((e) => e.id === a);
-    // Dropped on the empty space below the list: move to the end.
     const to = overIndex === -1 ? entries.length - 1 : overIndex;
     if (from !== -1 && from !== to) setEntries((es) => arrayMove(es, from, to));
   };
@@ -206,7 +200,6 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
     return { target: names(target), source: src ? names(src) : exercises.get(pending.exerciseId ?? "")?.name };
   })();
 
-  /* ---------------------------------------------------------------- header stats */
   const Icon = bt.icon!;
   const stats = (() => {
     if (kind === "cardio") {
@@ -250,7 +243,6 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
       }}
     >
       <div className="flex min-h-0 flex-1 flex-col">
-        {/* Top bar */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line px-4 py-3 sm:px-6">
           <Link href={`/programs/${program.id}`} className="flex items-center gap-1.5 rounded-lg border border-line bg-surface-2 px-2.5 py-1.5 text-xs font-medium hover:border-line-strong">
             <ArrowLeft className="size-3.5" /> Board
@@ -292,7 +284,6 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
         </div>
 
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(250px,300px)_minmax(0,1fr)_minmax(280px,340px)]">
-          {/* Left: fatigue */}
           <aside className="hidden min-h-0 flex-col border-r border-line p-4 lg:flex">
             <div className="mb-3 flex items-center gap-2">
               <PersonStanding className="size-4 text-accent" />
@@ -303,7 +294,6 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
             </div>
           </aside>
 
-          {/* Center */}
           <section className="board-grid scrollbar-thin min-h-0 overflow-y-auto p-4 sm:p-6">
             <div className="mx-auto flex min-h-full max-w-2xl flex-col">
               <div className="mb-3 flex items-center justify-between">
@@ -341,7 +331,6 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
             </div>
           </section>
 
-          {/* Right: library */}
           <aside className="flex min-h-[420px] flex-col border-t border-line lg:min-h-0 lg:border-l lg:border-t-0">
             <div className="flex items-center gap-2 border-b border-line px-3 py-2.5">
               <Dumbbell className="size-4 text-accent" />
@@ -399,7 +388,6 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
         initialName={creating ?? ""}
         initialDiscipline={(BLOCK_DISCIPLINES[block.type] ?? ["weights"])[0]}
         onSaved={(ex) => {
-          // Add straight to the workout; the exercise map catches up on the next render.
           setEntries((es) => [...es, newEntry(ex.id, ex, kind === "mobility" ? 15 : 90)]);
           setCreating(null);
         }}

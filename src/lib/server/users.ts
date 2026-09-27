@@ -26,7 +26,6 @@ export async function createUser(name: string, email: string, password: string) 
   return doc;
 }
 
-/** Always runs a bcrypt comparison so response time doesn't reveal whether the email exists. */
 export async function checkCredentials(email: string, password: string) {
   const user = await (await users()).findOne({ email });
   const ok = await bcrypt.compare(password, user?.passwordHash ?? DUMMY_HASH);
