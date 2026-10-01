@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
           ? "unreachable (check Atlas network access)"
           : err.codeName === "AtlasError" || err.code === 8000 || err.code === 18
             ? "authentication failed (check the user and password in MONGODB_URI)"
-            : `${err.name}${err.codeName ? ` ${err.codeName}` : ""}`;
+            : `${err.name}${err.codeName ? ` ${err.codeName}` : ""}: ${err.message.replace(/mongodb(\+srv)?:\/\/\S+/g, "<uri>").replace(/[\w.-]+\.mongodb\.net/g, "<host>").slice(0, 160)}`;
     }
   }
   const ok = !env.length && db === "ok";
