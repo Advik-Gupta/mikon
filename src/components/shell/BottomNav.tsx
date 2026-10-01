@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { Bell, Compass, Download, Dumbbell, Ellipsis, History, Layers, LayoutGrid, LogOut, Ruler, User, Users } from "lucide-react";
+import { openFeedback } from "../feedback/Feedback";
+import { Bell, MessageSquareHeart, Compass, Download, Dumbbell, Ellipsis, History, Layers, LayoutGrid, LogOut, Ruler, User, Users } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { logout } from "@/lib/storage";
 import { openStartSheet, updateWorkout, useActiveWorkout } from "@/lib/tracker";
@@ -102,6 +103,16 @@ export function BottomNav() {
             </Link>
           ))}
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            setMore(false);
+            openFeedback();
+          }}
+          className="mx-4 mb-2 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-2xl border border-line py-3 text-sm font-medium active:bg-surface-2"
+        >
+          <MessageSquareHeart className="size-4 text-accent" /> Report a bug or suggest a feature
+        </button>
         <button type="button" onClick={logout} className="mx-4 mb-5 flex w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-2xl py-3 text-sm text-muted active:bg-surface-2">
           <LogOut className="size-4" /> Log out
         </button>

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { Dumbbell, Folder, LogOut, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
+import { Dumbbell, Folder, LogOut, MessageSquareHeart, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
+import { openFeedback } from "../feedback/Feedback";
 import { openStartSheet, updateWorkout, useActiveWorkout } from "@/lib/tracker";
 import { programHref } from "@/lib/programs";
 import { KEYS, logout, usePrograms, useStored, writeStored } from "@/lib/storage";
@@ -153,6 +154,18 @@ export function Sidebar({ mobile, onNavigate }: { mobile?: boolean; onNavigate?:
         {FOOTER_NAV.map((item) => (
           <NavLink key={item.href} item={item} active={isActive(item.href)} collapsed={collapsed} onNavigate={onNavigate} />
         ))}
+        <button
+          type="button"
+          onClick={openFeedback}
+          title={collapsed ? "Feedback" : undefined}
+          className={cn(
+            "flex h-9 w-full items-center gap-3 rounded-lg px-2.5 text-sm text-muted transition hover:bg-surface-2 hover:text-ink",
+            collapsed && "justify-center px-0",
+          )}
+        >
+          <MessageSquareHeart className="size-[18px] shrink-0" />
+          {!collapsed && "Feedback"}
+        </button>
         <button
           type="button"
           onClick={logout}

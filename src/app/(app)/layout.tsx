@@ -17,6 +17,7 @@ import { Toaster } from "@/components/Toaster";
 import { Tour } from "@/components/tour/Tour";
 import { TrackerHost } from "@/components/tracker/Tracker";
 import { ImportPrompt } from "@/components/import/ImportPrompt";
+import { FeedbackSheet } from "@/components/feedback/Feedback";
 import { cn } from "@/components/ui";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -78,6 +79,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <InstallPrompt />
         <TrackerHost />
         <ImportPrompt />
+        <FeedbackSheet />
       </div>
     </div>
   );
