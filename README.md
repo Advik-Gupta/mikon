@@ -59,6 +59,12 @@
 - **Workout Tracker**
   A phone first logger in the spirit of Strong and MacroFactor: start today's session, any program day, a past workout or an empty one. Custom keypad with reps in reserve, previous numbers, warm ups, swaps, notes, rest timers that survive leaving the app, minimize to keep browsing, and a summary with new bests.
 
+- **Import From Other Apps**
+  Bring your full history from Strong, Hevy, Lyfta or MacroFactor Workouts. Exercises are matched to the library, and anything missing becomes your own exercise tagged with its source.
+
+- **Body Measurements**
+  Log weight, body fat, calories and body part measurements, with progress charts and a weight trend line.
+
 - **Workout History**
   Every logged session with a consistency heatmap, full set details and per exercise history.
 
