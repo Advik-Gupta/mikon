@@ -214,6 +214,68 @@ function TargetRow({
   );
 }
 
+function TargetCard({
+  t,
+  current,
+  onChange,
+  onDelete,
+  onFocus,
+}: {
+  t: VolumeTarget;
+  current: { sets: number; freq: number };
+  onChange: (p: Partial<VolumeTarget>) => void;
+  onDelete: () => void;
+  onFocus: () => void;
+}) {
+  const setsDiff = t.minSets != null ? round(current.sets) - t.minSets : null;
+  const freqDiff = t.minFreq != null ? current.freq - t.minFreq : null;
+  const met = (setsDiff == null || setsDiff >= 0) && (freqDiff == null || freqDiff >= 0);
+  const input = "h-10 w-16 rounded-lg border border-line bg-surface-2 px-2.5 text-sm tabular-nums outline-none focus:border-accent/60";
+  const rows = [
+    { label: "Sets / week", value: t.minSets, now: round(current.sets), diff: setsDiff, unit: "sets", key: "minSets" as const, max: 99 },
+    { label: "Times / week", value: t.minFreq, now: current.freq, diff: freqDiff, unit: "days", key: "minFreq" as const, max: 14 },
+  ];
+  return (
+    <div className="rounded-2xl border border-line bg-surface-2/40 p-3">
+      <div className="flex items-center gap-2">
+        <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-full", met ? "bg-accent/15 text-accent" : "bg-danger/15 text-danger")}>
+          {met ? <Check className="size-3.5" strokeWidth={3} /> : <X className="size-3.5" strokeWidth={3} />}
+        </span>
+        <button type="button" onClick={onFocus} className="min-w-0 flex-1 truncate text-left text-sm font-medium">
+          {t.kind === "group" ? groupById(t.ref)?.name : muscleById(t.ref)?.name}
+          <span className="ml-1.5 text-[11px] font-normal text-faint">{t.kind === "group" ? "group" : groupById(muscleById(t.ref)?.group ?? "")?.name}</span>
+        </button>
+        <button type="button" onClick={onDelete} className="rounded-md p-1.5 text-faint hover:bg-danger/10 hover:text-danger" aria-label="Remove target">
+          <Trash2 className="size-3.5" />
+        </button>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        {rows.map((r) => (
+          <div key={r.key}>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-faint">{r.label}</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                aria-label={`Minimum ${r.label.toLowerCase()}`}
+                value={r.value ?? ""}
+                placeholder="-"
+                onChange={(e) => onChange({ [r.key]: e.target.value === "" ? null : Math.max(0, Math.min(r.max, Math.round(Number(e.target.value)))) })}
+                className={input}
+              />
+              <span className="min-w-0 text-[11px] leading-tight">
+                <span className="block text-muted">now {r.now}</span>
+                <Diff d={r.diff} unit={r.diff != null && Math.abs(r.diff) === 1 ? r.unit.slice(0, -1) : r.unit} />
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function ProgramOverview({ program }: { program: Program }) {
   const profile = useProfile();
   const sex: Sex = profile?.personal.sex === "female" ? "female" : "male";
@@ -506,7 +568,21 @@ export function ProgramOverview({ program }: { program: Program }) {
           )}
         </header>
         {targets.length > 0 && (
-          <div className="overflow-x-auto">
+          <div className="space-y-2 p-3 sm:hidden">
+            {targets.map((t) => (
+              <TargetCard
+                key={t.id}
+                t={t}
+                current={currentFor(t)}
+                onChange={(p) => setTargets((ts) => ts.map((x) => (x.id === t.id ? { ...x, ...p } : x)))}
+                onDelete={() => setTargets((ts) => ts.filter((x) => x.id !== t.id))}
+                onFocus={() => (t.kind === "group" ? openGroup(t.ref) : openMuscle(t.ref))}
+              />
+            ))}
+          </div>
+        )}
+        {targets.length > 0 && (
+          <div className="hidden overflow-x-auto sm:block">
             <table className="w-full min-w-[760px] text-sm">
               <thead className="text-[10px] uppercase tracking-[0.12em] text-faint">
                 <tr>

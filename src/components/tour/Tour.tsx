@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Compass, Plus, X } from "lucide-react";
 import { displayName } from "@/lib/body";
 import { setTutorial, useProfile, useSessionUser } from "@/lib/storage";
 import { Button } from "../ui";
-import { TOUR, type TourStep } from "./steps";
+import { TOUR, TOUR_VERSION, type TourStep } from "./steps";
 
 type Rect = { top: number; left: number; width: number; height: number };
 const PAD = 8;
@@ -21,9 +21,9 @@ function useTargetRect(step: TourStep | undefined, active: boolean) {
     if (!active || !step?.target) return;
     let frame = 0;
     let tries = 0;
+    const find = () => [...document.querySelectorAll(`[data-tour="${step.target}"]`)].find((e) => e.getBoundingClientRect().width > 0);
     const measure = () => {
-      const el = document.querySelector(`[data-tour="${step.target}"]`);
-      const box = el?.getBoundingClientRect();
+      const box = find()?.getBoundingClientRect();
       if (box && box.width > 0) {
         setRect({ top: box.top - PAD, left: box.left - PAD, width: box.width + PAD * 2, height: box.height + PAD * 2 });
         setMissing(false);
@@ -33,8 +33,7 @@ function useTargetRect(step: TourStep | undefined, active: boolean) {
       }
       frame = requestAnimationFrame(measure);
     };
-    const el = document.querySelector(`[data-tour="${step.target}"]`);
-    el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    find()?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     measure();
     return () => cancelAnimationFrame(frame);
   }, [step, active]);
@@ -46,7 +45,14 @@ function useTargetRect(step: TourStep | undefined, active: boolean) {
 function cardPosition(rect: Rect | null, place: TourStep["place"]) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  if (!rect || vw < 640) return { left: Math.max(16, (vw - CARD_W) / 2), top: rect ? Math.min(vh - 260, rect.top + rect.height + 12) : vh / 2 - 120 };
+  if (!rect || vw < 640) {
+    const left = Math.max(16, (vw - CARD_W) / 2);
+    if (!rect) return { left, top: vh / 2 - 120 };
+    const below = rect.top + rect.height + 12;
+    if (below + 230 <= vh) return { left, top: below };
+    if (rect.top - 250 >= 16) return { left, top: rect.top - 250 };
+    return { left, top: Math.max(16, vh - 260) };
+  }
   const clampX = (x: number) => Math.min(Math.max(16, x), vw - CARD_W - 16);
   const clampY = (y: number) => Math.min(Math.max(16, y), vh - 240);
   switch (place) {
@@ -69,9 +75,12 @@ export function Tour() {
   const [, setTick] = useState(0);
 
   const tutorial = user?.tutorial;
-  const index = tutorial?.step ?? 0;
-  const step = TOUR[Math.min(index, TOUR.length - 1)];
-  const running = !!user && !!profile && !tutorial?.done;
+  const version = tutorial?.version ?? 1;
+  const whatsNew = !!tutorial?.done && version < TOUR_VERSION;
+  const steps = whatsNew ? TOUR.filter((s) => (s.since ?? 0) > version) : TOUR;
+  const index = Math.min((whatsNew ? tutorial?.newStep : tutorial?.step) ?? 0, steps.length - 1);
+  const step = steps[index];
+  const running = !!user && !!profile && (!tutorial?.done || whatsNew) && steps.length > 0;
   const onRoute = running && pathname === step.route;
   const { rect, missing } = useTargetRect(step, onRoute);
 
@@ -84,12 +93,12 @@ export function Tour() {
   if (!running) return null;
 
   const go = (to: number) => {
-    const next = TOUR[to];
-    setTutorial({ step: to, done: false });
+    const next = steps[to];
+    setTutorial(whatsNew ? { ...tutorial!, newStep: to } : { step: to, done: false, version });
     if (next.route !== pathname) router.push(next.route);
   };
   const finish = (target?: string) => {
-    setTutorial({ step: TOUR.length, done: true });
+    setTutorial({ step: TOUR.length, done: true, version: TOUR_VERSION });
     if (target) router.push(target);
   };
 
@@ -98,14 +107,14 @@ export function Tour() {
       <button
         type="button"
         onClick={() => router.push(step.route)}
-        className="fixed bottom-4 left-4 z-[70] flex items-center gap-2 rounded-full border border-accent/40 bg-surface/95 px-4 py-2 text-sm font-medium shadow-2xl backdrop-blur hover:border-accent"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] left-4 z-[70] flex items-center gap-2 rounded-full border border-accent/40 bg-surface/95 px-4 py-2 text-sm font-medium shadow-2xl backdrop-blur hover:border-accent md:bottom-4"
       >
-        <Compass className="size-4 text-accent" /> Resume tour
+        <Compass className="size-4 text-accent" /> {whatsNew ? "See what's new" : "Resume tour"}
       </button>
     );
   }
 
-  const last = index === TOUR.length - 1;
+  const last = index === steps.length - 1;
   const spotlight = step.target && rect && !missing ? rect : null;
   const pos = cardPosition(spotlight, step.place);
   const name = profile ? displayName(profile) : "there";
@@ -137,7 +146,8 @@ export function Tour() {
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
-              {index + 1} of {TOUR.length}
+              {whatsNew ? "New · " : ""}
+              {index + 1} of {steps.length}
             </span>
             <button type="button" onClick={() => finish()} className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted hover:bg-surface-2 hover:text-ink">
               Skip tour <X className="size-3.5" />
@@ -147,7 +157,7 @@ export function Tour() {
           <p className="mt-1.5 text-sm leading-relaxed text-muted">{step.body}</p>
           <div className="mt-4 flex items-center gap-2">
             <div className="flex flex-1 gap-1">
-              {TOUR.map((s, i) => (
+              {steps.map((s, i) => (
                 <span key={s.id} className={`h-1 flex-1 rounded-full ${i <= index ? "bg-accent" : "bg-surface-3"}`} />
               ))}
             </div>
@@ -156,7 +166,11 @@ export function Tour() {
                 <ArrowLeft className="size-4" />
               </Button>
             )}
-            {last ? (
+            {last && whatsNew ? (
+              <Button className="h-9" onClick={() => finish()}>
+                Got it
+              </Button>
+            ) : last ? (
               <Button className="h-9" onClick={() => finish("/programs/new")}>
                 <Plus className="size-4" strokeWidth={2.5} /> Create program
               </Button>

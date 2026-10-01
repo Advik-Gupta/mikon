@@ -1,4 +1,4 @@
-import { CalendarDays, Compass, Layers, LayoutGrid, Settings, TrendingUp, type LucideIcon } from "lucide-react";
+import { CalendarDays, Compass, Layers, LayoutGrid, Settings, TrendingUp, Users, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -10,16 +10,23 @@ export interface NavItem {
 export const MAIN_NAV: NavItem[] = [
   { href: "/", label: "Home", icon: LayoutGrid },
   { href: "/programs", label: "Programs", icon: Layers },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays, soon: true },
   { href: "/explorer", label: "Explorer", icon: Compass },
+  { href: "/friends", label: "Friends", icon: Users },
+  { href: "/calendar", label: "Calendar", icon: CalendarDays, soon: true },
   { href: "/progress", label: "Progress", icon: TrendingUp, soon: true },
 ];
 
 export const FOOTER_NAV: NavItem[] = [{ href: "/settings", label: "Settings", icon: Settings, soon: true }];
 
+export const isImmersive = (pathname: string) => pathname === "/workout" || pathname === "/programs/new" || pathname.endsWith("/edit");
+
 export function titleFor(pathname: string) {
   if (pathname === "/profile") return "Profile";
   if (pathname === "/workout") return "Workout";
+  if (pathname === "/notifications") return "Notifications";
+  if (pathname.startsWith("/exercises/")) return "Exercise";
+  if (pathname.startsWith("/u/")) return pathname.includes("/programs/") ? "Program" : "Profile";
+  if (pathname.startsWith("/shared/")) return "Shared program";
   if (pathname.startsWith("/programs/new") || pathname.endsWith("/edit")) return "Program builder";
   if (pathname.startsWith("/programs/")) return "Program";
   const item = [...MAIN_NAV, ...FOOTER_NAV].find((n) => n.href !== "/" && pathname.startsWith(n.href));

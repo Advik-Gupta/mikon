@@ -12,7 +12,7 @@ export default function ProgramsPage() {
 
   return (
     <div className="board-grid min-h-full">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-8">
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
             <h2 className="font-display text-2xl font-semibold tracking-tight">Programs</h2>
@@ -20,9 +20,9 @@ export default function ProgramsPage() {
           </div>
           <Link
             href="/programs/new"
-            className="flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-accent-ink transition hover:bg-[#d4ff4a]"
+            className="flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-accent px-3.5 text-sm font-semibold text-accent-ink transition hover:bg-[#d4ff4a] sm:px-4"
           >
-            <Plus className="size-4" strokeWidth={2.5} /> New program
+            <Plus className="size-4" strokeWidth={2.5} /> New<span className="hidden sm:inline"> program</span>
           </Link>
         </div>
 

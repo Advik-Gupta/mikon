@@ -97,10 +97,10 @@ export default function ProfilePage() {
                 <p className="text-[11px] text-muted">Workouts</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 sm:flex">
               {user && (
                 <Button variant="secondary" onClick={() => router.push(`/u/${user.username}`)}>
-                  <ExternalLink className="size-4" /> Public profile
+                  <ExternalLink className="size-4" /> Public<span className="hidden sm:inline"> profile</span>
                 </Button>
               )}
               <Button variant="secondary" data-tour="profile-edit" onClick={() => router.push("/onboarding?edit=personal")}>

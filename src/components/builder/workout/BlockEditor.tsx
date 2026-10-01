@@ -30,6 +30,7 @@ import { entryHardSets, entryValue, newEntry, newExercise, SUPERSET_LETTERS } fr
 import { ExerciseThumb } from "../../explorer/ExerciseBits";
 import { CreateExerciseModal } from "../../explorer/CreateExerciseModal";
 import { Modal } from "../../Modal";
+import { toast } from "../../Toaster";
 import { Button, cn } from "../../ui";
 import { CardioEditor, CardioLibrary, fmtDuration } from "./CardioEditor";
 import { ExercisePicker, LIB } from "./ExercisePicker";
@@ -110,6 +111,7 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
   const [pending, setPending] = useState<PendingMerge | null>(null);
   const [confirmReset, setConfirmReset] = useState<"block" | "day" | null>(null);
   const [creating, setCreating] = useState<string | null>(null);
+  const [pane, setPane] = useState<"workout" | "library" | "fatigue">("workout");
 
   const updateDay = (fn: (blocks: ProgramBlock[]) => ProgramBlock[]) =>
     updateProgram(program.id, (p) => ({ ...p, days: p.days.map((d) => (d.id !== dayId ? d : { ...d, blocks: fn(d.blocks) })) }));
@@ -118,12 +120,14 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
   const setSegments = (next: CardioSegment[]) => updateBlock((b) => ({ ...b, cardio: next }));
   const setSession = (next: SessionDetail) => updateBlock((b) => ({ ...b, session: next }));
 
-  const addExercise = (exerciseId: string, index?: number) =>
+  const addExercise = (exerciseId: string, index?: number) => {
     setEntries((es) => {
       const next = [...es];
       next.splice(index ?? next.length, 0, newEntry(exerciseId, exercises.get(exerciseId), kind === "mobility" ? 15 : 90));
       return next;
     });
+    if (pane === "library" && window.innerWidth < 1024) toast({ tone: "success", title: `Added ${exercises.get(exerciseId)?.name ?? "exercise"}` });
+  };
 
   const doReset = () => {
     if (confirmReset === "block") updateBlock(clearedBlock);
@@ -283,8 +287,31 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
           </div>
         </div>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(250px,300px)_minmax(0,1fr)_minmax(280px,340px)]">
-          <aside className="hidden min-h-0 flex-col border-r border-line p-4 lg:flex">
+        <div className="flex gap-1 border-b border-line bg-surface/60 p-1.5 lg:hidden">
+          {(
+            [
+              ["workout", kind === "cardio" || kind === "session" ? "Session" : "Workout", kind === "cardio" ? segments.length : kind === "session" ? 0 : entries.length],
+              ["library", "Library", 0],
+              ["fatigue", "Load", 0],
+            ] as const
+          ).map(([id, label, count]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setPane(id)}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition",
+                pane === id ? "bg-ink text-bg" : "text-muted hover:text-ink",
+              )}
+            >
+              {label}
+              {count > 0 && <span className={cn("rounded-full px-1.5 text-[10px] font-bold", pane === id ? "bg-accent text-accent-ink" : "bg-surface-3 text-ink")}>{count}</span>}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(250px,300px)_minmax(0,1fr)_minmax(280px,340px)]">
+          <aside className={cn("min-h-0 flex-col border-line p-4 lg:flex lg:border-r", pane === "fatigue" ? "flex" : "hidden")}>
             <div className="mb-3 flex items-center gap-2">
               <PersonStanding className="size-4 text-accent" />
               <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-faint">Fatigue & volume</h3>
@@ -294,7 +321,7 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
             </div>
           </aside>
 
-          <section className="board-grid scrollbar-thin min-h-0 overflow-y-auto p-4 sm:p-6">
+          <section className={cn("board-grid scrollbar-thin min-h-0 overflow-y-auto p-4 sm:p-6 lg:block", pane !== "workout" && "hidden")}>
             <div className="mx-auto flex min-h-full max-w-2xl flex-col">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-faint">
@@ -331,7 +358,7 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
             </div>
           </section>
 
-          <aside className="flex min-h-[420px] flex-col border-t border-line lg:min-h-0 lg:border-l lg:border-t-0">
+          <aside className={cn("min-h-0 flex-col border-line lg:flex lg:border-l", pane === "library" ? "flex" : "hidden")}>
             <div className="flex items-center gap-2 border-b border-line px-3 py-2.5">
               <Dumbbell className="size-4 text-accent" />
               <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-faint">

@@ -139,6 +139,7 @@ export default function HomePage() {
             </p>
             <Link
               href="/programs/new"
+              data-tour="new-program"
               className="mt-5 flex h-11 items-center justify-center gap-2 rounded-xl bg-accent text-sm font-semibold text-accent-ink transition hover:bg-[#d4ff4a] active:scale-[0.98]"
             >
               <Plus className="size-4" strokeWidth={2.5} /> Create new program

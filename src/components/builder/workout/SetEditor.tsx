@@ -25,7 +25,21 @@ function fromDisplay(v: string, units: Units) {
   return units === "metric" ? n : lbToKg(n);
 }
 
-function Num({ value, onChange, placeholder, suffix, label, className }: { value: string; onChange: (v: string) => void; placeholder?: string; suffix?: string; label: string; className?: string }) {
+function Num({
+  value,
+  onChange,
+  placeholder,
+  suffix,
+  label,
+  className,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  suffix?: string;
+  label: string;
+  className?: string;
+}) {
   return (
     <label className={cn("relative block", className)}>
       <span className="sr-only">{label}</span>
@@ -79,7 +93,12 @@ function TechniqueMenu({ set, onChange }: { set: WorkoutSet; onChange: (mods: st
                 onClick={() => onChange(on ? set.modifiers.filter((x) => x !== m.id) : [...set.modifiers, m.id])}
                 className="flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-surface-2"
               >
-                <span className={cn("mt-0.5 flex size-4 shrink-0 items-center justify-center rounded border", on ? "border-warn bg-warn text-accent-ink" : "border-line-strong")}>
+                <span
+                  className={cn(
+                    "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded border",
+                    on ? "border-warn bg-warn text-accent-ink" : "border-line-strong",
+                  )}
+                >
                   {on && <Check className="size-3" strokeWidth={3.5} />}
                 </span>
                 <span className="min-w-0 flex-1">
@@ -109,7 +128,9 @@ const COLUMNS: Record<Mode, { type: boolean; weight: string | null; rpe: boolean
 
 function gridFor(mode: Mode) {
   const c = COLUMNS[mode];
-  return ["34px", c.type && "112px", c.weight && "1fr", "1fr", c.rpe && "76px", c.tech && "auto", c.value && "44px", "auto"].filter(Boolean).join(" ");
+  return ["34px", c.type && "112px", c.weight && "1fr", "1fr", c.rpe && "76px", c.tech && "auto", c.value && "44px", "auto"]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function SetRow({
@@ -137,86 +158,130 @@ function SetRow({
   const kind = SET_KINDS.find((k) => k.id === set.kind)!;
   const v = setValue(set);
   const kinds = mode === "plyo" ? SET_KINDS.filter((k) => k.id !== "backoff") : SET_KINDS;
+  const badge = (
+    <span
+      className="flex size-8 items-center justify-center rounded-lg font-display text-xs font-bold"
+      style={{ background: `color-mix(in srgb, ${kind.color} 20%, transparent)`, color: kind.color }}
+      title={kind.label}
+    >
+      {prefix}
+      {label}
+    </span>
+  );
+  const typeSel = col.type && (
+    <select
+      aria-label="Set type"
+      value={set.kind}
+      onChange={(e) => onChange({ kind: e.target.value as SetKind, modifiers: e.target.value === "warmup" ? [] : set.modifiers })}
+      className="h-9 min-w-0 cursor-pointer rounded-lg border border-line bg-surface-2 px-2 text-xs outline-none hover:border-line-strong focus:border-accent/60"
+    >
+      {kinds.map((k) => (
+        <option key={k.id} value={k.id}>
+          {k.label}
+        </option>
+      ))}
+    </select>
+  );
+  const weightIn = col.weight && (
+    <Num
+      label={col.weight}
+      value={toDisplay(set.weight, units)}
+      onChange={(x) => onChange({ weight: fromDisplay(x, units) })}
+      placeholder={mode === "calisthenics" ? "BW" : "BW"}
+      suffix={units === "metric" ? "kg" : "lb"}
+    />
+  );
+  const amountIn = timed ? (
+    <Num
+      label="Hold time"
+      value={set.holdSec == null ? "" : String(set.holdSec)}
+      onChange={(x) => onChange({ holdSec: x === "" ? null : Math.max(0, Math.round(Number(x))) })}
+      placeholder="–"
+      suffix="sec"
+    />
+  ) : (
+    <Num
+      label={col.amount}
+      value={set.reps == null ? "" : String(set.reps)}
+      onChange={(x) => onChange({ reps: x === "" ? null : Math.max(0, Math.round(Number(x))) })}
+      placeholder="–"
+      suffix={mode === "plyo" ? "contacts" : "reps"}
+    />
+  );
+  const rpeSel = col.rpe && (
+    <select
+      aria-label="RPE"
+      value={set.rpe ?? ""}
+      onChange={(e) => onChange({ rpe: e.target.value ? Number(e.target.value) : null })}
+      className={cn(
+        "h-9 cursor-pointer rounded-lg border border-line bg-surface-2 px-2 text-xs outline-none hover:border-line-strong focus:border-accent/60",
+        set.rpe == null && "text-faint",
+      )}
+      title="Rate of perceived exertion"
+    >
+      <option value="">RPE</option>
+      {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map((r) => (
+        <option key={r} value={r}>
+          RPE {r}
+        </option>
+      ))}
+    </select>
+  );
+  const techMenu = col.tech && <TechniqueMenu set={set} onChange={(modifiers) => onChange({ modifiers })} />;
+  const valueTag = col.value && (
+    <span
+      className={cn("text-center font-display text-xs font-semibold tabular-nums", v === 0 ? "text-faint" : v > 1 ? "text-warn" : "text-ink")}
+      title="Counts as this many sets"
+    >
+      {fmtSets(v)}
+    </span>
+  );
+  const actions = (
+    <div className="flex">
+      <button
+        type="button"
+        onClick={onDuplicate}
+        className="rounded-lg p-2 text-faint hover:bg-surface-3 hover:text-ink"
+        aria-label="Duplicate set"
+        title="Duplicate"
+      >
+        <Copy className="size-3.5" />
+      </button>
+      <button
+        type="button"
+        onClick={onDelete}
+        className="rounded-lg p-2 text-faint hover:bg-danger/10 hover:text-danger"
+        aria-label="Delete set"
+        title="Delete"
+      >
+        <Trash2 className="size-3.5" />
+      </button>
+    </div>
+  );
   return (
     <div className="rounded-xl border border-line bg-surface-2/40 p-2">
-      <div className="grid items-center gap-2" style={{ gridTemplateColumns: gridFor(mode) }}>
-        <span
-          className="flex size-8 items-center justify-center rounded-lg font-display text-xs font-bold"
-          style={{ background: `color-mix(in srgb, ${kind.color} 20%, transparent)`, color: kind.color }}
-          title={kind.label}
-        >
-          {prefix}
-          {label}
-        </span>
-        {col.type && (
-          <select
-            aria-label="Set type"
-            value={set.kind}
-            onChange={(e) => onChange({ kind: e.target.value as SetKind, modifiers: e.target.value === "warmup" ? [] : set.modifiers })}
-            className="h-9 min-w-0 cursor-pointer rounded-lg border border-line bg-surface-2 px-2 text-xs outline-none hover:border-line-strong focus:border-accent/60"
-          >
-            {kinds.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.label}
-              </option>
-            ))}
-          </select>
-        )}
-        {col.weight && (
-          <Num
-            label={col.weight}
-            value={toDisplay(set.weight, units)}
-            onChange={(x) => onChange({ weight: fromDisplay(x, units) })}
-            placeholder={mode === "calisthenics" ? "BW" : "BW"}
-            suffix={units === "metric" ? "kg" : "lb"}
-          />
-        )}
-        {timed ? (
-          <Num
-            label="Hold time"
-            value={set.holdSec == null ? "" : String(set.holdSec)}
-            onChange={(x) => onChange({ holdSec: x === "" ? null : Math.max(0, Math.round(Number(x))) })}
-            placeholder="–"
-            suffix="sec"
-          />
-        ) : (
-          <Num
-            label={col.amount}
-            value={set.reps == null ? "" : String(set.reps)}
-            onChange={(x) => onChange({ reps: x === "" ? null : Math.max(0, Math.round(Number(x))) })}
-            placeholder="–"
-            suffix={mode === "plyo" ? "contacts" : "reps"}
-          />
-        )}
-        {col.rpe && (
-          <select
-            aria-label="RPE"
-            value={set.rpe ?? ""}
-            onChange={(e) => onChange({ rpe: e.target.value ? Number(e.target.value) : null })}
-            className={cn("h-9 cursor-pointer rounded-lg border border-line bg-surface-2 px-2 text-xs outline-none hover:border-line-strong focus:border-accent/60", set.rpe == null && "text-faint")}
-            title="Rate of perceived exertion"
-          >
-            <option value="">RPE</option>
-            {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map((r) => (
-              <option key={r} value={r}>
-                RPE {r}
-              </option>
-            ))}
-          </select>
-        )}
-        {col.tech && <TechniqueMenu set={set} onChange={(modifiers) => onChange({ modifiers })} />}
-        {col.value && (
-          <span className={cn("text-center font-display text-xs font-semibold tabular-nums", v === 0 ? "text-faint" : v > 1 ? "text-warn" : "text-ink")} title="Counts as this many sets">
-            {fmtSets(v)}
-          </span>
-        )}
-        <div className="flex">
-          <button type="button" onClick={onDuplicate} className="rounded-lg p-2 text-faint hover:bg-surface-3 hover:text-ink" aria-label="Duplicate set" title="Duplicate">
-            <Copy className="size-3.5" />
-          </button>
-          <button type="button" onClick={onDelete} className="rounded-lg p-2 text-faint hover:bg-danger/10 hover:text-danger" aria-label="Delete set" title="Delete">
-            <Trash2 className="size-3.5" />
-          </button>
+      <div className="hidden items-center gap-2 sm:grid" style={{ gridTemplateColumns: gridFor(mode) }}>
+        {badge}
+        {typeSel}
+        {weightIn}
+        {amountIn}
+        {rpeSel}
+        {techMenu}
+        {valueTag}
+        {actions}
+      </div>
+      <div className="space-y-2 sm:hidden">
+        <div className="flex items-center gap-2">
+          {badge}
+          <div className="min-w-0 flex-1">{typeSel}</div>
+          {valueTag}
+          {actions}
+        </div>
+        <div className="flex gap-2 [&>*]:min-w-0 [&>*]:flex-1">
+          {weightIn}
+          {amountIn}
+          {rpeSel}
+          {techMenu}
         </div>
       </div>
       {set.modifiers.length > 0 && (
@@ -256,7 +321,16 @@ function QuickApply({
     <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-line p-2.5">
       <Zap className="size-3.5 text-accent" />
       <span className="text-xs text-muted">All working sets:</span>
-      {col.weight && <Num label={`${col.weight} for all`} value={w} onChange={setW} placeholder={col.weight} suffix={units === "metric" ? "kg" : "lb"} className="w-32" />}
+      {col.weight && (
+        <Num
+          label={`${col.weight} for all`}
+          value={w}
+          onChange={setW}
+          placeholder={col.weight}
+          suffix={units === "metric" ? "kg" : "lb"}
+          className="w-32"
+        />
+      )}
       <Num label={`${amountLabel} for all`} value={r} onChange={setR} placeholder={amountLabel} className="w-28" />
       <Button
         variant="secondary"
@@ -293,7 +367,12 @@ export function SetEditor({
   onChange: (entry: WorkoutEntry) => void;
   onClose: () => void;
 }) {
-  if (!entry) return <Modal open={false} onClose={onClose} title="">{null}</Modal>;
+  if (!entry)
+    return (
+      <Modal open={false} onClose={onClose} title="">
+        {null}
+      </Modal>
+    );
   const col = COLUMNS[mode];
   const superset = entry.exercises.length > 1;
   const name = (we: WorkoutExercise) => exercises.get(we.exerciseId)?.name ?? "Unknown exercise";
@@ -314,7 +393,12 @@ export function SetEditor({
 
   const addSet = (we: WorkoutExercise, kind: SetKind): WorkoutExercise => {
     const template = [...we.sets].reverse().find((s) => s.kind === kind) ?? [...we.sets].reverse().find((s) => s.kind === "working");
-    const set = newSet(kind, template ? { weight: template.weight, reps: template.reps, holdSec: template.holdSec, rpe: kind === "warmup" ? null : template.rpe, kind } : undefined);
+    const set = newSet(
+      kind,
+      template
+        ? { weight: template.weight, reps: template.reps, holdSec: template.holdSec, rpe: kind === "warmup" ? null : template.rpe, kind }
+        : undefined,
+    );
     if (kind === "warmup") {
       const firstWorking = we.sets.findIndex((s) => s.kind !== "warmup");
       const sets = [...we.sets];
@@ -352,7 +436,8 @@ export function SetEditor({
   const hard = entryHardSets(entry);
   const bonus = entryValue(entry) - hard;
   const contacts = entry.exercises.reduce((a, we) => a + we.sets.filter((s) => s.kind !== "warmup").reduce((b, s) => b + (s.reps ?? 0), 0), 0);
-  const kinds = mode === "plyo" ? SET_KINDS.filter((k) => k.id !== "backoff") : mode === "mobility" ? SET_KINDS.filter((k) => k.id === "working") : SET_KINDS;
+  const kinds =
+    mode === "plyo" ? SET_KINDS.filter((k) => k.id !== "backoff") : mode === "mobility" ? SET_KINDS.filter((k) => k.id === "working") : SET_KINDS;
 
   const footer = (
     <div className="flex items-center justify-between gap-3">
@@ -380,7 +465,10 @@ export function SetEditor({
   );
 
   const header = (
-    <div className="mt-4 hidden gap-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-faint sm:grid" style={{ gridTemplateColumns: gridFor(mode) }}>
+    <div
+      className="mt-4 hidden gap-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-faint sm:grid"
+      style={{ gridTemplateColumns: gridFor(mode) }}
+    >
       <span>Set</span>
       {col.type && <span>Type</span>}
       {col.weight && <span>{col.weight}</span>}
@@ -402,7 +490,11 @@ export function SetEditor({
       onClose={onClose}
       className="max-w-4xl"
       title={superset ? "Superset" : name(entry.exercises[0])}
-      subtitle={superset ? entry.exercises.map((we, i) => `${letter}${i + 1} ${name(we)}`).join("  ·  ") : titleCase(exercises.get(entry.exercises[0].exerciseId)?.equipment ?? "")}
+      subtitle={
+        superset
+          ? entry.exercises.map((we, i) => `${letter}${i + 1} ${name(we)}`).join("  ·  ")
+          : titleCase(exercises.get(entry.exercises[0].exerciseId)?.equipment ?? "")
+      }
       footer={footer}
     >
       <div className={cn("grid gap-3", superset && "sm:grid-cols-2")}>
@@ -460,8 +552,8 @@ export function SetEditor({
               )}
               {ex?.discipline === "plyometrics" && ex.intensity && (
                 <p className="mt-2 text-[11px] text-muted">
-                  <span style={{ color: PLYO_INTENSITY[ex.intensity].color }}>{PLYO_INTENSITY[ex.intensity].label} intensity</span> · each contact is a
-                  maximal effort; rest fully between sets.
+                  <span style={{ color: PLYO_INTENSITY[ex.intensity].color }}>{PLYO_INTENSITY[ex.intensity].label} intensity</span> · each contact is
+                  a maximal effort; rest fully between sets.
                 </p>
               )}
             </div>
@@ -541,11 +633,19 @@ export function SetEditor({
             </div>
           ))}
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" className="h-9 text-xs" onClick={() => onChange({ ...entry, exercises: entry.exercises.map((we) => addSet(we, "working")) })}>
+            <Button
+              variant="secondary"
+              className="h-9 text-xs"
+              onClick={() => onChange({ ...entry, exercises: entry.exercises.map((we) => addSet(we, "working")) })}
+            >
               <Plus className="size-3.5" /> Add round
             </Button>
             {mode !== "mobility" && (
-              <Button variant="ghost" className="h-9 text-xs" onClick={() => onChange({ ...entry, exercises: entry.exercises.map((we) => addSet(we, "warmup")) })}>
+              <Button
+                variant="ghost"
+                className="h-9 text-xs"
+                onClick={() => onChange({ ...entry, exercises: entry.exercises.map((we) => addSet(we, "warmup")) })}
+              >
                 <Plus className="size-3.5" /> Warm-up round
               </Button>
             )}
@@ -570,10 +670,17 @@ export function SetEditor({
                   onDelete={() => deleteSet(we.id, s.id)}
                 />
               ))}
-              {we.sets.length === 0 && <p className="rounded-xl border border-dashed border-line py-6 text-center text-sm text-faint">No sets yet. Add one below.</p>}
+              {we.sets.length === 0 && (
+                <p className="rounded-xl border border-dashed border-line py-6 text-center text-sm text-faint">No sets yet. Add one below.</p>
+              )}
               <div className="flex flex-wrap gap-2 pt-1.5">
                 {kinds.map((k) => (
-                  <Button key={k.id} variant={k.id === "working" ? "secondary" : "ghost"} className="h-9 text-xs" onClick={() => patchExercise(we.id, (x) => addSet(x, k.id))}>
+                  <Button
+                    key={k.id}
+                    variant={k.id === "working" ? "secondary" : "ghost"}
+                    className="h-9 text-xs"
+                    onClick={() => patchExercise(we.id, (x) => addSet(x, k.id))}
+                  >
                     <Plus className="size-3.5" /> {mode === "mobility" ? "Hold" : k.label}
                   </Button>
                 ))}

@@ -6,7 +6,10 @@ export interface TourStep {
   title: string;
   body: string;
   next?: string;
+  since?: number;
 }
+
+export const TOUR_VERSION = 2;
 
 export const TOUR: TourStep[] = [
   {
@@ -30,7 +33,16 @@ export const TOUR: TourStep[] = [
     target: "nav",
     place: "right",
     title: "Everything lives here",
-    body: "Jump between your programs and the explorer. New areas like the calendar and progress will appear here as they launch.",
+    body: "Jump between your programs, the explorer and your friends. New areas will appear here as they launch.",
+  },
+  {
+    id: "bell",
+    route: "/",
+    target: "bell",
+    place: "bottom",
+    title: "Notifications",
+    body: "Friend requests and programs shared with you land here. Turn on push notifications from your profile to get them on your phone.",
+    since: 2,
   },
   {
     id: "avatar",
@@ -73,7 +85,16 @@ export const TOUR: TourStep[] = [
     place: "bottom",
     title: "Hundreds of exercises",
     body: "Browse the full library with filters, or create your own exercises when something is missing.",
+  },
+  {
+    id: "friends",
+    route: "/friends",
+    target: "friends-tabs",
+    place: "bottom",
+    title: "Train with friends",
+    body: "Find people by username, send requests and see each other's active programs. You can compare progress on the exercises you share.",
     next: "Last step",
+    since: 2,
   },
   {
     id: "new-program",
