@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Download, Loader2, Share2 } from "lucide-react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
+import { Download, ImageDown, Loader2, Share2 } from "lucide-react";
 import { Sheet } from "../tracker/Sheet";
 import { toast } from "../Toaster";
 import { Button, cn } from "../ui";
@@ -92,7 +93,14 @@ function loadPrefs(): Prefs {
   }
 }
 
+const images = new Map<string, Promise<HTMLImageElement | null>>();
+
 function loadImage(src: string) {
+  if (!images.has(src)) images.set(src, fetchImage(src));
+  return images.get(src)!;
+}
+
+function fetchImage(src: string) {
   return new Promise<HTMLImageElement | null>((resolve) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -111,9 +119,34 @@ function loadImage(src: string) {
   });
 }
 
+const noop = () => () => {};
+
+function device() {
+  const ua = navigator.userAgent;
+  if (/iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return "ios";
+  if (/Android/.test(ua)) return "android";
+  return "desktop";
+}
+
 const GLYPH = "M8 22V11.5l5 6 3-3.6 3 3.6 5-6V22";
 
+const FITS = [
+  [1, true],
+  [0.9, true],
+  [0.8, true],
+  [1, false],
+  [0.88, false],
+  [0.76, false],
+  [0.66, false],
+  [0.58, false],
+] as const;
+
 async function draw(canvas: HTMLCanvasElement, c: ShareContent, p: Prefs) {
+  const tries = c.apps ? FITS : FITS.filter(([, apps]) => !apps);
+  for (const [scale, apps] of tries) if (await paint(canvas, c, p, scale, apps)) return;
+}
+
+async function paint(canvas: HTMLCanvasElement, c: ShareContent, p: Prefs, scale: number, withApps: boolean) {
   const t = THEMES[p.theme];
   const { w, h } = SIZES[p.size];
   canvas.width = w;
@@ -199,7 +232,8 @@ async function draw(canvas: HTMLCanvasElement, c: ShareContent, p: Prefs) {
 
   const pad = 80;
   const inner = w - pad * 2;
-  const k = p.size === "story" ? 1.18 : p.size === "square" ? 0.88 : 1;
+  const k = (p.size === "story" ? 1.18 : p.size === "square" ? 0.88 : 1) * scale;
+  const last = scale === FITS.at(-1)![0];
   const dark = p.theme === "lime" || p.theme === "paper";
   let y = p.size === "story" ? 120 : 84;
 
@@ -214,7 +248,7 @@ async function draw(canvas: HTMLCanvasElement, c: ShareContent, p: Prefs) {
   const tag = c.eyebrow.toUpperCase();
   ctx.fillText(tag, w - pad - ctx.measureText(tag).width, y + 31);
   ctx.textBaseline = "alphabetic";
-  y += 60 + (p.size === "story" ? 90 : 56);
+  y += 60 + (p.size === "story" ? 90 : 56) * scale;
 
   if (c.kind === "profile") {
     const size = 168 * k;
@@ -304,11 +338,13 @@ async function draw(canvas: HTMLCanvasElement, c: ShareContent, p: Prefs) {
     y += ch + 66 * k;
   }
 
-  const appsH = c.apps ? 250 * Math.min(1, k) : 0;
+  const appsH = withApps ? 250 * Math.min(1, k) : 0;
   const footerTop = h - (p.size === "story" ? 220 : 170) - appsH;
-  for (const b of c.blocks) {
-    if (p.hidden.includes(b.title) || !b.items.length) continue;
-    if (y > footerTop - 120) break;
+  const shown = c.blocks.filter((b) => !p.hidden.includes(b.title) && b.items.length);
+  const end = shown.length ? y + 98 * k : y - 66 * k + 30;
+  if (!last && end > footerTop) return false;
+  for (const b of shown) {
+    if (y + 22 * k + 76 * k > footerTop) break;
     ctx.fillStyle = t.sub;
     ctx.font = font(700, 24 * k, body);
     ctx.fillText(b.title.toUpperCase(), pad, y);
@@ -328,7 +364,7 @@ async function draw(canvas: HTMLCanvasElement, c: ShareContent, p: Prefs) {
     y += 42 * k;
   }
 
-  if (c.apps) {
+  if (withApps) {
     let ay = footerTop + 30;
     ctx.fillStyle = t.sub;
     ctx.font = font(700, 24 * Math.min(1, k), body);
@@ -367,6 +403,7 @@ async function draw(canvas: HTMLCanvasElement, c: ShareContent, p: Prefs) {
   ctx.fillStyle = t.sub;
   ctx.font = font(500, 26, body);
   ctx.fillText(ellipsis(c.url.replace(/^https?:\/\//, ""), inner), pad, fy + 42);
+  return true;
 }
 
 export function ShareStudio({ content, open, onClose }: { content: ShareContent | null; open: boolean; onClose: () => void }) {
@@ -375,6 +412,9 @@ export function ShareStudio({ content, open, onClose }: { content: ShareContent 
   const [loaded, setLoaded] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [holding, setHolding] = useState(false);
+  const ios = useSyncExternalStore(noop, () => device() === "ios", () => false);
 
   useEffect(() => {
     if (!open || loaded) return;
@@ -398,38 +438,54 @@ export function ShareStudio({ content, open, onClose }: { content: ShareContent 
     if (!open || !content || !loaded) return;
     let live = true;
     canvas.current ??= document.createElement("canvas");
-    draw(canvas.current, content, prefs).then(() => {
-      if (live && canvas.current) setPreview(canvas.current.toDataURL("image/png"));
+    const el = canvas.current;
+    draw(el, content, prefs).then(() => {
+      if (!live) return;
+      setPreview(el.toDataURL("image/png"));
+      el.toBlob((b) => live && b && setFile(new File([b], content.fileName, { type: "image/png" })), "image/png");
     });
     return () => {
       live = false;
     };
   }, [open, content, prefs, loaded]);
 
-  const blob = () => new Promise<Blob | null>((r) => (canvas.current ? canvas.current.toBlob(r, "image/png") : r(null)));
-
-  const download = (b: Blob) => {
+  const download = (f: File) => {
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(b);
-    a.download = content?.fileName ?? "mikon.png";
+    a.href = URL.createObjectURL(f);
+    a.download = f.name;
+    document.body.appendChild(a);
     a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   };
 
-  const share = async () => {
-    if (!content) return;
-    setBusy(true);
-    try {
-      const b = await blob();
-      if (!b) throw new Error("Couldn't create the image");
-      const file = new File([b], content.fileName, { type: "image/png" });
-      if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], title: content.title, text: `${content.cta} ${content.url}` });
-      else download(b);
-    } catch (e) {
-      if ((e as Error).name !== "AbortError") toast({ tone: "warn", title: "Couldn't share", message: (e as Error).message });
-    } finally {
-      setBusy(false);
+  const failed = (e: unknown) => {
+    if ((e as Error).name !== "AbortError") toast({ tone: "warn", title: "Couldn't share", message: (e as Error).message });
+  };
+
+  const share = () => {
+    if (!content || !file) return;
+    if (navigator.canShare?.({ files: [file] })) {
+      setBusy(true);
+      navigator
+        .share({ files: [file], text: `${content.cta} ${content.url}` })
+        .catch(failed)
+        .finally(() => setBusy(false));
+    } else if (navigator.share) {
+      navigator.share({ title: content.title, text: content.cta, url: content.url }).catch(failed);
+    } else save();
+  };
+
+  const save = () => {
+    if (!file) return;
+    const d = device();
+    if (d === "ios") {
+      if (navigator.canShare?.({ files: [file] })) navigator.share({ files: [file] }).catch((e) => (e as Error).name !== "AbortError" && setHolding(true));
+      else setHolding(true);
+      return;
     }
+    download(file);
+    toast({ tone: "success", title: d === "android" ? "Saved to Downloads" : "Image downloaded" });
   };
 
   const pill = (on: boolean) => cn("shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition", on ? "border-ink bg-ink text-bg" : "border-line bg-surface-2 text-muted");
@@ -499,23 +555,27 @@ export function ShareStudio({ content, open, onClose }: { content: ShareContent 
           </div>
         </div>
         <div className="mt-3 grid shrink-0 grid-cols-[1fr_auto] gap-2">
-          <Button onClick={share} disabled={busy || !preview} className="h-12 rounded-full text-[15px]">
+          <Button onClick={share} disabled={busy || !file} className="h-12 rounded-full text-[15px]">
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />} Share
           </Button>
-          <Button
-            variant="secondary"
-            onClick={async () => {
-              const b = await blob();
-              if (b) download(b);
-            }}
-            disabled={!preview}
-            className="h-12 rounded-full px-4"
-            aria-label="Save image"
-          >
-            <Download className="size-4" />
+          <Button variant="secondary" onClick={save} disabled={!file} className="h-12 rounded-full px-5">
+            {ios ? <ImageDown className="size-4" /> : <Download className="size-4" />} {ios ? "Save to Photos" : "Save"}
           </Button>
         </div>
       </div>
+      {holding &&
+        preview &&
+        createPortal(
+          <div className="fixed inset-0 z-[95] flex flex-col items-center justify-center gap-4 bg-black/90 p-6" onClick={() => setHolding(false)}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={preview} alt="Your share image" className="max-h-[75%] max-w-full rounded-2xl" style={{ WebkitTouchCallout: "default" }} onClick={(e) => e.stopPropagation()} />
+            <p className="text-center text-sm text-white/80">Press and hold the image, then tap Save to Photos</p>
+            <Button variant="secondary" onClick={() => setHolding(false)}>
+              Done
+            </Button>
+          </div>,
+          document.body,
+        )}
     </Sheet>
   );
 }
