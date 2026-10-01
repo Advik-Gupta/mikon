@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   description: "Build and maintain serious training programs.",
   applicationName: "Mikon",
   appleWebApp: { capable: true, title: "Mikon", statusBarStyle: "black-translucent" },
-  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
   formatDetection: { telephone: false },
 };
 

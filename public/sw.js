@@ -1,4 +1,4 @@
-const CACHE = "mikon-v1";
+const CACHE = "mikon-v2";
 const OFFLINE = "/offline.html";
 const PRECACHE = [OFFLINE, "/icons/icon-192.png", "/icons/icon-512.png"];
 const DEV = ["localhost", "127.0.0.1"].includes(self.location.hostname);
