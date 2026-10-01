@@ -20,17 +20,19 @@
 - [MongoDB](https://www.mongodb.com/) with the official Node driver
 - [jose](https://github.com/panva/jose) (JWT sessions) and [bcrypt](https://github.com/dcodeIO/bcrypt.js) (password hashing)
 - [Zod](https://zod.dev/) (request validation)
+- [UploadThing](https://uploadthing.com/) (profile photos)
+- [web-push](https://github.com/web-push-libs/web-push) (push notifications)
 
 ## 🔧 Features
 
 - **Secure Accounts**
-  Email and password signup with hashed passwords, httpOnly JWT sessions, rate limited auth, validated requests and strict security headers.
+  Email or username sign in with hashed passwords, httpOnly JWT sessions, rate limited auth, validated requests and strict security headers.
 
 - **In Depth Onboarding**
   Contact details, body metrics, body fat estimate, an injury body map, experience and PRs, training disciplines, ranked goals and a weekly availability calendar.
 
 - **Guided Tour**
-  A short walkthrough after signup that visits the board, profile and explorer and ends at creating your first program.
+  A short walkthrough after signup that visits the board, profile, explorer and friends and ends at creating your first program. New features get a short what's new tour.
 
 - **Muscle and Exercise Explorer**
   Interactive male and female body maps with zoomable muscle groups, anatomy for every muscle, and a library of 900+ exercises you can extend with your own.
@@ -47,6 +49,24 @@
 - **Smart Suggestions**
   Toast advice when a change stacks activities on the same muscles, overloads a muscle in one session or skips a recovery day.
 
+- **Program Overview**
+  Save a finished program and analyse it day by day or across the week, with a heat mapped muscle figure, weekly volume, a load map and targets.
+
+- **Daily Training**
+  Start a program on any date and the home board shows each day's session. Log sets, reps and weights and get notified of new bests.
+
+- **Friends and Sharing**
+  Search people by username, send friend requests, see each other's active programs, share programs or list them on your public profile.
+
+- **Progress Comparisons**
+  Every exercise has a page with your progress chart and a friends leaderboard, plus head to head charts on a friend's profile.
+
+- **Privacy Controls**
+  Choose who sees your profile, active program and progress: everyone, friends or only you.
+
+- **Installable App**
+  A full PWA with offline fallback, an install prompt, push notifications and phone first layouts.
+
 ## 🚀 Getting Started
 
 ```bash
@@ -56,7 +76,7 @@ npm run db:seed
 npm run dev
 ```
 
-Fill in `.env.local` with your MongoDB connection string and a long random `JWT_SECRET` before seeding. `npm run db:seed` loads the exercise library into MongoDB.
+Fill in `.env.local` with your MongoDB connection string, a long random `JWT_SECRET`, an UploadThing token and VAPID keys (`npx web-push generate-vapid-keys`) before seeding. `npm run db:seed` loads the exercise library into MongoDB.
 
 Exercise photos and instructions come from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain). Body figure paths come from [react-native-body-highlighter](https://github.com/HichamELBSI/react-native-body-highlighter) (MIT).
 
