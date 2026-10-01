@@ -12,8 +12,15 @@ import { cn } from "../../ui";
 
 export const LIB = "lib:";
 
+const IMPORT_LABEL: Record<string, string> = { strong: "Strong", hevy: "Hevy", lyfta: "Lyfta", macrofactor: "MacroFactor" };
+
 export function ExerciseBadge({ e }: { e: Exercise }) {
-  if (e.source === "custom") return <span className="rounded bg-info/15 px-1 py-px text-[10px] font-medium text-info">Custom</span>;
+  if (e.source === "custom")
+    return (
+      <span className="rounded bg-info/15 px-1 py-px text-[10px] font-medium text-info">
+        {e.importedFrom ? `${IMPORT_LABEL[e.importedFrom] ?? "Imported"} import` : "Custom"}
+      </span>
+    );
   if (e.discipline === "plyometrics" && e.intensity) {
     const i = PLYO_INTENSITY[e.intensity];
     return (

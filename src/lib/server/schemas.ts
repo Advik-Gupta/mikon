@@ -46,7 +46,7 @@ export const customExerciseSchema = z.looseObject({
   id: z.string().regex(/^cx-[A-Za-z0-9_-]{1,40}$/),
   name: z.string().trim().min(1).max(120),
   source: z.literal("custom"),
-  primary: z.array(z.enum(MUSCLE_KEYS)).min(1).max(17),
+  primary: z.array(z.enum(MUSCLE_KEYS)).max(17),
   secondary: z.array(z.enum(MUSCLE_KEYS)).max(17),
   instructions: z.array(z.string().max(1000)).max(40),
 });
@@ -69,6 +69,7 @@ export const logSchema = z.object({
   name: z.string().max(120).optional(),
   startedAt: z.string().max(40).optional(),
   durationSec: z.number().int().min(0).max(86400).optional(),
+  source: z.enum(["strong", "hevy", "lyfta", "macrofactor"]).optional(),
   exercises: z
     .array(
       z.object({
@@ -83,13 +84,14 @@ export const logSchema = z.object({
               done: z.boolean(),
               rir: z.number().int().min(0).max(10).nullable().optional(),
               kind: z.enum(["warmup", "working", "backoff"]).optional(),
+              distanceKm: num.optional(),
             }),
           )
           .max(40),
       }),
     )
     .max(60),
-  notes: z.string().max(2000),
+  notes: z.string().max(4000),
   completedAt: z.string().max(40).nullable(),
 });
 
@@ -109,3 +111,17 @@ export const meSchema = z
   .partial();
 
 export const usernameSchema = meSchema.shape.username.unwrap();
+
+export const measurementSchema = z.object({
+  id: z.string().regex(ID),
+  metric: z.enum(["weight", "bodyFat", "calories", "neck", "shoulders", "chest", "leftBicep", "rightBicep", "leftForearm", "rightForearm", "upperAbs", "waist", "abdomen", "lowerAbs", "hips", "leftThigh", "rightThigh", "leftCalf", "rightCalf"]),
+  date: z.string().max(40),
+  value: z.number().finite().min(0).max(100000),
+  source: z.string().max(20).optional(),
+});
+
+export const importSchema = z.object({
+  logs: z.array(logSchema).max(80),
+  measurements: z.array(measurementSchema).max(2000),
+  customExercises: z.array(customExerciseSchema).max(200),
+});

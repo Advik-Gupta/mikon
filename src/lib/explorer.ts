@@ -25,6 +25,7 @@ export interface Exercise {
   source: "free-exercise-db" | "mikon" | "custom";
   targets?: string[];
   createdAt?: string;
+  importedFrom?: string;
 }
 
 interface ExerciseDB {

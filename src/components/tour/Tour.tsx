@@ -81,7 +81,8 @@ export function Tour() {
   const steps = whatsNew ? TOUR.filter((s) => (s.since ?? 0) > version) : TOUR;
   const index = Math.min((whatsNew ? tutorial?.newStep : tutorial?.step) ?? 0, steps.length - 1);
   const step = steps[index];
-  const running = !!user && !!profile && (!tutorial?.done || whatsNew) && steps.length > 0;
+  const asked = !!tutorial?.guides?.includes("import-asked");
+  const running = !!user && !!profile && asked && pathname !== "/import" && (!tutorial?.done || whatsNew) && steps.length > 0;
   const onRoute = running && pathname === step.route;
   const { rect, missing } = useTargetRect(step, onRoute);
 
@@ -108,7 +109,7 @@ export function Tour() {
       <button
         type="button"
         onClick={() => router.push(step.route)}
-        className="fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] left-4 z-[70] flex items-center gap-2 rounded-full border border-accent/40 bg-surface/95 px-4 py-2 text-sm font-medium shadow-2xl backdrop-blur hover:border-accent md:bottom-4"
+        className="fixed bottom-[calc(max(env(safe-area-inset-bottom)_-_12px,4px)_+_62px)] left-4 z-[70] flex items-center gap-2 rounded-full border border-accent/40 bg-surface/95 px-4 py-2 text-sm font-medium shadow-2xl backdrop-blur hover:border-accent md:bottom-4"
       >
         <Compass className="size-4 text-accent" /> {whatsNew ? "See what's new" : "Resume tour"}
       </button>

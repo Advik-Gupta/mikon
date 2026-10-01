@@ -365,6 +365,8 @@ function MuscleChips({ ids, nav, strong }: { ids: string[]; nav: ExplorerNav; st
   );
 }
 
+const IMPORT_SOURCE: Record<string, string> = { strong: "Strong", hevy: "Hevy", lyfta: "Lyfta", macrofactor: "MacroFactor Workouts" };
+
 export function ExercisePanel({ nav, exercise }: { nav: ExplorerNav; exercise: Exercise }) {
   const worked = musclesForExercise(exercise);
   const { db } = useExerciseDB();
@@ -413,7 +415,9 @@ export function ExercisePanel({ nav, exercise }: { nav: ExplorerNav; exercise: E
           </div>
         )}
       </div>
-      {exercise.source === "custom" && <p className="mt-1 text-xs text-info">Your exercise</p>}
+      {exercise.source === "custom" && (
+        <p className="mt-1 text-xs text-info">{exercise.importedFrom ? `From your ${IMPORT_SOURCE[exercise.importedFrom] ?? "app"} import` : "Your exercise"}</p>
+      )}
       <Link
         href={`/exercises/${exercise.id}`}
         className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface-2 px-2.5 py-1.5 text-xs font-medium hover:border-line-strong"
@@ -507,7 +511,9 @@ export function ExercisePanel({ nav, exercise }: { nav: ExplorerNav; exercise: E
 
       <p className="mt-8 border-t border-line pt-4 text-[11px] text-faint">
         {exercise.source === "custom"
-          ? "Created by you."
+          ? exercise.importedFrom
+            ? `Imported from ${IMPORT_SOURCE[exercise.importedFrom] ?? "another app"}. Edit it to add muscles and instructions.`
+            : "Created by you."
           : exercise.source === "mikon"
             ? "Written for Mikon."
             : "Photos and instructions: free-exercise-db (public domain)."}
