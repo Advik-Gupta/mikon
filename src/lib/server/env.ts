@@ -19,4 +19,9 @@ const schema = z.object({
   VAPID_SUBJECT: z.string().optional(),
 });
 
-export const env = schema.parse(process.env);
+type Env = z.infer<typeof schema>;
+let parsed: Env | null = null;
+
+export const env = new Proxy({} as Env, {
+  get: (_, key) => (parsed ??= schema.parse(process.env))[key as keyof Env],
+});

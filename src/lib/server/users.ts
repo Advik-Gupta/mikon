@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { ObjectId } from "mongodb";
 import { getDb } from "./db";
 import { env } from "./env";
-import { TOUR_VERSION } from "@/components/tour/steps";
+import { TOUR_VERSION } from "../tour-version";
 
 export type Visibility = "private" | "friends" | "public";
 

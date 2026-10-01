@@ -10,11 +10,18 @@ export interface PushPayload {
   tag?: string;
 }
 
-const enabled = !!(env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY);
-if (enabled) webpush.setVapidDetails(env.VAPID_SUBJECT ?? "mailto:admin@example.com", env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!, env.VAPID_PRIVATE_KEY!);
+let configured: boolean | null = null;
+
+function ready() {
+  if (configured === null) {
+    configured = !!(env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY);
+    if (configured) webpush.setVapidDetails(env.VAPID_SUBJECT ?? "mailto:admin@example.com", env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!, env.VAPID_PRIVATE_KEY!);
+  }
+  return configured;
+}
 
 export async function sendPush(userId: string, payload: PushPayload) {
-  if (!enabled) return;
+  if (!ready()) return;
   const db = await getDb();
   const subs = await db.collection("push_subscriptions").find({ userId }).toArray();
   await Promise.all(

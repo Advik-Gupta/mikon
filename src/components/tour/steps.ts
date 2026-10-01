@@ -9,7 +9,7 @@ export interface TourStep {
   since?: number;
 }
 
-export const TOUR_VERSION = 2;
+export { TOUR_VERSION } from "@/lib/tour-version";
 
 export const TOUR: TourStep[] = [
   {
