@@ -75,6 +75,7 @@ export const logSchema = z.object({
       z.object({
         exerciseId: z.string().regex(/^[A-Za-z0-9_-]{1,120}$/),
         note: z.string().max(1000).optional(),
+        supersetId: z.string().regex(ID).optional(),
         sets: z
           .array(
             z.object({

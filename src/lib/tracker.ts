@@ -137,12 +137,14 @@ export function startFromProgram(userId: string, program: Program, dayIndex: num
     .flatMap((b) =>
       (b.entries ?? []).flatMap((e) =>
         e.exercises.map((x) => {
+          const supersetId = e.exercises.length > 1 ? e.id : undefined;
           const timed = exercises.get(x.exerciseId)?.measure === "time" || x.sets.some((s) => s.holdSec != null && s.reps == null);
           return {
             id: uid(),
             exerciseId: x.exerciseId,
             note: x.notes ?? "",
             restSec: e.restSec ?? 90,
+            supersetId,
             sets: x.sets.map((s) => newTrackSet({ kind: s.kind, weight: s.weight, reps: s.reps, holdSec: s.holdSec ?? null, rir: null, timed })),
           };
         }),
@@ -200,6 +202,7 @@ export function toLog(w: ActiveWorkout): WorkoutLog {
       .map((x) => ({
         exerciseId: x.exerciseId,
         note: x.note.slice(0, 1000) || undefined,
+        supersetId: x.supersetId,
         sets: x.sets.map(
           (s): LoggedSet => ({ weight: s.weight, reps: s.timed ? null : s.reps, holdSec: s.timed ? s.holdSec : null, done: s.done, rir: s.rir, kind: s.kind }),
         ),
@@ -292,6 +295,7 @@ export function startFromLog(userId: string, log: WorkoutLog) {
     exerciseId: x.exerciseId,
     note: x.note ?? "",
     restSec: 90,
+    supersetId: x.supersetId,
     sets: x.sets.map((s) => newTrackSet({ kind: s.kind ?? "working", weight: s.weight, reps: s.reps, holdSec: s.holdSec, timed: s.holdSec != null && s.reps == null })),
   }));
   return begin(userId, log.name || "Workout", list, log.programId || null, log.dayIndex >= 0 ? log.dayIndex : null);

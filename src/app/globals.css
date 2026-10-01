@@ -154,3 +154,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     padding-bottom: max(calc(env(safe-area-inset-bottom) - 16px), 6px);
   }
 }
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

@@ -212,6 +212,7 @@ export interface LoggedSet {
 export interface LoggedExercise {
   exerciseId: string;
   note?: string;
+  supersetId?: string;
   sets: LoggedSet[];
 }
 
