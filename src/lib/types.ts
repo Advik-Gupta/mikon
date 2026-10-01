@@ -206,6 +206,7 @@ export interface LoggedSet {
   done: boolean;
   rir?: number | null;
   kind?: SetKind;
+  distanceKm?: number | null;
 }
 
 export interface LoggedExercise {
@@ -222,6 +223,7 @@ export interface WorkoutLog {
   name?: string;
   startedAt?: string;
   durationSec?: number;
+  source?: string;
   exercises: LoggedExercise[];
   notes: string;
   completedAt: string | null;

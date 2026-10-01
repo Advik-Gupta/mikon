@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import type { Measurement } from "./measurements";
 import { migrateProfile } from "./migrate";
 import type { Profile, Program, Visibility, WorkoutLog } from "./types";
 
@@ -11,9 +12,10 @@ export const KEYS = {
   sidebar: "mikon.sidebar-collapsed",
   customExercises: "mikon.custom-exercises.v1",
   logs: "mikon.logs.v1",
+  measurements: "mikon.measurements.v1",
 } as const;
 
-const SYNCED = new Set<string>([KEYS.profile, KEYS.draft, KEYS.programs, KEYS.customExercises, KEYS.logs]);
+const SYNCED = new Set<string>([KEYS.profile, KEYS.draft, KEYS.programs, KEYS.customExercises, KEYS.logs, KEYS.measurements]);
 
 export interface Privacy {
   profile: Visibility;
@@ -116,6 +118,8 @@ function persist(key: string, prev: unknown, next: unknown) {
     schedule("draft", (k) => api("PUT", "/api/profile/draft", next ?? null, k), 800);
   } else if (key === KEYS.programs) {
     persistList("programs", prev as Program[] | null, next as Program[] | null);
+  } else if (key === KEYS.measurements) {
+    persistList("measurements", prev as { id: string }[] | null, next as { id: string }[] | null);
   } else if (key === KEYS.logs) {
     persistList("logs", prev as WorkoutLog[] | null, next as WorkoutLog[] | null);
   } else if (key === KEYS.customExercises) {
@@ -138,6 +142,7 @@ export function hydrate() {
       memory.set(KEYS.programs, data.programs ?? []);
       memory.set(KEYS.customExercises, data.customExercises ?? []);
       memory.set(KEYS.logs, data.logs ?? []);
+      memory.set(KEYS.measurements, data.measurements ?? []);
       SYNCED.forEach((k) => window.localStorage.removeItem(k));
       hydrated = true;
       emit();
@@ -230,11 +235,19 @@ export function useStored<T>(key: string): T | null | undefined {
 export const useProfile = () => useStored<Profile>(KEYS.profile);
 export const usePrograms = () => useStored<Program[]>(KEYS.programs);
 export const useLogs = () => useStored<WorkoutLog[]>(KEYS.logs);
+export const useMeasurements = () => useStored<Measurement[]>(KEYS.measurements);
+
+export async function rehydrate() {
+  hydrating = null;
+  return hydrate();
+}
 
 export function saveProfile(p: Profile) {
   writeStored(KEYS.profile, { ...p, updatedAt: new Date().toISOString() });
 }
 
-export function resetAll() {
-  Object.values(KEYS).forEach((k) => writeStored(k, null));
+export async function resetAll() {
+  await api("DELETE", "/api/me/data");
+  SYNCED.forEach((k) => memory.set(k, k === KEYS.programs || k === KEYS.logs || k === KEYS.measurements || k === KEYS.customExercises ? [] : null));
+  emit();
 }

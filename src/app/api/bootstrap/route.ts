@@ -16,11 +16,12 @@ export const GET = handler(async (req: NextRequest) => {
   }
   const user = await ensureUsername(found);
   const db = await getDb();
-  const [profile, programs, custom, logs] = await Promise.all([
+  const [profile, programs, custom, logs, measurements] = await Promise.all([
     db.collection("profiles").findOne({ userId }),
     db.collection("programs").find({ userId }).sort({ updatedAt: -1 }).toArray(),
     db.collection("custom_exercises").find({ userId }).sort({ updatedAt: -1 }).toArray(),
-    db.collection("logs").find({ userId }).sort({ date: -1 }).limit(2000).toArray(),
+    db.collection("logs").find({ userId }).sort({ date: -1 }).limit(3000).toArray(),
+    db.collection("measurements").find({ userId }).sort({ date: -1 }).limit(5000).toArray(),
   ]);
   return Response.json(
     {
@@ -30,6 +31,7 @@ export const GET = handler(async (req: NextRequest) => {
       programs: programs.map((p) => p.data),
       customExercises: custom.map((c) => c.data),
       logs: logs.map((l) => l.data),
+      measurements: measurements.map((m) => m.data),
     },
     { headers: { "Cache-Control": "no-store" } },
   );

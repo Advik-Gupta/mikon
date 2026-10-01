@@ -14,6 +14,8 @@ async function ensureIndexes(db: Db) {
     db.collection("users").createIndex({ email: 1 }, { unique: true }),
     db.collection("users").createIndex({ username: 1 }, { unique: true, partialFilterExpression: { username: { $type: "string" } } }),
     db.collection("logs").createIndex({ userId: 1, id: 1 }, { unique: true }),
+    db.collection("measurements").createIndex({ userId: 1, id: 1 }, { unique: true }),
+    db.collection("measurements").createIndex({ userId: 1, metric: 1, date: -1 }),
     db.collection("logs").createIndex({ userId: 1, exerciseIds: 1, date: 1 }),
     db.collection("friendships").createIndex({ pair: 1 }, { unique: true }),
     db.collection("friendships").createIndex({ users: 1, status: 1 }),

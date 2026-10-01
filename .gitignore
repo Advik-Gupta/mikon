@@ -46,3 +46,6 @@ AGENTS.md
 CLAUDE.md
 .claude/
 .cursor/
+
+# Sample export files from other apps
+/data examples/
