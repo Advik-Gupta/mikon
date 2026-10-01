@@ -1,12 +1,19 @@
 import type { NextRequest } from "next/server";
 import { getDb } from "@/lib/server/db";
-import { handler, HttpError, requireUser } from "@/lib/server/http";
+import { endSession, handler, HttpError, requireUser } from "@/lib/server/http";
+import { env } from "@/lib/server/env";
+import { SESSION_COOKIE, sessionIssuedAt } from "@/lib/server/session";
 import { ensureUsername, findUser, publicUser } from "@/lib/server/users";
 
 export const GET = handler(async (req: NextRequest) => {
   const userId = await requireUser(req);
   const found = await findUser(userId);
   if (!found) throw new HttpError(401, "Not signed in");
+  const issued = await sessionIssuedAt(req.cookies.get(SESSION_COOKIE)?.value, env.JWT_SECRET);
+  if (found.passwordChangedAt && issued && issued * 1000 < found.passwordChangedAt.getTime() - 1000) {
+    await endSession();
+    throw new HttpError(401, "Your password was changed. Sign in again.");
+  }
   const user = await ensureUsername(found);
   const db = await getDb();
   const [profile, programs, custom, logs] = await Promise.all([

@@ -22,6 +22,8 @@ async function ensureIndexes(db: Db) {
     db.collection("push_subscriptions").createIndex({ endpoint: 1 }, { unique: true }),
     db.collection("push_subscriptions").createIndex({ userId: 1 }),
     db.collection("shares").createIndex({ to: 1, createdAt: -1 }),
+    db.collection("password_resets").createIndex({ tokenHash: 1 }, { unique: true }),
+    db.collection("password_resets").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
     db.collection("profiles").createIndex({ userId: 1 }, { unique: true }),
     db.collection("programs").createIndex({ userId: 1, id: 1 }, { unique: true }),
     db.collection("custom_exercises").createIndex({ userId: 1, id: 1 }, { unique: true }),

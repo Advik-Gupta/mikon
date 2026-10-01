@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
@@ -23,55 +23,7 @@ const STRENGTH_COLOR = ["#ff5c5c", "#ff9a3c", "#ffb547", "#8be04e", "#c6f432"];
 
 const safeNext = (next: string | null) => (next && next.startsWith("/") && !next.startsWith("//") ? next : "/");
 
-export function AuthForm({ mode }: { mode: "login" | "signup" }) {
-  const router = useRouter();
-  const params = useSearchParams();
-  const next = safeNext(params.get("next"));
-  const ref = params.get("ref")?.toLowerCase().match(/^[a-z0-9_.]{3,24}$/)?.[0];
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
-  const [touchedUsername, setTouchedUsername] = useState(false);
-  const [available, setAvailable] = useState<{ name: string; ok: boolean } | null>(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [show, setShow] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const signup = mode === "signup";
-  const s = strength(password);
-  const handle = touchedUsername ? username : name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 24);
-  const validHandle = /^[a-z0-9_.]{3,24}$/.test(handle);
-
-  useEffect(() => {
-    if (!signup || !validHandle) return;
-    const t = setTimeout(async () => {
-      const res = await fetch(`/api/users/available?u=${encodeURIComponent(handle)}`).catch(() => null);
-      const data = await res?.json().catch(() => null);
-      if (data) setAvailable({ name: handle, ok: data.available });
-    }, 350);
-    return () => clearTimeout(t);
-  }, [handle, signup, validHandle]);
-  const handleState = !handle ? null : !validHandle ? "invalid" : available?.name !== handle ? "checking" : available.ok ? "ok" : "taken";
-
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/auth/${mode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(signup ? { name, username: handle, email, password, ...(ref ? { ref } : {}) } : { email, password }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? "Something went wrong");
-      router.replace(signup ? "/onboarding" : next);
-    } catch (err) {
-      setError((err as Error).message);
-      setBusy(false);
-    }
-  };
-
+export function AuthShell({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
       <div className="board-grid relative hidden overflow-hidden border-r border-line bg-surface/40 p-10 lg:flex lg:flex-col">
@@ -95,6 +47,85 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       </div>
 
       <div className="flex items-center justify-center px-5 py-12 sm:px-10">
+{children}
+      </div>
+    </div>
+  );
+}
+
+export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+  const router = useRouter();
+  const params = useSearchParams();
+  const next = safeNext(params.get("next"));
+  const ref = params.get("ref")?.toLowerCase().match(/^[a-z0-9_.]{3,24}$/)?.[0];
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [touchedUsername, setTouchedUsername] = useState(false);
+  const [available, setAvailable] = useState<{ name: string; ok: boolean } | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [wrongCredentials, setWrongCredentials] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const signup = mode === "signup";
+  const s = strength(password);
+  const handle = touchedUsername ? username : name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 24);
+  const validHandle = /^[a-z0-9_.]{3,24}$/.test(handle);
+
+  useEffect(() => {
+    if (!signup || !validHandle) return;
+    const t = setTimeout(async () => {
+      const res = await fetch(`/api/users/available?u=${encodeURIComponent(handle)}`).catch(() => null);
+      const data = await res?.json().catch(() => null);
+      if (data) setAvailable({ name: handle, ok: data.available });
+    }, 350);
+    return () => clearTimeout(t);
+  }, [handle, signup, validHandle]);
+  const handleState = !handle ? null : !validHandle ? "invalid" : available?.name !== handle ? "checking" : available.ok ? "ok" : "taken";
+
+  const check = () => {
+    if (signup && !name.trim()) return "Enter your name.";
+    if (signup && !validHandle) return "Pick a username of 3 to 24 letters, numbers, dots or underscores.";
+    if (!email.trim()) return signup ? "Enter your email." : "Enter your email or username.";
+    if (signup && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return "That email doesn't look right.";
+    if (!password) return "Enter your password.";
+    if (signup && password.length < 8) return "Your password needs at least 8 characters.";
+    return null;
+  };
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    const invalid = check();
+    setError(invalid);
+    setWrongCredentials(false);
+    if (invalid) return;
+    setBusy(true);
+    let res: Response;
+    try {
+      res = await fetch(`/api/auth/${mode}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(signup ? { name, username: handle, email, password, ...(ref ? { ref } : {}) } : { email, password }),
+      });
+    } catch {
+      setError("Can't reach Mikon. Check your connection and try again.");
+      setBusy(false);
+      return;
+    }
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) return router.replace(signup ? "/onboarding" : next);
+    setBusy(false);
+    if (res.status === 401) {
+      setWrongCredentials(true);
+      return setError("Your email or password is incorrect.");
+    }
+    if (res.status >= 500) return setError(data.error && res.status === 503 ? data.error : "We couldn't sign you in right now. Please try again in a minute.");
+    setError(data.error ?? "Something went wrong. Please try again.");
+  };
+
+  return (
+    <AuthShell>
         <motion.form
           onSubmit={submit}
           initial={{ opacity: 0, y: 12 }}
@@ -162,6 +193,11 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
               />
             </Field>
             <Field label="Password">
+              {!signup && (
+                <Link href="/forgot-password" className="float-right -mt-6 text-xs font-medium text-muted hover:text-accent">
+                  Forgot password?
+                </Link>
+              )}
               <div className="relative">
                 <Input
                   icon={Lock}
@@ -198,9 +234,21 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             </Field>
           </div>
 
-          {error && <p className="mt-4 rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
+          {error && (
+            <p role="alert" className="mt-4 rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+              {error}
+              {wrongCredentials && (
+                <>
+                  {" "}
+                  <Link href={`/forgot-password${email.includes("@") ? `?email=${encodeURIComponent(email.trim())}` : ""}`} className="font-medium underline">
+                    Reset your password
+                  </Link>
+                </>
+              )}
+            </p>
+          )}
 
-          <Button type="submit" disabled={busy || (signup && handleState === "taken")} className={cn("mt-6 h-11 w-full")}>
+          <Button type="submit" disabled={busy || (signup && handleState === "taken")} aria-busy={busy} className={cn("mt-6 h-11 w-full")}>
             {busy ? "Please wait…" : signup ? "Create account" : "Sign in"} {!busy && <ArrowRight className="size-4" />}
           </Button>
 
@@ -211,7 +259,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             </Link>
           </p>
         </motion.form>
-      </div>
-    </div>
+    </AuthShell>
   );
 }

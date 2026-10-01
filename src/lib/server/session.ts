@@ -22,3 +22,13 @@ export async function verifySession(token: string | undefined, secret: string) {
     return null;
   }
 }
+
+export async function sessionIssuedAt(token: string | undefined, secret: string) {
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, key(secret), { algorithms: ["HS256"] });
+    return typeof payload.iat === "number" ? payload.iat : null;
+  } catch {
+    return null;
+  }
+}

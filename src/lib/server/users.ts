@@ -17,6 +17,7 @@ export interface UserDoc {
   bio: string;
   privacy: { profile: Visibility; activeProgram: Visibility; progress: Visibility };
   passwordHash: string;
+  passwordChangedAt?: Date;
   createdAt: Date;
   tutorial: { step: number; done: boolean; version?: number; newStep?: number; guides?: string[] };
 }
@@ -89,4 +90,9 @@ export async function checkCredentials(email: string, password: string) {
 export async function findUser(id: string) {
   if (!ObjectId.isValid(id)) return null;
   return (await users()).findOne({ _id: new ObjectId(id) });
+}
+
+export async function setPassword(userId: ObjectId, password: string) {
+  const passwordHash = await bcrypt.hash(password, env.BCRYPT_ROUNDS);
+  await (await users()).updateOne({ _id: userId }, { $set: { passwordHash, passwordChangedAt: new Date() } });
 }

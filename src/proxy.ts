@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySession } from "@/lib/server/session";
 
-const PUBLIC = ["/login", "/signup"];
+const PUBLIC = ["/login", "/signup", "/forgot-password", "/reset-password"];
 
 export async function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
@@ -13,7 +13,7 @@ export async function proxy(req: NextRequest) {
     if (pathname !== "/") url.searchParams.set("next", pathname + search);
     return NextResponse.redirect(url);
   }
-  if (userId && isPublic) return NextResponse.redirect(new URL("/", req.url));
+  if (userId && isPublic && pathname !== "/reset-password") return NextResponse.redirect(new URL("/", req.url));
   return NextResponse.next();
 }
 

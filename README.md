@@ -22,11 +22,12 @@
 - [Zod](https://zod.dev/) (request validation)
 - [UploadThing](https://uploadthing.com/) (profile photos)
 - [web-push](https://github.com/web-push-libs/web-push) (push notifications)
+- [Nodemailer](https://nodemailer.com/) (password reset emails)
 
 ## 🔧 Features
 
 - **Secure Accounts**
-  Email or username sign in with hashed passwords, httpOnly JWT sessions, rate limited auth, validated requests and strict security headers.
+  Email or username sign in with hashed passwords, httpOnly JWT sessions, emailed password reset links, rate limited auth, validated requests and strict security headers.
 
 - **In Depth Onboarding**
   Contact details, body metrics, body fat estimate, an injury body map, experience and PRs, training disciplines, ranked goals and a weekly availability calendar.
@@ -76,7 +77,7 @@ npm run db:seed
 npm run dev
 ```
 
-Fill in `.env.local` with your MongoDB connection string, a long random `JWT_SECRET`, an UploadThing token and VAPID keys (`npx web-push generate-vapid-keys`) before seeding. `npm run db:seed` loads the exercise library into MongoDB.
+Fill in `.env.local` with your MongoDB connection string, a long random `JWT_SECRET`, an UploadThing token, SMTP details for reset emails and VAPID keys (`npx web-push generate-vapid-keys`) before seeding. `npm run db:seed` loads the exercise library into MongoDB.
 
 Exercise photos and instructions come from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain). Body figure paths come from [react-native-body-highlighter](https://github.com/HichamELBSI/react-native-body-highlighter) (MIT).
 

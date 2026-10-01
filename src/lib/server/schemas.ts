@@ -16,6 +16,12 @@ export const signupSchema = z.object({
   ref: z.string().regex(/^[a-z0-9_.]{3,24}$/).optional(),
 });
 
+const newPassword = z.string().min(8, "Password must be at least 8 characters").max(128, "Password is too long");
+
+export const forgotSchema = z.object({ email });
+
+export const resetSchema = z.object({ token: z.string().regex(/^[A-Za-z0-9_-]{40,60}$/, "This reset link is invalid"), password: newPassword });
+
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().min(1, "Enter your email or username").max(254),
   password: z.string().min(1, "Enter your password").max(128),
