@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { ShareStudio } from "@/components/share/ShareStudio";
+import { profileShare } from "@/components/share/content";
+import { InviteCard } from "@/components/social/InviteCard";
+import { weekStreak } from "@/components/home/Insights";
+import { workoutStats } from "@/lib/tracker";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarCheck, ExternalLink, LogOut, Mail, MapPin, Pencil, RotateCcw, Users } from "lucide-react";
+import { CalendarCheck, ExternalLink, LogOut, Mail, MapPin, Pencil, RotateCcw, Share2, Users } from "lucide-react";
 import { age, bmi, bmiLabel, displayName, fatBand, formatHeight, formatWeight, round1 } from "@/lib/body";
 import type { InjurySeverity } from "@/lib/types";
 import { logout, resetAll, useLogs, useProfile, usePrograms, useSessionUser } from "@/lib/storage";
@@ -31,7 +36,26 @@ export default function ProfilePage() {
   const [tab, setTab] = useState<"training" | "account">("training");
   const friends = useApi<{ friends: UserCard[] }>("/api/friends").data?.friends;
   const programs = usePrograms() ?? [];
-  const workouts = (useLogs() ?? []).filter((l) => l.completedAt).length;
+  const allLogs = useLogs();
+  const done = useMemo(() => (allLogs ?? []).filter((l) => l.completedAt), [allLogs]);
+  const workouts = done.length;
+  const [sharing, setSharing] = useState(false);
+  const shareContent = useMemo(
+    () =>
+      user
+        ? profileShare({
+            name: user.name,
+            username: user.username,
+            avatarUrl: user.avatarUrl,
+            workouts: done.length,
+            streak: weekStreak(done),
+            volume: done.reduce((a, l) => a + workoutStats(l).volume, 0),
+            friends: friends?.length ?? null,
+            units: profile.body.units,
+          })
+        : null,
+    [user, done, friends, profile.body.units],
+  );
   const p = profile;
   const u = p.body.units;
   const a = age(p.personal.dob);
@@ -116,6 +140,20 @@ export default function ProfilePage() {
           </div>
         </div>
       </section>
+
+      <section className="mt-4 grid gap-3 rounded-3xl border border-line bg-surface p-4 sm:grid-cols-[auto_1fr] sm:items-center sm:p-5">
+        <div className="sm:pr-4">
+          <p className="text-sm font-semibold">Share and invite</p>
+          <p className="text-xs text-muted">Show off your training or bring friends to Mikon.</p>
+          <Button onClick={() => setSharing(true)} className="mt-3 h-11 w-full rounded-full sm:w-auto">
+            <Share2 className="size-4" /> Share my profile
+          </Button>
+        </div>
+        <div className="min-w-0">
+          <InviteCard compact />
+        </div>
+      </section>
+      <ShareStudio open={sharing} onClose={() => setSharing(false)} content={shareContent} />
 
       <div className="scrollbar-thin mt-6 flex gap-1 overflow-x-auto border-b border-line">
         {(

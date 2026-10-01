@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { CalendarDays, ChevronRight, Clock, Dumbbell, Flame, Play, Repeat2, Trash2, Trophy } from "lucide-react";
+import { CalendarDays, ChevronRight, Clock, Dumbbell, Flame, Play, Repeat2, Share2, Trash2, Trophy } from "lucide-react";
+import { ShareStudio } from "@/components/share/ShareStudio";
+import { workoutShare } from "@/components/share/content";
 import { useExerciseMap } from "@/lib/analysis";
 import { kgToLb, round1 } from "@/lib/body";
 import { deleteLog } from "@/lib/logs";
@@ -50,7 +52,13 @@ function Detail({ log, onClose }: { log: WorkoutLog | null; onClose: () => void 
   const exercises = useExerciseMap();
   const units = useProfile()?.body.units ?? "metric";
   const user = useSessionUser();
-  const logs = useLogs() ?? [];
+  const stored = useLogs();
+  const logs = useMemo(() => stored ?? [], [stored]);
+  const [sharing, setSharing] = useState(false);
+  const shareContent = useMemo(
+    () => (log ? workoutShare(log, exercises, units, personalBests(log, logs.filter((l) => (l.startedAt ?? l.date) < (log.startedAt ?? log.date))), user?.username) : null),
+    [log, exercises, units, logs, user?.username],
+  );
   if (!log) return <Sheet open={false} onClose={onClose}>{null}</Sheet>;
   const st = workoutStats(log);
   const prs = new Set(personalBests(log, logs.filter((l) => (l.startedAt ?? l.date) < (log.startedAt ?? log.date))).map((x) => x.exerciseId));
@@ -113,7 +121,11 @@ function Detail({ log, onClose }: { log: WorkoutLog | null; onClose: () => void 
             );
           })}
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-2">
+        <Button className="mt-5 h-12 w-full rounded-full" onClick={() => setSharing(true)}>
+          <Share2 className="size-4" /> Share workout
+        </Button>
+        <ShareStudio open={sharing} onClose={() => setSharing(false)} content={shareContent} />
+        <div className="mt-2 grid grid-cols-2 gap-2">
           <Button
             variant="secondary"
             className="h-12"
