@@ -14,6 +14,9 @@ const schema = z.object({
   RATE_LIMIT_API_WINDOW_SEC: z.coerce.number().int().positive(),
   MAX_BODY_KB: z.coerce.number().int().positive(),
   NEXT_PUBLIC_EXERCISE_IMAGE_BASE: z.string().url(),
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_SUBJECT: z.string().optional(),
 });
 
 export const env = schema.parse(process.env);
