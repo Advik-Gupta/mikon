@@ -5,7 +5,7 @@ import { ObjectId } from "mongodb";
 import { ZodError, type z } from "zod";
 import { getDb } from "./db";
 import { env } from "./env";
-import { SESSION_COOKIE, sessionClaims, signSession, verifySession, type Role } from "./session";
+import { KNOWN_COOKIE, SESSION_COOKIE, sessionClaims, signSession, verifySession, type Role } from "./session";
 
 export class HttpError extends Error {
   constructor(
@@ -181,6 +181,7 @@ export async function startSession(userId: string, role: Role = "user") {
     path: "/",
     maxAge: env.SESSION_TTL_DAYS * 86400,
   });
+  (await cookies()).set(KNOWN_COOKIE, "1", { path: "/", sameSite: "lax", maxAge: 400 * 86400 });
 }
 
 export async function endSession() {

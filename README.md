@@ -26,6 +26,9 @@
 
 ## 🔧 Features
 
+- **Landing Page**
+  First time visitors see a simple page with real app screenshots, while returning devices go straight to sign in.
+
 - **Secure Accounts**
   Email or username sign in with hashed passwords, httpOnly JWT sessions, emailed password reset links, rate limited auth, validated requests and strict security headers.
 
@@ -63,13 +66,13 @@
   Bring your full history from Strong, Hevy, Lyfta or MacroFactor Workouts. Exercises are matched to the library, and anything missing becomes your own exercise tagged with its source.
 
 - **Share Cards**
-  Turn any workout or your profile into a story, post or square image with themes, fonts and layouts, then share it anywhere.
+  Turn any workout or your profile into a story, post or square image with themes, fonts and layouts. Cards fit their content automatically, and saving goes straight to Photos on iPhone.
 
 - **Export Anywhere**
   Download your history in Strong, Hevy, Lyfta or MacroFactor format.
 
 - **Admin Panel**
-  Role based admin area with usage charts, users, request logs, feedback, announcements and storage tracking.
+  Role based admin area with usage charts, users, top referrers, device and browser stats, request logs, feedback, announcements and storage tracking.
 
 - **Body Measurements**
   Log weight, body fat, calories and body part measurements, with progress charts and a weight trend line.
@@ -78,7 +81,7 @@
   Every logged session with a consistency heatmap, full set details and per exercise history.
 
 - **Friends and Sharing**
-  Search people by username, send friend requests, see each other's active programs, share programs or list them on your public profile. Invite links (WhatsApp, share sheet or copy) make you friends with whoever joins.
+  Search people by username, send friend requests, see each other's active programs, share programs or list them on your public profile. Invite links are remembered through signup, and new users get a prompt to add whoever invited them.
 
 - **Progress Comparisons**
   Every exercise has a page with your progress chart and a friends leaderboard, plus head to head charts on a friend's profile.
@@ -87,7 +90,7 @@
   Choose who sees your profile, active program and progress: everyone, friends or only you.
 
 - **Installable App**
-  A full PWA with offline fallback, an install prompt, push notifications and phone first layouts.
+  A full PWA with offline fallback, push notifications and phone first layouts. Phone users are guided to install it before anything else.
 
 ## 🚀 Getting Started
 
