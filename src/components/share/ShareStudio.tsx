@@ -11,14 +11,19 @@ export interface ShareStat {
   value: string;
 }
 
+export interface ShareBlock {
+  title: string;
+  star?: boolean;
+  items: { left: string; right: string }[];
+}
+
 export interface ShareContent {
   kind: "workout" | "profile";
   eyebrow: string;
   title: string;
   subtitle: string;
   stats: ShareStat[];
-  highlights: { title: string; items: { left: string; right: string }[] } | null;
-  list: { title: string; items: { left: string; right: string }[] } | null;
+  blocks: ShareBlock[];
   avatarUrl?: string | null;
   initials?: string;
   cta: string;
@@ -72,7 +77,7 @@ function loadImage(src: string) {
   });
 }
 
-async function draw(canvas: HTMLCanvasElement, c: ShareContent, themeId: ThemeId, sizeId: SizeId, opts: { highlights: boolean; list: boolean }) {
+async function draw(canvas: HTMLCanvasElement, c: ShareContent, themeId: ThemeId, sizeId: SizeId, hidden: Set<string>) {
   const t = THEMES[themeId];
   const { w, h } = SIZES[sizeId];
   canvas.width = w;
@@ -174,7 +179,7 @@ async function draw(canvas: HTMLCanvasElement, c: ShareContent, themeId: ThemeId
   y += 190 * k + (tall ? 90 : 44);
 
   const footer = 170;
-  const block = (b: NonNullable<ShareContent["list"]>, star: boolean) => {
+  const block = (b: ShareBlock, star: boolean) => {
     if (y > h - footer - 140) return;
     ctx.fillStyle = t.sub;
     ctx.font = font(700, 28, sans);
@@ -195,8 +200,7 @@ async function draw(canvas: HTMLCanvasElement, c: ShareContent, themeId: ThemeId
     }
     y += 34;
   };
-  if (opts.highlights && c.highlights?.items.length) block(c.highlights, true);
-  if (opts.list && c.list?.items.length) block(c.list, false);
+  for (const b of c.blocks) if (!hidden.has(b.title) && b.items.length) block(b, !!b.star);
 
   ctx.fillStyle = t.ink;
   ctx.font = font(700, 40);
@@ -210,8 +214,7 @@ export function ShareStudio({ content, open, onClose }: { content: ShareContent 
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const [theme, setTheme] = useState<ThemeId>("midnight");
   const [size, setSize] = useState<SizeId>("story");
-  const [highlights, setHighlights] = useState(true);
-  const [list, setList] = useState(true);
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -219,13 +222,13 @@ export function ShareStudio({ content, open, onClose }: { content: ShareContent 
     if (!open || !content) return;
     let live = true;
     canvas.current ??= document.createElement("canvas");
-    draw(canvas.current, content, theme, size, { highlights, list }).then(() => {
+    draw(canvas.current, content, theme, size, hidden).then(() => {
       if (live && canvas.current) setPreview(canvas.current.toDataURL("image/png"));
     });
     return () => {
       live = false;
     };
-  }, [open, content, theme, size, highlights, list]);
+  }, [open, content, theme, size, hidden]);
 
   const blob = () => new Promise<Blob | null>((r) => canvas.current?.toBlob(r, "image/png") ?? r(null));
 
@@ -280,16 +283,25 @@ export function ShareStudio({ content, open, onClose }: { content: ShareContent 
               {SIZES[id].label}
             </button>
           ))}
-          {content?.highlights && (
-            <button type="button" onClick={() => setHighlights((v) => !v)} className={pill(highlights)}>
-              {content.highlights.title}
-            </button>
-          )}
-          {content?.list && (
-            <button type="button" onClick={() => setList((v) => !v)} className={pill(list)}>
-              {content.list.title}
-            </button>
-          )}
+          {content?.blocks
+            .filter((b) => b.items.length)
+            .map((b) => (
+              <button
+                key={b.title}
+                type="button"
+                onClick={() =>
+                  setHidden((h) => {
+                    const n = new Set(h);
+                    if (n.has(b.title)) n.delete(b.title);
+                    else n.add(b.title);
+                    return n;
+                  })
+                }
+                className={pill(!hidden.has(b.title))}
+              >
+                {b.title}
+              </button>
+            ))}
         </div>
         <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
           <Button onClick={share} disabled={busy || !preview} className="h-12 rounded-full text-[15px]">

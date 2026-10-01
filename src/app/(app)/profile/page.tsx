@@ -6,6 +6,9 @@ import { profileShare } from "@/components/share/content";
 import { InviteCard } from "@/components/social/InviteCard";
 import { weekStreak } from "@/components/home/Insights";
 import { workoutStats } from "@/lib/tracker";
+import { useExerciseMap } from "@/lib/analysis";
+import { activeProgram, dayLabel } from "@/lib/programs";
+import { blockType } from "@/lib/options";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarCheck, ExternalLink, LogOut, Mail, MapPin, Pencil, RotateCcw, Share2, Users } from "lucide-react";
@@ -35,11 +38,13 @@ export default function ProfilePage() {
   const router = useRouter();
   const [tab, setTab] = useState<"training" | "account">("training");
   const friends = useApi<{ friends: UserCard[] }>("/api/friends").data?.friends;
-  const programs = usePrograms() ?? [];
+  const storedPrograms = usePrograms();
+  const programs = useMemo(() => storedPrograms ?? [], [storedPrograms]);
   const allLogs = useLogs();
   const done = useMemo(() => (allLogs ?? []).filter((l) => l.completedAt), [allLogs]);
   const workouts = done.length;
   const [sharing, setSharing] = useState(false);
+  const exerciseMap = useExerciseMap();
   const shareContent = useMemo(
     () =>
       user
@@ -52,9 +57,15 @@ export default function ProfilePage() {
             volume: done.reduce((a, l) => a + workoutStats(l).volume, 0),
             friends: friends?.length ?? null,
             units: profile.body.units,
+            logs: done,
+            exercises: exerciseMap,
+            split: (() => {
+              const p = activeProgram(programs);
+              return p ? p.days.map((d, i) => ({ left: dayLabel(p, i), right: d.title || (d.blocks.some((b) => b.type !== "recovery") ? d.blocks.map((b) => blockType(b.type).label).join(" + ") : "Rest") })).slice(0, 7) : [];
+            })(),
           })
         : null,
-    [user, done, friends, profile.body.units],
+    [user, done, friends, profile.body.units, exerciseMap, programs],
   );
   const p = profile;
   const u = p.body.units;
