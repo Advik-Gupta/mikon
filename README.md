@@ -32,8 +32,8 @@
 - **In Depth Onboarding**
   Contact details, body metrics, body fat estimate, an injury body map, experience and PRs, training disciplines, ranked goals and a weekly availability calendar.
 
-- **Guided Tour**
-  A short walkthrough after signup that visits the board, profile, explorer and friends and ends at creating your first program. New features get a short what's new tour, and the builder shows a few quick tips the first time.
+- **Guided Start**
+  After signup you choose where to begin: build a program, start a workout, explore or set up your profile. Every page shows a few quick tips the first time you open it, a Getting started list on Home ticks off as you go, and tips can be replayed from settings.
 
 - **Muscle and Exercise Explorer**
   Interactive male and female body maps with zoomable muscle groups, anatomy for every muscle, and a library of 900+ exercises you can extend with your own.
