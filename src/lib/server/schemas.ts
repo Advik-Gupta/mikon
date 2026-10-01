@@ -6,12 +6,17 @@ const email = z.string().trim().toLowerCase().email("Enter a valid email").max(2
 
 export const signupSchema = z.object({
   name: z.string().trim().min(1, "Enter your name").max(60),
+  username: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9_.]{3,24}$/, "Usernames are 3 to 24 letters, numbers, dots or underscores"),
   email,
   password: z.string().min(8, "Password must be at least 8 characters").max(128, "Password is too long"),
 });
 
 export const loginSchema = z.object({
-  email,
+  email: z.string().trim().toLowerCase().min(1, "Enter your email or username").max(254),
   password: z.string().min(1, "Enter your password").max(128),
 });
 
@@ -40,3 +45,39 @@ export const customExerciseSchema = z.looseObject({
 });
 
 export const tutorialSchema = z.object({ step: z.number().int().min(0).max(100), done: z.boolean() });
+
+const num = z.number().finite().min(0).max(100000).nullable();
+
+export const logSchema = z.object({
+  id: z.string().regex(ID),
+  programId: z.string().regex(ID),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  dayIndex: z.number().int().min(0).max(100),
+  exercises: z
+    .array(
+      z.object({
+        exerciseId: z.string().regex(/^[A-Za-z0-9_-]{1,120}$/),
+        sets: z.array(z.object({ weight: num, reps: num, holdSec: num, done: z.boolean() })).max(40),
+      }),
+    )
+    .max(60),
+  notes: z.string().max(2000),
+  completedAt: z.string().max(40).nullable(),
+});
+
+const visibility = z.enum(["private", "friends", "public"]);
+
+export const meSchema = z
+  .object({
+    name: z.string().trim().min(1).max(60),
+    username: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(/^[a-z0-9_.]{3,24}$/, "Usernames are 3 to 24 letters, numbers, dots or underscores"),
+    bio: z.string().trim().max(240),
+    privacy: z.object({ profile: visibility, activeProgram: visibility, progress: visibility }),
+  })
+  .partial();
+
+export const usernameSchema = meSchema.shape.username.unwrap();

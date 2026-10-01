@@ -7,11 +7,13 @@ import type { ReactNode } from "react";
 import { displayName, formatHeight, formatWeight, round1 } from "@/lib/body";
 import { GOALS, MODALITIES, WEEKDAYS, labelOf, regionLabel } from "@/lib/options";
 import { fmtDuration, freeMinutesByDay } from "@/lib/schedule";
-import { useProfile, usePrograms } from "@/lib/storage";
+import { useLogs, useProfile, usePrograms } from "@/lib/storage";
+import { TodayCard } from "@/components/home/TodayCard";
 import { DEFAULT_SHAPE, Figure } from "@/components/graphics/Figure";
 import { SEVERITY_COLOR } from "@/components/graphics/BodyMap";
 import { cn } from "@/components/ui";
 import { MiniBoard, programMeta } from "@/components/builder/ProgramPreview";
+import { activeProgram, programHref } from "@/lib/programs";
 
 function greeting() {
   const h = new Date().getHours();
@@ -83,6 +85,9 @@ function ProgramIllustration() {
 export default function HomePage() {
   const profile = useProfile()!;
   const programs = usePrograms() ?? [];
+  const logs = useLogs() ?? [];
+  const active = activeProgram(programs);
+  const others = programs.filter((p) => p.id !== active?.id);
   const today = new Date();
   const todayIdx = (today.getDay() + 6) % 7;
   const u = profile.body.units;
@@ -110,6 +115,12 @@ export default function HomePage() {
         </div>
 
         <div data-tour="home-board" className="columns-1 gap-6 md:columns-2 xl:columns-3">
+          {active && (
+            <PinCard tilt={-0.6} pinColor="var(--color-accent)">
+              <TodayCard program={active} logs={logs} units={u} />
+            </PinCard>
+          )}
+
           <PinCard tilt={-1}>
             <div className="mb-5 flex items-center justify-between">
               <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
@@ -119,11 +130,11 @@ export default function HomePage() {
             </div>
             <ProgramIllustration />
             <h3 className="mt-6 font-display text-2xl font-semibold tracking-tight">
-              {programs.length ? "Start another program" : "Create your first program"}
+              {active ? "Plan your next block" : programs.length ? "Start another program" : "Create your first program"}
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-muted">
               {programs.length
-                ? "Build a new block of training alongside your current drafts."
+                ? "Build a new block of training alongside the ones you already have."
                 : "You haven't built a program yet. Design training blocks, weeks and sessions around your goals, schedule and injuries."}
             </p>
             <Link
@@ -134,28 +145,33 @@ export default function HomePage() {
             </Link>
           </PinCard>
 
-          {programs.slice(0, 3).map((p, i) => {
+          {others.slice(0, 3).map((p, i) => {
             const meta = programMeta(p);
+            const draft = p.status === "draft";
             return (
-              <PinCard key={p.id} tilt={i % 2 ? 0.9 : -0.8} pinColor="#ffb547" delay={0.04 * (i + 1)}>
-                <PinTitle icon={Layers}>Draft program</PinTitle>
+              <PinCard key={p.id} tilt={i % 2 ? 0.9 : -0.8} pinColor={draft ? "#ffb547" : "#5ed1a0"} delay={0.04 * (i + 1)}>
+                <PinTitle icon={Layers}>{draft ? "Draft program" : "Saved program"}</PinTitle>
                 <p className="truncate font-display text-xl font-semibold tracking-tight">{p.name}</p>
                 <p className="mt-0.5 truncate text-xs text-muted">{meta.major.join(" · ") || "No goals yet"}</p>
                 <div className="mt-4">
                   <MiniBoard program={p} />
                 </div>
-                <div className="mt-4 flex items-center justify-between text-[11px] text-muted">
-                  <span>{meta.stepLabel}</span>
-                  <span>{Math.round(meta.progress * 100)}%</span>
-                </div>
-                <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-surface-3">
-                  <div className="h-full rounded-full bg-warn" style={{ width: `${meta.progress * 100}%` }} />
-                </div>
+                {draft && (
+                  <>
+                    <div className="mt-4 flex items-center justify-between text-[11px] text-muted">
+                      <span>{meta.stepLabel}</span>
+                      <span>{Math.round(meta.progress * 100)}%</span>
+                    </div>
+                    <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-surface-3">
+                      <div className="h-full rounded-full bg-warn" style={{ width: `${meta.progress * 100}%` }} />
+                    </div>
+                  </>
+                )}
                 <Link
-                  href={`/programs/${p.id}`}
+                  href={programHref(p)}
                   className="mt-4 flex h-10 items-center justify-center gap-2 rounded-xl border border-line bg-surface-2 text-sm font-medium transition hover:border-line-strong hover:bg-surface-3"
                 >
-                  Continue building <ArrowRight className="size-4" />
+                  {draft ? "Continue building" : "Open"} <ArrowRight className="size-4" />
                 </Link>
               </PinCard>
             );

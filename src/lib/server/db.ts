@@ -12,6 +12,16 @@ function client() {
 async function ensureIndexes(db: Db) {
   await Promise.all([
     db.collection("users").createIndex({ email: 1 }, { unique: true }),
+    db.collection("users").createIndex({ username: 1 }, { unique: true, partialFilterExpression: { username: { $type: "string" } } }),
+    db.collection("logs").createIndex({ userId: 1, id: 1 }, { unique: true }),
+    db.collection("logs").createIndex({ userId: 1, exerciseIds: 1, date: 1 }),
+    db.collection("friendships").createIndex({ pair: 1 }, { unique: true }),
+    db.collection("friendships").createIndex({ users: 1, status: 1 }),
+    db.collection("notifications").createIndex({ userId: 1, createdAt: -1 }),
+    db.collection("notifications").createIndex({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 90 }),
+    db.collection("push_subscriptions").createIndex({ endpoint: 1 }, { unique: true }),
+    db.collection("push_subscriptions").createIndex({ userId: 1 }),
+    db.collection("shares").createIndex({ to: 1, createdAt: -1 }),
     db.collection("profiles").createIndex({ userId: 1 }, { unique: true }),
     db.collection("programs").createIndex({ userId: 1, id: 1 }, { unique: true }),
     db.collection("custom_exercises").createIndex({ userId: 1, id: 1 }, { unique: true }),

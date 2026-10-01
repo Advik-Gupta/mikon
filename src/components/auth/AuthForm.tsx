@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowRight, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import { ArrowRight, AtSign, Check, Eye, EyeOff, Lock, Mail, User, X } from "lucide-react";
 import { Figure } from "../graphics/Figure";
 import { Logo } from "../graphics/Logo";
 import { Button, cn, Field, Input } from "../ui";
@@ -27,6 +27,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const next = safeNext(useSearchParams().get("next"));
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [touchedUsername, setTouchedUsername] = useState(false);
+  const [available, setAvailable] = useState<{ name: string; ok: boolean } | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -34,6 +37,19 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [busy, setBusy] = useState(false);
   const signup = mode === "signup";
   const s = strength(password);
+  const handle = touchedUsername ? username : name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 24);
+  const validHandle = /^[a-z0-9_.]{3,24}$/.test(handle);
+
+  useEffect(() => {
+    if (!signup || !validHandle) return;
+    const t = setTimeout(async () => {
+      const res = await fetch(`/api/users/available?u=${encodeURIComponent(handle)}`).catch(() => null);
+      const data = await res?.json().catch(() => null);
+      if (data) setAvailable({ name: handle, ok: data.available });
+    }, 350);
+    return () => clearTimeout(t);
+  }, [handle, signup, validHandle]);
+  const handleState = !handle ? null : !validHandle ? "invalid" : available?.name !== handle ? "checking" : available.ok ? "ok" : "taken";
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -43,7 +59,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       const res = await fetch(`/api/auth/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(signup ? { name, email, password } : { email, password }),
+        body: JSON.stringify(signup ? { name, username: handle, email, password } : { email, password }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Something went wrong");
@@ -96,8 +112,47 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
                 <Input icon={User} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Alex Morgan" required maxLength={60} autoFocus />
               </Field>
             )}
-            <Field label="Email">
-              <Input icon={Mail} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@example.com" required autoFocus={!signup} />
+            {signup && (
+              <Field label="Username" hint={handleState === "invalid" ? "3 to 24 letters, numbers, dots or underscores" : "Friends find you with this"}>
+                <div className="relative">
+                  <Input
+                    icon={AtSign}
+                    value={handle}
+                    onChange={(e) => {
+                      setTouchedUsername(true);
+                      setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, "").slice(0, 24));
+                    }}
+                    autoComplete="username"
+                    placeholder="alexmorgan"
+                    required
+                    className="pr-28"
+                  />
+                  {handleState && handleState !== "invalid" && (
+                    <span
+                      className={cn(
+                        "pointer-events-none absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center gap-1 text-xs",
+                        handleState === "ok" ? "text-accent" : handleState === "taken" ? "text-danger" : "text-faint",
+                      )}
+                    >
+                      {handleState === "ok" && <Check className="size-3.5" />}
+                      {handleState === "taken" && <X className="size-3.5" />}
+                      {handleState === "ok" ? "Available" : handleState === "taken" ? "Taken" : "Checking"}
+                    </span>
+                  )}
+                </div>
+              </Field>
+            )}
+            <Field label={signup ? "Email" : "Email or username"}>
+              <Input
+                icon={Mail}
+                type={signup ? "email" : "text"}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete={signup ? "email" : "username"}
+                placeholder={signup ? "you@example.com" : "you@example.com or alexmorgan"}
+                required
+                autoFocus={!signup}
+              />
             </Field>
             <Field label="Password">
               <div className="relative">
@@ -138,7 +193,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
           {error && <p className="mt-4 rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
 
-          <Button type="submit" disabled={busy} className={cn("mt-6 h-11 w-full")}>
+          <Button type="submit" disabled={busy || (signup && handleState === "taken")} className={cn("mt-6 h-11 w-full")}>
             {busy ? "Please wait…" : signup ? "Create account" : "Sign in"} {!busy && <ArrowRight className="size-4" />}
           </Button>
 

@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { migrateProfile } from "./migrate";
-import type { Profile, Program } from "./types";
+import type { Profile, Program, Visibility, WorkoutLog } from "./types";
 
 export const KEYS = {
   profile: "mikon.profile.v1",
@@ -10,14 +10,25 @@ export const KEYS = {
   programs: "mikon.programs.v1",
   sidebar: "mikon.sidebar-collapsed",
   customExercises: "mikon.custom-exercises.v1",
+  logs: "mikon.logs.v1",
 } as const;
 
-const SYNCED = new Set<string>([KEYS.profile, KEYS.draft, KEYS.programs, KEYS.customExercises]);
+const SYNCED = new Set<string>([KEYS.profile, KEYS.draft, KEYS.programs, KEYS.customExercises, KEYS.logs]);
+
+export interface Privacy {
+  profile: Visibility;
+  activeProgram: Visibility;
+  progress: Visibility;
+}
 
 export interface SessionUser {
   id: string;
   email: string;
   name: string;
+  username: string;
+  avatarUrl: string | null;
+  bio: string;
+  privacy: Privacy;
   tutorial: { step: number; done: boolean };
 }
 
@@ -105,6 +116,8 @@ function persist(key: string, prev: unknown, next: unknown) {
     schedule("draft", (k) => api("PUT", "/api/profile/draft", next ?? null, k), 800);
   } else if (key === KEYS.programs) {
     persistList("programs", prev as Program[] | null, next as Program[] | null);
+  } else if (key === KEYS.logs) {
+    persistList("logs", prev as WorkoutLog[] | null, next as WorkoutLog[] | null);
   } else if (key === KEYS.customExercises) {
     persistList("custom-exercises", prev as { id: string }[] | null, next as { id: string }[] | null);
   }
@@ -124,6 +137,7 @@ export function hydrate() {
       memory.set(KEYS.draft, data.draft ? { ...data.draft, profile: migrateProfile(data.draft.profile) } : null);
       memory.set(KEYS.programs, data.programs ?? []);
       memory.set(KEYS.customExercises, data.customExercises ?? []);
+      memory.set(KEYS.logs, data.logs ?? []);
       SYNCED.forEach((k) => window.localStorage.removeItem(k));
       hydrated = true;
       emit();
@@ -155,6 +169,12 @@ export function setTutorial(tutorial: SessionUser["tutorial"]) {
   user = { ...user, tutorial };
   emit();
   schedule("tutorial", (k) => api("PATCH", "/api/me/tutorial", tutorial, k), 0);
+}
+
+export function setSessionUser(patch: Partial<SessionUser>) {
+  if (!user) return;
+  user = { ...user, ...patch };
+  emit();
 }
 
 export async function logout() {
@@ -209,6 +229,7 @@ export function useStored<T>(key: string): T | null | undefined {
 
 export const useProfile = () => useStored<Profile>(KEYS.profile);
 export const usePrograms = () => useStored<Program[]>(KEYS.programs);
+export const useLogs = () => useStored<WorkoutLog[]>(KEYS.logs);
 
 export function saveProfile(p: Profile) {
   writeStored(KEYS.profile, { ...p, updatedAt: new Date().toISOString() });
