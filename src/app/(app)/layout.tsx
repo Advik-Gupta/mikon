@@ -18,6 +18,7 @@ import { Tour } from "@/components/tour/Tour";
 import { TrackerHost } from "@/components/tracker/Tracker";
 import { ImportPrompt } from "@/components/import/ImportPrompt";
 import { FeedbackSheet } from "@/components/feedback/Feedback";
+import { AnnouncementBar } from "@/components/shell/Announcements";
 import { cn } from "@/components/ui";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -72,6 +73,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
         </header>
+        <AnnouncementBar />
         <main className={cn("scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain", immersive && "pt-[env(safe-area-inset-top)] md:pt-0")}>{children}</main>
         {!immersive && <BottomNav />}
         <Toaster />

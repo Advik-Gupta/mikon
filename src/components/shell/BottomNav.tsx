@@ -5,9 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import { openFeedback } from "../feedback/Feedback";
-import { Bell, MessageSquareHeart, Compass, Download, Dumbbell, Ellipsis, History, Layers, LayoutGrid, LogOut, Ruler, User, Users } from "lucide-react";
+import { Bell, MessageSquareHeart, ShieldCheck, Compass, Download, Dumbbell, Ellipsis, History, Layers, LayoutGrid, LogOut, Ruler, User, Users } from "lucide-react";
 import { useApi } from "@/lib/api";
-import { logout } from "@/lib/storage";
+import { logout, useSessionUser } from "@/lib/storage";
 import { openStartSheet, updateWorkout, useActiveWorkout } from "@/lib/tracker";
 import { Sheet } from "../tracker/Sheet";
 import { cn } from "../ui";
@@ -34,6 +34,8 @@ export function BottomNav() {
   const requests = useApi<{ incoming: unknown[] }>("/api/friends", 60_000).data?.incoming.length ?? 0;
   const unread = useApi<{ unread: number }>("/api/notifications", 30_000).data?.unread ?? 0;
   const workout = useActiveWorkout();
+  const user = useSessionUser();
+  const items = user?.role === "admin" ? [...MORE, { href: "/admin", label: "Admin", icon: ShieldCheck, hint: "Stats and announcements" }] : MORE;
   const active = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
   const moreActive = MORE.some((m) => active(m.href)) || pathname.startsWith("/u/") || pathname.startsWith("/exercises/");
   const badge = requests + unread;
@@ -88,7 +90,7 @@ export function BottomNav() {
       </nav>
       <Sheet open={more} onClose={() => setMore(false)} title="More">
         <div className="grid grid-cols-2 gap-2 px-4 pb-4">
-          {MORE.map((m) => (
+          {items.map((m) => (
             <Link
               key={m.href}
               href={m.href}

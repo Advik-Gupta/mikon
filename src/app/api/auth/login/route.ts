@@ -11,6 +11,6 @@ export const POST = handler(async (req: NextRequest) => {
   await rateLimit(`login-email:${email}`, env.RATE_LIMIT_LOGIN_MAX, env.RATE_LIMIT_AUTH_WINDOW_SEC);
   const user = await checkCredentials(email, password);
   if (!user) throw new HttpError(401, "Incorrect email, username or password");
-  await startSession(user._id.toHexString());
+  await startSession(user._id.toHexString(), user.role === "admin" ? "admin" : "user");
   return Response.json({ user: publicUser(user) });
 });

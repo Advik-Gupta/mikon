@@ -1,11 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, verifySession } from "@/lib/server/session";
+import { SESSION_COOKIE, sessionClaims } from "@/lib/server/session";
 
 const PUBLIC = ["/login", "/signup", "/forgot-password", "/reset-password"];
 
 export async function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
-  const userId = await verifySession(req.cookies.get(SESSION_COOKIE)?.value, process.env.JWT_SECRET ?? "");
+  const claims = await sessionClaims(req.cookies.get(SESSION_COOKIE)?.value, process.env.JWT_SECRET ?? "");
+  const userId = claims?.sub ?? null;
+  if (pathname.startsWith("/admin") && claims?.role !== "admin") return NextResponse.redirect(new URL(userId ? "/" : "/login", req.url));
   const isPublic = PUBLIC.includes(pathname);
 
   if (!userId && !isPublic) {

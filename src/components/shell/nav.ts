@@ -27,6 +27,7 @@ export function titleFor(pathname: string) {
   if (pathname === "/history") return "History";
   if (pathname.startsWith("/body")) return "Body";
   if (pathname === "/import") return "Import";
+  if (pathname === "/admin") return "Admin";
   if (pathname === "/notifications") return "Notifications";
   if (pathname.startsWith("/exercises/")) return "Exercise";
   if (pathname.startsWith("/u/")) return pathname.includes("/programs/") ? "Program" : "Profile";

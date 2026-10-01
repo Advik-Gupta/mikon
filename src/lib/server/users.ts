@@ -18,6 +18,8 @@ export interface UserDoc {
   privacy: { profile: Visibility; activeProgram: Visibility; progress: Visibility };
   passwordHash: string;
   passwordChangedAt?: Date;
+  role?: "user" | "admin";
+  lastActiveAt?: Date;
   createdAt: Date;
   tutorial: { step: number; done: boolean; version?: number; newStep?: number; guides?: string[] };
 }
@@ -36,6 +38,7 @@ export const publicUser = (u: UserDoc) => ({
   avatarUrl: u.avatarUrl ?? null,
   bio: u.bio ?? "",
   privacy: { ...DEFAULT_PRIVACY, ...u.privacy },
+  role: u.role === "admin" ? ("admin" as const) : ("user" as const),
   tutorial: u.tutorial,
 });
 

@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { Dumbbell, Folder, LogOut, MessageSquareHeart, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
+import { Dumbbell, Folder, LogOut, MessageSquareHeart, PanelLeftClose, PanelLeftOpen, Plus, ShieldCheck } from "lucide-react";
 import { openFeedback } from "../feedback/Feedback";
 import { openStartSheet, updateWorkout, useActiveWorkout } from "@/lib/tracker";
 import { programHref } from "@/lib/programs";
-import { KEYS, logout, usePrograms, useStored, writeStored } from "@/lib/storage";
+import { KEYS, logout, usePrograms, useSessionUser, useStored, writeStored } from "@/lib/storage";
 import { Logo, LogoMark } from "../graphics/Logo";
 import { cn } from "../ui";
 import { FOOTER_NAV, MAIN_NAV, type NavItem } from "./nav";
@@ -57,6 +57,7 @@ function StartButton({ collapsed }: { collapsed: boolean }) {
 
 export function Sidebar({ mobile, onNavigate }: { mobile?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
+  const user = useSessionUser();
   const programs = usePrograms() ?? [];
   const stored = useStored<boolean>(KEYS.sidebar);
   const collapsed = !mobile && !!stored;
@@ -151,6 +152,7 @@ export function Sidebar({ mobile, onNavigate }: { mobile?: boolean; onNavigate?:
       </div>
 
       <div className="space-y-0.5 border-t border-line py-3">
+        {user?.role === "admin" && <NavLink item={{ href: "/admin", label: "Admin", icon: ShieldCheck }} active={isActive("/admin")} collapsed={collapsed} onNavigate={onNavigate} />}
         {FOOTER_NAV.map((item) => (
           <NavLink key={item.href} item={item} active={isActive(item.href)} collapsed={collapsed} onNavigate={onNavigate} />
         ))}

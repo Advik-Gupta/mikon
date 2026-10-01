@@ -4,8 +4,10 @@ export const SESSION_COOKIE = "mikon_session";
 
 const key = (secret: string) => new TextEncoder().encode(secret);
 
-export async function signSession(userId: string, secret: string, ttlDays: number) {
-  return new SignJWT({})
+export type Role = "user" | "admin";
+
+export async function signSession(userId: string, secret: string, ttlDays: number, role: Role = "user") {
+  return new SignJWT({ role })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(userId)
     .setIssuedAt()
@@ -28,6 +30,17 @@ export async function sessionIssuedAt(token: string | undefined, secret: string)
   try {
     const { payload } = await jwtVerify(token, key(secret), { algorithms: ["HS256"] });
     return typeof payload.iat === "number" ? payload.iat : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function sessionClaims(token: string | undefined, secret: string) {
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, key(secret), { algorithms: ["HS256"] });
+    if (typeof payload.sub !== "string") return null;
+    return { sub: payload.sub, role: (payload.role === "admin" ? "admin" : "user") as Role, iat: payload.iat ?? 0 };
   } catch {
     return null;
   }

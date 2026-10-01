@@ -31,6 +31,7 @@ export interface SessionUser {
   avatarUrl: string | null;
   bio: string;
   privacy: Privacy;
+  role: "user" | "admin";
   tutorial: { step: number; done: boolean; version?: number; newStep?: number; guides?: string[] };
 }
 
