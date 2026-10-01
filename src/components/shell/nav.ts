@@ -19,7 +19,9 @@ export const FOOTER_NAV: NavItem[] = [{ href: "/settings", label: "Settings", ic
 
 export function titleFor(pathname: string) {
   if (pathname === "/profile") return "Profile";
-  if (pathname.startsWith("/programs/")) return "Program builder";
+  if (pathname === "/workout") return "Workout";
+  if (pathname.startsWith("/programs/new") || pathname.endsWith("/edit")) return "Program builder";
+  if (pathname.startsWith("/programs/")) return "Program";
   const item = [...MAIN_NAV, ...FOOTER_NAV].find((n) => n.href !== "/" && pathname.startsWith(n.href));
   return item?.label ?? "Home";
 }

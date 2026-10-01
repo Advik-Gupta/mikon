@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { ArrowRight, Layers, Plus, Trash2 } from "lucide-react";
-import { deleteProgram } from "@/lib/programs";
+import { deleteProgram, programHref } from "@/lib/programs";
+import { StatusBadge } from "@/components/program/ProgramView";
 import { usePrograms } from "@/lib/storage";
 import { MiniBoard, programMeta } from "@/components/builder/ProgramPreview";
 
@@ -47,24 +48,33 @@ export default function ProgramsPage() {
                       <p className="truncate font-display text-lg font-semibold">{p.name}</p>
                       <p className="mt-0.5 truncate text-xs text-muted">{meta.major.join(" · ") || "No goals yet"}</p>
                     </div>
-                    <span className="shrink-0 rounded-full border border-warn/40 bg-warn/10 px-2 py-0.5 text-[10px] font-medium text-warn">Draft</span>
+                    <span className="shrink-0">
+                      <StatusBadge program={p} />
+                    </span>
                   </div>
                   <MiniBoard program={p} />
-                  <div className="mt-4">
-                    <div className="flex justify-between text-[11px] text-muted">
-                      <span>{meta.stepLabel}</span>
-                      <span>{meta.cycle ?? ""}</span>
+                  {p.status === "draft" ? (
+                    <div className="mt-4">
+                      <div className="flex justify-between text-[11px] text-muted">
+                        <span>{meta.stepLabel}</span>
+                        <span>{meta.cycle ?? ""}</span>
+                      </div>
+                      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-surface-3">
+                        <div className="h-full rounded-full bg-warn" style={{ width: `${meta.progress * 100}%` }} />
+                      </div>
                     </div>
-                    <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-surface-3">
-                      <div className="h-full rounded-full bg-accent" style={{ width: `${meta.progress * 100}%` }} />
-                    </div>
-                  </div>
+                  ) : (
+                    <p className="mt-4 text-[11px] text-muted">
+                      {meta.cycle}
+                      {p.structure.lengthWeeks ? ` · ${p.structure.lengthWeeks} weeks` : ""}
+                    </p>
+                  )}
                   <div className="mt-5 flex items-center gap-2">
                     <Link
-                      href={`/programs/${p.id}`}
+                      href={programHref(p)}
                       className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-line bg-surface-2 text-sm font-medium transition hover:border-line-strong hover:bg-surface-3"
                     >
-                      Continue <ArrowRight className="size-3.5" />
+                      {p.status === "draft" ? "Continue" : "Open"} <ArrowRight className="size-3.5" />
                     </Link>
                     <button
                       type="button"

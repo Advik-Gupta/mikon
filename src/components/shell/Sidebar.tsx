@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import { Folder, LogOut, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
+import { programHref } from "@/lib/programs";
 import { KEYS, logout, usePrograms, useStored, writeStored } from "@/lib/storage";
 import { Logo, LogoMark } from "../graphics/Logo";
 import { cn } from "../ui";
@@ -103,16 +104,20 @@ export function Sidebar({ mobile, onNavigate }: { mobile?: boolean; onNavigate?:
                 {programs.map((p) => (
                   <li key={p.id}>
                     <Link
-                      href={`/programs/${p.id}`}
+                      href={programHref(p)}
                       onClick={onNavigate}
                       className={cn(
                         "flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[13px] transition",
-                        pathname === `/programs/${p.id}` ? "bg-surface-3 text-ink" : "text-muted hover:bg-surface-2 hover:text-ink",
+                        pathname.startsWith(`/programs/${p.id}`) ? "bg-surface-3 text-ink" : "text-muted hover:bg-surface-2 hover:text-ink",
                       )}
                     >
                       <Folder className="size-3.5 shrink-0" />
                       <span className="min-w-0 flex-1 truncate">{p.name}</span>
-                      {p.status === "draft" && <span className="size-1.5 shrink-0 rounded-full bg-warn" title="Draft" />}
+                      {p.status === "draft" ? (
+                        <span className="size-1.5 shrink-0 rounded-full bg-warn" title="Draft" />
+                      ) : (
+                        p.activeFrom && <span className="size-1.5 shrink-0 rounded-full bg-accent" title="Active" />
+                      )}
                     </Link>
                   </li>
                 ))}

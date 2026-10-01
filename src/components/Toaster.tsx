@@ -2,14 +2,14 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Lightbulb, TriangleAlert, X } from "lucide-react";
+import { Bell, CircleCheck, Lightbulb, TriangleAlert, X } from "lucide-react";
 import { cn } from "./ui";
 
 export interface Toast {
   id: string;
   title: string;
   message: string;
-  tone?: "advice" | "warn";
+  tone?: "advice" | "warn" | "success" | "info";
   tag?: string;
 }
 
@@ -17,8 +17,8 @@ let toasts: Toast[] = [];
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
-export function toast(t: Omit<Toast, "id">) {
-  toasts = [...toasts, { ...t, id: crypto.randomUUID() }].slice(-4);
+export function toast(t: Omit<Toast, "id" | "message"> & { message?: string }) {
+  toasts = [...toasts, { message: "", ...t, id: crypto.randomUUID() }].slice(-4);
   emit();
 }
 
@@ -32,12 +32,20 @@ const subscribe = (cb: () => void) => {
   return () => listeners.delete(cb);
 };
 
+const TONES = {
+  advice: { icon: Lightbulb, chip: "bg-warn/15 text-warn", bar: "bg-warn" },
+  warn: { icon: TriangleAlert, chip: "bg-danger/15 text-danger", bar: "bg-danger" },
+  success: { icon: CircleCheck, chip: "bg-accent/15 text-accent", bar: "bg-accent" },
+  info: { icon: Bell, chip: "bg-info/15 text-info", bar: "bg-info" },
+};
+
 function ToastCard({ t }: { t: Toast }) {
   useEffect(() => {
     const timer = setTimeout(() => dismiss(t.id), 9000);
     return () => clearTimeout(timer);
   }, [t.id]);
-  const Icon = t.tone === "warn" ? TriangleAlert : Lightbulb;
+  const tone = TONES[t.tone ?? "advice"];
+  const Icon = tone.icon;
   return (
     <motion.div
       layout
@@ -49,12 +57,12 @@ function ToastCard({ t }: { t: Toast }) {
       role="status"
     >
       <div className="flex gap-3">
-        <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", t.tone === "warn" ? "bg-danger/15 text-danger" : "bg-warn/15 text-warn")}>
+        <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", tone.chip)}>
           <Icon className="size-4" />
         </span>
         <div className="min-w-0">
           <p className="text-sm font-semibold leading-snug">{t.title}</p>
-          <p className="mt-1 text-xs leading-relaxed text-muted">{t.message}</p>
+          {t.message && <p className="mt-1 text-xs leading-relaxed text-muted">{t.message}</p>}
           {t.tag && <span className="mt-2 inline-block rounded-md bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted">{t.tag}</span>}
         </div>
       </div>
@@ -62,7 +70,7 @@ function ToastCard({ t }: { t: Toast }) {
         <X className="size-4" />
       </button>
       <motion.span
-        className={cn("absolute bottom-0 left-0 h-0.5", t.tone === "warn" ? "bg-danger" : "bg-warn")}
+        className={cn("absolute bottom-0 left-0 h-0.5", tone.bar)}
         initial={{ width: "100%" }}
         animate={{ width: "0%" }}
         transition={{ duration: 9, ease: "linear" }}
@@ -78,7 +86,7 @@ export function Toaster() {
     () => toasts,
   );
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-[60] flex flex-col items-end gap-2">
+    <div className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] right-4 z-[60] flex flex-col items-end gap-2 md:bottom-4">
       <AnimatePresence initial={false}>
         {list.map((t) => (
           <ToastCard key={t.id} t={t} />

@@ -1,17 +1,27 @@
 "use client";
 
-import { Suspense } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { SearchX } from "lucide-react";
-import { Builder } from "@/components/builder/Builder";
-import { useProgram } from "@/lib/programs";
+import { useParams, useRouter } from "next/navigation";
+import { CalendarCheck, CircleStop, Pencil, SearchX } from "lucide-react";
+import { ProgramView } from "@/components/program/ProgramView";
+import { StartModal } from "@/components/program/StartModal";
+import { Button } from "@/components/ui";
+import { deactivateProgram, programDayOn, useProgram } from "@/lib/programs";
+import { useProfile } from "@/lib/storage";
 
-function ProgramBuilder() {
+export default function ProgramPage() {
   const { id } = useParams<{ id: string }>();
   const program = useProgram(id);
+  const profile = useProfile();
+  const router = useRouter();
+  const [starting, setStarting] = useState(false);
 
-  if (program === undefined) return null;
+  useEffect(() => {
+    if (program?.status === "draft") router.replace(`/programs/${id}/edit`);
+  }, [program?.status, id, router]);
+
+  if (program === undefined || program?.status === "draft") return null;
   if (program === null) {
     return (
       <div className="board-grid flex min-h-full flex-col items-center justify-center p-8 text-center">
@@ -24,13 +34,34 @@ function ProgramBuilder() {
       </div>
     );
   }
-  return <Builder program={program} />;
-}
 
-export default function ProgramPage() {
+  const state = programDayOn(program, new Date())?.state;
+  const live = state === "running" || state === "upcoming";
+
   return (
-    <Suspense>
-      <ProgramBuilder />
-    </Suspense>
+    <>
+      <ProgramView
+        program={program}
+        sex={profile?.personal.sex === "female" ? "female" : "male"}
+        units={profile?.body.units ?? "metric"}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => router.push(`/programs/${id}/edit`)}>
+              <Pencil className="size-4" /> Edit
+            </Button>
+            {live ? (
+              <Button variant="ghost" onClick={() => window.confirm(`Stop "${program.name}"? It stays saved and you can start it again.`) && deactivateProgram(id)}>
+                <CircleStop className="size-4" /> Stop
+              </Button>
+            ) : (
+              <Button onClick={() => setStarting(true)}>
+                <CalendarCheck className="size-4" /> Start program
+              </Button>
+            )}
+          </>
+        }
+      />
+      <StartModal key={String(starting)} program={program} open={starting} onClose={() => setStarting(false)} />
+    </>
   );
 }

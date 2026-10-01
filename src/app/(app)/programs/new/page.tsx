@@ -14,7 +14,7 @@ export default function NewProgramPage() {
     if (created.current) return;
     created.current = true;
     const program = createProgram(readStored<Profile>(KEYS.profile));
-    router.replace(`/programs/${program.id}`);
+    router.replace(`/programs/${program.id}/edit`);
   }, [router]);
 
   return null;

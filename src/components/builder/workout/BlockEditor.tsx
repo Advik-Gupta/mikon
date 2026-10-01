@@ -244,7 +244,7 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
     >
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line px-4 py-3 sm:px-6">
-          <Link href={`/programs/${program.id}`} className="flex items-center gap-1.5 rounded-lg border border-line bg-surface-2 px-2.5 py-1.5 text-xs font-medium hover:border-line-strong">
+          <Link href={`/programs/${program.id}/edit`} className="flex items-center gap-1.5 rounded-lg border border-line bg-surface-2 px-2.5 py-1.5 text-xs font-medium hover:border-line-strong">
             <ArrowLeft className="size-3.5" /> Board
           </Link>
           <div className="flex items-center gap-2.5">
@@ -263,7 +263,7 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
               {others.map((b) => (
                 <Link
                   key={b.id}
-                  href={`/programs/${program.id}?block=${b.id}`}
+                  href={`/programs/${program.id}/edit?block=${b.id}`}
                   replace
                   className={cn("rounded-lg px-2.5 py-1 text-xs font-medium transition", b.id === blockId ? "bg-ink text-bg" : "text-muted hover:text-ink")}
                 >

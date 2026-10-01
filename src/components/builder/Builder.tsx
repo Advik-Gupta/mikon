@@ -2,13 +2,16 @@
 
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronLeft, CloudCheck, CloudOff, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarCheck, Check, ChevronDown, ChevronLeft, CloudCheck, CloudOff, Loader2 } from "lucide-react";
 import { useSaveStatus } from "@/lib/storage";
 import { ProgramOverview } from "./ProgramOverview";
 import { useProgramAdvice } from "@/lib/advice";
-import { resizeDays, STEP_ORDER, targetDayCount, updateProgram } from "@/lib/programs";
+import { activateProgram, activeProgram, resizeDays, STEP_ORDER, targetDayCount, updateProgram } from "@/lib/programs";
+import { usePrograms } from "@/lib/storage";
+import { Modal } from "../Modal";
+import { toast } from "../Toaster";
 import type { BuilderStep, Program } from "@/lib/types";
 import { Button, cn } from "../ui";
 import { Board } from "./Board";
@@ -79,6 +82,63 @@ function SavedIndicator({ updatedAt }: { updatedAt: string }) {
   );
 }
 
+function DoneModal({ program, open, onClose }: { program: Program; open: boolean; onClose: () => void }) {
+  const router = useRouter();
+  const current = activeProgram(usePrograms());
+  const [start, setStart] = useState(!current);
+  const [date, setDate] = useState(program.structure.startDate);
+  const empty = !program.days.some((d) => d.blocks.length);
+
+  const save = () => {
+    if (start && date) activateProgram(program.id, date);
+    else updateProgram(program.id, (p) => ({ ...p, status: "ready" }));
+    toast({ tone: "success", title: start ? "Program saved and scheduled" : "Program saved", message: "You can edit it any time from its page." });
+    router.push(`/programs/${program.id}`);
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Happy with it for now?"
+      subtitle="Nothing is locked in. You can come back and change any part of this program later."
+      className="max-w-lg"
+      footer={
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="ghost" onClick={onClose}>
+            Keep editing
+          </Button>
+          <Button onClick={save} className="px-6">
+            <Check className="size-4" strokeWidth={2.5} /> Save program
+          </Button>
+        </div>
+      }
+    >
+      {empty && <p className="mb-4 rounded-xl border border-warn/30 bg-warn/10 px-3.5 py-2.5 text-sm text-warn">Your board is still empty. You can save it anyway and fill it in later.</p>}
+      <label className={cn("flex cursor-pointer gap-3 rounded-2xl border p-4 transition", start ? "border-accent/60 bg-accent/[0.06]" : "border-line hover:border-line-strong")}>
+        <input type="checkbox" checked={start} onChange={(e) => setStart(e.target.checked)} className="mt-1 size-4 accent-[#c6f432]" />
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-2 text-sm font-medium">
+            <CalendarCheck className="size-4 text-accent" /> Start this program
+          </span>
+          <span className="mt-0.5 block text-xs text-muted">
+            Your home page will show each day&apos;s training from this date.
+            {current && current.id !== program.id && ` This replaces "${current.name}" as your active program.`}
+          </span>
+          {start && (
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="mt-3 h-10 w-full rounded-xl border border-line bg-surface-2 px-3 text-sm outline-none focus:border-accent/60 sm:w-56"
+            />
+          )}
+        </span>
+      </label>
+    </Modal>
+  );
+}
+
 export function Builder({ program }: { program: Program }) {
   useProgramAdvice(program);
   const update: ProgramUpdate = (fn) => updateProgram(program.id, fn);
@@ -92,6 +152,14 @@ export function Builder({ program }: { program: Program }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const overviewRef = useRef<HTMLDivElement>(null);
   const [dir, setDir] = useState(1);
+  const [doneOpen, setDoneOpen] = useState(false);
+  const router = useRouter();
+  const draft = program.status === "draft";
+  const finish = () => {
+    if (draft) return setDoneOpen(true);
+    toast({ tone: "success", title: "Changes saved" });
+    router.push(`/programs/${program.id}`);
+  };
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 });
@@ -116,9 +184,10 @@ export function Builder({ program }: { program: Program }) {
 
   return (
     <div className="flex h-full flex-col">
+      <DoneModal key={String(doneOpen)} program={program} open={doneOpen} onClose={() => setDoneOpen(false)} />
       <div className={cn("border-b border-line px-4 pt-4 sm:px-8", editingDay && "pb-4")}>
         <div className="flex items-center gap-3">
-          <Link href="/programs" className="rounded-lg p-1.5 text-muted hover:bg-surface-2 hover:text-ink" aria-label="All programs">
+          <Link href={draft ? "/programs" : `/programs/${program.id}`} className="rounded-lg p-1.5 text-muted hover:bg-surface-2 hover:text-ink" aria-label="Back">
             <ChevronLeft className="size-5" />
           </Link>
           <input
@@ -128,8 +197,17 @@ export function Builder({ program }: { program: Program }) {
             className="min-w-0 flex-1 rounded-lg bg-transparent px-1.5 py-1 font-display text-xl font-semibold tracking-tight outline-none hover:bg-surface-2 focus:bg-surface-2 sm:text-2xl"
             aria-label="Program name"
           />
-          <span className="rounded-full border border-warn/40 bg-warn/10 px-2.5 py-0.5 text-[11px] font-medium text-warn">Draft</span>
+          {draft ? (
+            <span className="hidden rounded-full border border-warn/40 bg-warn/10 px-2.5 py-0.5 text-[11px] font-medium text-warn sm:inline">Draft</span>
+          ) : (
+            <span className="hidden rounded-full border border-accent/40 bg-accent/10 px-2.5 py-0.5 text-[11px] font-medium text-accent sm:inline">Editing</span>
+          )}
           <SavedIndicator updatedAt={program.updatedAt} />
+          {(isBoard || !draft) && (
+            <Button onClick={finish} className="h-9 px-3 sm:px-4">
+              <Check className="size-4" strokeWidth={2.5} /> {draft ? "Done" : "Save"}
+            </Button>
+          )}
         </div>
 
         <nav hidden={!!editingDay} className="scrollbar-thin -mb-px mt-4 flex gap-1 overflow-x-auto">

@@ -103,3 +103,51 @@ export function cycleSummary(p: Program) {
 }
 
 export const STEP_ORDER = ["goals", "targets", "training", "structure", "board"] as const;
+
+export const toISODate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+export function parseISODate(s: string) {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+export const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const daysBetween = (a: Date, b: Date) => Math.round((b.getTime() - a.getTime()) / 86400000);
+
+export function programEnd(p: Program) {
+  if (!p.activeFrom || !p.structure.lengthWeeks) return null;
+  return addDays(parseISODate(p.activeFrom), p.structure.lengthWeeks * 7 - 1);
+}
+
+export function programDayOn(p: Program, date: Date) {
+  if (!p.activeFrom || !p.days.length) return null;
+  const start = parseISODate(p.activeFrom);
+  const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const since = daysBetween(start, day);
+  if (since < 0) return { state: "upcoming" as const, startsIn: -since };
+  const end = programEnd(p);
+  if (end && day > end) return { state: "finished" as const };
+  const n = p.days.length;
+  const anchored = weekdayOf(p, 0) !== null;
+  const anchor = anchored ? addDays(start, -((start.getDay() + 6) % 7)) : start;
+  const index = daysBetween(anchor, day) % n;
+  return { state: "running" as const, index, week: Math.floor(since / 7) + 1 };
+}
+
+export const activeProgram = (list: Program[] | null | undefined) => list?.find((p) => p.status === "ready" && p.activeFrom) ?? null;
+
+export function activateProgram(id: string, startDate: string) {
+  const list = readStored<Program[]>(KEYS.programs) ?? [];
+  const now = new Date().toISOString();
+  writeStored(
+    KEYS.programs,
+    list.map((p) => {
+      if (p.id === id) return { ...p, status: "ready" as const, activeFrom: startDate, updatedAt: now };
+      return p.activeFrom ? { ...p, activeFrom: null, updatedAt: now } : p;
+    }),
+  );
+}
+
+export const deactivateProgram = (id: string) => updateProgram(id, (p) => ({ ...p, activeFrom: null }));
+
+export const programHref = (p: Program) => (p.status === "draft" ? `/programs/${p.id}/edit` : `/programs/${p.id}`);

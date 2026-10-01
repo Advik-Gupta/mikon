@@ -448,7 +448,7 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
                       highlight={overDay === d.id && !!activeId?.startsWith(PALETTE)}
                       freeMin={free && wd != null ? free[wd] : null}
                       onTitle={(title) => setDays((ds) => ds.map((x) => (x.id === d.id ? { ...x, title } : x)))}
-                      onOpenBlock={(id) => router.push(`/programs/${program.id}?block=${id}`)}
+                      onOpenBlock={(id) => router.push(`/programs/${program.id}/edit?block=${id}`)}
                       onRemoveBlock={(id) => setDays((ds) => ds.map((x) => (x.id === d.id ? { ...x, blocks: x.blocks.filter((b) => b.id !== id) } : x)))}
                       onDuplicate={() =>
                         setDayCount((ds) => {

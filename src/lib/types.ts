@@ -175,12 +175,16 @@ export interface VolumeTarget {
   minFreq: number | null;
 }
 
+export type Visibility = "private" | "friends" | "public";
+
 export interface Program {
   id: string;
   name: string;
   createdAt: string;
   updatedAt: string;
-  status: "draft" | "active";
+  status: "draft" | "ready";
+  activeFrom?: string | null;
+  visibility?: Visibility;
   step: BuilderStep;
   goals: ProgramGoal[];
   targets: ProgramTarget[];
@@ -193,4 +197,26 @@ export interface Program {
   };
   days: ProgramDay[];
   volumeTargets?: VolumeTarget[];
+}
+
+export interface LoggedSet {
+  weight: number | null;
+  reps: number | null;
+  holdSec: number | null;
+  done: boolean;
+}
+
+export interface LoggedExercise {
+  exerciseId: string;
+  sets: LoggedSet[];
+}
+
+export interface WorkoutLog {
+  id: string;
+  programId: string;
+  date: string;
+  dayIndex: number;
+  exercises: LoggedExercise[];
+  notes: string;
+  completedAt: string | null;
 }
