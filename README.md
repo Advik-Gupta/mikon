@@ -62,6 +62,15 @@
 - **Import From Other Apps**
   Bring your full history from Strong, Hevy, Lyfta or MacroFactor Workouts. Exercises are matched to the library, and anything missing becomes your own exercise tagged with its source.
 
+- **Share Cards**
+  Turn any workout or your profile into a story, post or square image with themes, fonts and layouts, then share it anywhere.
+
+- **Export Anywhere**
+  Download your history in Strong, Hevy, Lyfta or MacroFactor format.
+
+- **Admin Panel**
+  Role based admin area with usage charts, users, request logs, feedback, announcements and storage tracking.
+
 - **Body Measurements**
   Log weight, body fat, calories and body part measurements, with progress charts and a weight trend line.
 
@@ -89,7 +98,7 @@ npm run db:seed
 npm run dev
 ```
 
-Fill in `.env.local` with your MongoDB connection string, a long random `JWT_SECRET`, an UploadThing token, SMTP details for reset emails and VAPID keys (`npx web-push generate-vapid-keys`) before seeding. `npm run db:seed` loads the exercise library into MongoDB.
+Fill in `.env.local` with your MongoDB connection string, a long random `JWT_SECRET`, an UploadThing token, SMTP details for reset emails and VAPID keys (`npx web-push generate-vapid-keys`) before seeding. `npm run db:seed` loads the exercise library into MongoDB. Run `npm run admin:grant -- you@example.com` to make an account an admin.
 
 Exercise photos and instructions come from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain). Body figure paths come from [react-native-body-highlighter](https://github.com/HichamELBSI/react-native-body-highlighter) (MIT).
 

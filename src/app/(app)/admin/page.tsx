@@ -31,6 +31,8 @@ function MobileAdmin() {
 export default function AdminPage() {
   const user = useSessionUser();
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("overview");
+  const overview = useOverview();
+  const fresh = overview.data?.kpis.feedbackNew ?? 0;
 
   if (user?.role !== "admin") {
     return (
@@ -61,6 +63,7 @@ export default function AdminPage() {
               className={cn("relative flex items-center gap-2 whitespace-nowrap px-3 pb-3 pt-1 text-sm transition", tab === t.id ? "text-ink" : "text-muted hover:text-ink")}
             >
               <t.icon className="size-4" /> {t.label}
+              {t.id === "feedback" && fresh > 0 && <span className="rounded-full bg-accent px-1.5 text-[10px] font-bold text-accent-ink">{fresh}</span>}
               {tab === t.id && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-accent" />}
             </button>
           ))}
