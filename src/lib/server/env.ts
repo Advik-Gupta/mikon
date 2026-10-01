@@ -36,7 +36,11 @@ export const env = new Proxy({} as Env, {
   get: (_, key) => (parsed ??= schema.parse(clean()))[key as keyof Env],
 });
 
+const PLACEHOLDER_CHECK = [...Object.keys(schema.shape), "UPLOADTHING_TOKEN"];
+
 export function envProblems() {
-  const result = schema.safeParse(clean());
-  return result.success ? [] : result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+  const values = clean();
+  const placeholders = PLACEHOLDER_CHECK.filter((k) => /<[^>]+>/.test(values[k] ?? "")).map((k) => `${k}: still the placeholder from .env.example`);
+  const result = schema.safeParse(values);
+  return [...placeholders, ...(result.success ? [] : result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`))];
 }
