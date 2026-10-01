@@ -63,14 +63,29 @@ const num = z.number().finite().min(0).max(100000).nullable();
 
 export const logSchema = z.object({
   id: z.string().regex(ID),
-  programId: z.string().regex(ID),
+  programId: z.union([z.string().regex(ID), z.literal("")]),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  dayIndex: z.number().int().min(0).max(100),
+  dayIndex: z.number().int().min(-1).max(100),
+  name: z.string().max(120).optional(),
+  startedAt: z.string().max(40).optional(),
+  durationSec: z.number().int().min(0).max(86400).optional(),
   exercises: z
     .array(
       z.object({
         exerciseId: z.string().regex(/^[A-Za-z0-9_-]{1,120}$/),
-        sets: z.array(z.object({ weight: num, reps: num, holdSec: num, done: z.boolean() })).max(40),
+        note: z.string().max(1000).optional(),
+        sets: z
+          .array(
+            z.object({
+              weight: num,
+              reps: num,
+              holdSec: num,
+              done: z.boolean(),
+              rir: z.number().int().min(0).max(10).nullable().optional(),
+              kind: z.enum(["warmup", "working", "backoff"]).optional(),
+            }),
+          )
+          .max(40),
       }),
     )
     .max(60),

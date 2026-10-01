@@ -204,10 +204,13 @@ export interface LoggedSet {
   reps: number | null;
   holdSec: number | null;
   done: boolean;
+  rir?: number | null;
+  kind?: SetKind;
 }
 
 export interface LoggedExercise {
   exerciseId: string;
+  note?: string;
   sets: LoggedSet[];
 }
 
@@ -216,6 +219,9 @@ export interface WorkoutLog {
   programId: string;
   date: string;
   dayIndex: number;
+  name?: string;
+  startedAt?: string;
+  durationSec?: number;
   exercises: LoggedExercise[];
   notes: string;
   completedAt: string | null;

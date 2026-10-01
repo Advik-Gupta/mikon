@@ -15,7 +15,7 @@ export const metricFor = (sets: LoggedSet[]): Metric => {
 };
 
 export function bestValue(sets: LoggedSet[], metric: Metric) {
-  const done = sets.filter((s) => s.done);
+  const done = sets.filter((s) => s.done && s.kind !== "warmup");
   if (!done.length) return null;
   if (metric === "hold") return Math.max(...done.map((s) => s.holdSec ?? 0)) || null;
   if (metric === "reps") return Math.max(...done.map((s) => s.reps ?? 0)) || null;
@@ -41,7 +41,7 @@ export function seriesFor(logs: Pick<WorkoutLog, "date" | "exercises">[], exerci
 }
 
 export const setsFor = (logs: Pick<WorkoutLog, "exercises">[], exerciseId: string) =>
-  logs.flatMap((l) => l.exercises.filter((x) => x.exerciseId === exerciseId).flatMap((x) => x.sets.filter((s) => s.done)));
+  logs.flatMap((l) => l.exercises.filter((x) => x.exerciseId === exerciseId).flatMap((x) => x.sets.filter((s) => s.done && s.kind !== "warmup")));
 
 export function metricFormat(metric: Metric, units: "metric" | "imperial") {
   if (metric === "hold") return (v: number) => `${Math.round(v)}s`;
