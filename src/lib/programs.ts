@@ -151,3 +151,11 @@ export function activateProgram(id: string, startDate: string) {
 export const deactivateProgram = (id: string) => updateProgram(id, (p) => ({ ...p, activeFrom: null }));
 
 export const programHref = (p: Program) => (p.status === "draft" ? `/programs/${p.id}/edit` : `/programs/${p.id}`);
+
+export function copyProgram(source: Program) {
+  const now = new Date().toISOString();
+  const copy: Program = { ...structuredClone(source), id: crypto.randomUUID(), createdAt: now, updatedAt: now, status: "ready", activeFrom: null, visibility: "private" };
+  const list = readStored<Program[]>(KEYS.programs) ?? [];
+  writeStored(KEYS.programs, [copy, ...list]);
+  return copy;
+}

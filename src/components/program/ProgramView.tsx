@@ -95,7 +95,7 @@ export function ProgramView({ program, sex, units, actions, byline }: { program:
 
   return (
     <div className="board-grid min-h-full">
-      <div className="mx-auto max-w-6xl px-4 pb-24 pt-6 sm:px-8 sm:pt-8 md:pb-12">
+      <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-8 sm:pt-8">
         <section className="relative overflow-hidden rounded-3xl border border-line bg-surface">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-accent/[0.07] via-transparent to-info/[0.05]" />
           <div className="relative flex flex-col gap-5 p-5 sm:p-7 lg:flex-row lg:items-end lg:justify-between">
@@ -133,7 +133,7 @@ export function ProgramView({ program, sex, units, actions, byline }: { program:
           <Stat icon={CalendarDays} label="Training days" value={`${a.training}/${n}`} sub={n === 7 ? "per week" : `per ${n} day cycle`} />
           <Stat icon={Dumbbell} label="Hard sets" value={round(a.weeklySets)} sub="per week" />
           <Stat icon={Clock} label="Training time" value={fmtDuration(Math.round(a.weeklyMinutes / 5) * 5)} sub="per week, estimated" />
-          <Stat icon={Zap} label="Muscle groups" value={trainedGroups.length} sub="trained directly" />
+          <Stat icon={Zap} label="Muscle groups" value={a.ready ? trainedGroups.length : "-"} sub="trained directly" />
         </div>
 
         <div className="scrollbar-thin -mx-4 mt-6 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
@@ -197,8 +197,14 @@ export function ProgramView({ program, sex, units, actions, byline }: { program:
             <section className="rounded-3xl border border-line bg-surface p-5">
               <h3 className="font-display text-lg font-semibold tracking-tight">{sel === "cycle" ? "Weekly volume by muscle group" : "Muscles worked"}</h3>
               <p className="text-xs text-muted">{sel === "cycle" ? (n === 7 ? "Direct sets per week." : `Direct sets, converted from your ${n} day cycle to a week.`) : "Direct sets on this day."}</p>
-              {ranked.length === 0 ? (
-                <p className="mt-4 text-sm text-faint">{a.ready ? "Nothing trains muscles here yet." : "Loading…"}</p>
+              {!a.ready ? (
+                <div className="mt-4 space-y-2">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="h-2.5 animate-pulse rounded-full bg-surface-2" />
+                  ))}
+                </div>
+              ) : ranked.length === 0 ? (
+                <p className="mt-4 text-sm text-faint">Nothing trains muscles here yet.</p>
               ) : (
                 <ul className="mt-4 space-y-2">
                   {ranked.map((g) => (

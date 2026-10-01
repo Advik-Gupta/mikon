@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { CalendarCheck, CircleStop, Pencil, SearchX } from "lucide-react";
+import { CalendarCheck, CircleStop, Pencil, SearchX, Share2 } from "lucide-react";
+import { ShareModal } from "@/components/program/ShareModal";
+import { visibilityOf } from "@/components/social/VisibilityPicker";
 import { ProgramView } from "@/components/program/ProgramView";
 import { StartModal } from "@/components/program/StartModal";
 import { Button } from "@/components/ui";
@@ -16,6 +18,7 @@ export default function ProgramPage() {
   const profile = useProfile();
   const router = useRouter();
   const [starting, setStarting] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
     if (program?.status === "draft") router.replace(`/programs/${id}/edit`);
@@ -46,6 +49,9 @@ export default function ProgramPage() {
         units={profile?.body.units ?? "metric"}
         actions={
           <>
+            <Button variant="secondary" onClick={() => setSharing(true)} title={`Visible to: ${visibilityOf(program.visibility).label}`}>
+              <Share2 className="size-4" /> Share
+            </Button>
             <Button variant="secondary" onClick={() => router.push(`/programs/${id}/edit`)}>
               <Pencil className="size-4" /> Edit
             </Button>
@@ -62,6 +68,7 @@ export default function ProgramPage() {
         }
       />
       <StartModal key={String(starting)} program={program} open={starting} onClose={() => setStarting(false)} />
+      <ShareModal program={program} open={sharing} onClose={() => setSharing(false)} />
     </>
   );
 }
