@@ -18,7 +18,7 @@ export interface UserDoc {
   privacy: { profile: Visibility; activeProgram: Visibility; progress: Visibility };
   passwordHash: string;
   createdAt: Date;
-  tutorial: { step: number; done: boolean; version?: number; newStep?: number };
+  tutorial: { step: number; done: boolean; version?: number; newStep?: number; guides?: string[] };
 }
 
 export const DEFAULT_PRIVACY: UserDoc["privacy"] = { profile: "public", activeProgram: "friends", progress: "friends" };

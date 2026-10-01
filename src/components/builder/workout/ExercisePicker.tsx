@@ -125,7 +125,7 @@ export function ExercisePicker({
     <div className="flex h-full flex-col">
       <div className="space-y-2 border-b border-line p-3">
         <div className="flex gap-2">
-        <div className="relative flex-1">
+        <div data-tour="builder-search" className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-faint" />
           <input
             value={q}
@@ -141,6 +141,7 @@ export function ExercisePicker({
           <button
             type="button"
             onClick={() => onCreate(q.trim())}
+            data-tour="builder-create"
             className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-line bg-surface-2 px-2.5 text-xs font-medium text-muted transition hover:border-accent/60 hover:text-accent"
             title="Create your own exercise"
           >

@@ -29,7 +29,7 @@ export interface SessionUser {
   avatarUrl: string | null;
   bio: string;
   privacy: Privacy;
-  tutorial: { step: number; done: boolean; version?: number; newStep?: number };
+  tutorial: { step: number; done: boolean; version?: number; newStep?: number; guides?: string[] };
 }
 
 const memory = new Map<string, unknown>();

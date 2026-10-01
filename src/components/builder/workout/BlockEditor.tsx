@@ -30,6 +30,7 @@ import { entryHardSets, entryValue, newEntry, newExercise, SUPERSET_LETTERS } fr
 import { ExerciseThumb } from "../../explorer/ExerciseBits";
 import { CreateExerciseModal } from "../../explorer/CreateExerciseModal";
 import { Modal } from "../../Modal";
+import { Guide, type GuideStep } from "../../tour/Guide";
 import { toast } from "../../Toaster";
 import { Button, cn } from "../../ui";
 import { CardioEditor, CardioLibrary, fmtDuration } from "./CardioEditor";
@@ -38,6 +39,34 @@ import { FatiguePanel } from "./FatiguePanel";
 import { defaultSession, SessionEditor, SessionLibrary } from "./SessionEditor";
 import { SetEditor } from "./SetEditor";
 import { MERGE, WORKOUT, WorkoutList } from "./WorkoutList";
+
+const BLOCK_GUIDE: GuideStep[] = [
+  {
+    target: "builder-search",
+    place: "left",
+    title: "Search 900+ exercises",
+    body: "Type any exercise or filter by muscle and equipment. Tap + or drag it into your workout.",
+  },
+  {
+    target: "builder-create",
+    place: "left",
+    title: "Missing one? Create it",
+    body: "If an exercise isn't in our library, add your own with the muscles it works. It's saved for every program after.",
+  },
+  {
+    target: "builder-workout",
+    place: "right",
+    title: "Sets, reps and supersets",
+    body: "Tap Sets on an exercise to plan weight, reps and RPE. Drop one exercise onto another to make a superset.",
+  },
+  {
+    target: "builder-load",
+    place: "right",
+    title: "Keep an eye on load",
+    body: "The body map shows how hard each muscle works today and across the week. You'll get a tip if a day gets too heavy.",
+  },
+];
+const GUIDE_PANES = ["library", "library", "workout", "fatigue"] as const;
 
 interface PendingMerge {
   targetId: string;
@@ -311,7 +340,7 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
         </div>
 
         <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(250px,300px)_minmax(0,1fr)_minmax(280px,340px)]">
-          <aside className={cn("min-h-0 flex-col border-line p-4 lg:flex lg:border-r", pane === "fatigue" ? "flex" : "hidden")}>
+          <aside data-tour="builder-load" className={cn("min-h-0 flex-col border-line p-4 lg:flex lg:border-r", pane === "fatigue" ? "flex" : "hidden")}>
             <div className="mb-3 flex items-center gap-2">
               <PersonStanding className="size-4 text-accent" />
               <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-faint">Fatigue & volume</h3>
@@ -321,7 +350,7 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
             </div>
           </aside>
 
-          <section className={cn("board-grid scrollbar-thin min-h-0 overflow-y-auto p-4 sm:p-6 lg:block", pane !== "workout" && "hidden")}>
+          <section data-tour="builder-workout" className={cn("board-grid scrollbar-thin min-h-0 overflow-y-auto p-4 sm:p-6 lg:block", pane !== "workout" && "hidden")}>
             <div className="mx-auto flex min-h-full max-w-2xl flex-col">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-faint">
@@ -385,6 +414,8 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
           </aside>
         </div>
       </div>
+
+      {kind !== "cardio" && kind !== "session" && <Guide id="builder-block" steps={BLOCK_GUIDE} onStep={(i) => setPane(GUIDE_PANES[i])} />}
 
       <DragOverlay dropAnimation={{ duration: 160 }}>
         {activeExercise ? (

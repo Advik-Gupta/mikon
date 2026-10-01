@@ -6,14 +6,15 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight, Compass, Plus, X } from "lucide-react";
 import { displayName } from "@/lib/body";
 import { setTutorial, useProfile, useSessionUser } from "@/lib/storage";
+import { Spotlight } from "./Spotlight";
 import { Button } from "../ui";
 import { TOUR, TOUR_VERSION, type TourStep } from "./steps";
 
-type Rect = { top: number; left: number; width: number; height: number };
+export type Rect = { top: number; left: number; width: number; height: number };
 const PAD = 8;
-const CARD_W = 340;
+export const CARD_W = 340;
 
-function useTargetRect(step: TourStep | undefined, active: boolean) {
+export function useTargetRect(step: { target?: string } | undefined, active: boolean, maxFrames = 90) {
   const [rect, setRect] = useState<Rect | null>(null);
   const [missing, setMissing] = useState(false);
 
@@ -27,7 +28,7 @@ function useTargetRect(step: TourStep | undefined, active: boolean) {
       if (box && box.width > 0) {
         setRect({ top: box.top - PAD, left: box.left - PAD, width: box.width + PAD * 2, height: box.height + PAD * 2 });
         setMissing(false);
-      } else if (++tries > 90) {
+      } else if (++tries > maxFrames) {
         setMissing(true);
         return;
       }
@@ -36,13 +37,13 @@ function useTargetRect(step: TourStep | undefined, active: boolean) {
     find()?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     measure();
     return () => cancelAnimationFrame(frame);
-  }, [step, active]);
+  }, [step, active, maxFrames]);
 
   const live = active && !!step?.target;
   return { rect: live ? rect : null, missing: live && missing };
 }
 
-function cardPosition(rect: Rect | null, place: TourStep["place"]) {
+export function cardPosition(rect: Rect | null, place: TourStep["place"]) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   if (!rect || vw < 640) {
@@ -121,17 +122,7 @@ export function Tour() {
 
   return (
     <div className="fixed inset-0 z-[70]" aria-live="polite">
-      {spotlight ? (
-        <motion.div
-          className="pointer-events-none fixed rounded-2xl ring-2 ring-accent"
-          initial={false}
-          animate={{ top: spotlight.top, left: spotlight.left, width: spotlight.width, height: spotlight.height }}
-          transition={{ type: "spring", bounce: 0.15, duration: 0.45 }}
-          style={{ boxShadow: "0 0 0 9999px rgb(0 0 0 / 0.66)" }}
-        />
-      ) : (
-        <div className="fixed inset-0 bg-black/66" />
-      )}
+      <Spotlight rect={spotlight} dim={0.66} />
       <AnimatePresence mode="wait">
         <motion.div
           key={step.id}

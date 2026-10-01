@@ -383,7 +383,7 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
       }}
     >
       <div className="flex min-h-0 flex-1">
-        <aside className="scrollbar-thin hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-line bg-surface/40 p-4 md:flex">
+        <aside data-tour="builder-palette" className="scrollbar-thin hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-line bg-surface/40 p-4 md:flex">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-faint">Blocks</p>
           <p className="mb-4 mt-1 text-xs text-muted">Drag onto any day.</p>
           <div className="space-y-2">
@@ -426,7 +426,7 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
             </div>
           </div>
 
-          <div className="scrollbar-thin flex gap-2 overflow-x-auto border-b border-line px-4 py-3 md:hidden">
+          <div data-tour="builder-palette" className="scrollbar-thin flex gap-2 overflow-x-auto border-b border-line px-4 py-3 md:hidden">
             {palette.map((b) => (
               <div key={b.id} className="w-44 shrink-0">
                 <PaletteItem type={b.id} variant="strip" />
@@ -435,7 +435,7 @@ export function Board({ program, update, goTo }: BuilderStepProps) {
           </div>
 
           <div className="board-grid scrollbar-thin min-h-0 flex-1 overflow-x-auto overflow-y-auto">
-            <div className="flex min-h-full w-max min-w-full items-stretch gap-4 p-4 sm:p-6">
+            <div data-tour="builder-days" className="flex min-h-full w-max min-w-full items-stretch gap-4 p-4 sm:p-6">
               <AnimatePresence initial={false}>
                 {days.map((d, i) => {
                   const wd = weekdayOf(program, i);

@@ -13,6 +13,7 @@ export const signupSchema = z.object({
     .regex(/^[a-z0-9_.]{3,24}$/, "Usernames are 3 to 24 letters, numbers, dots or underscores"),
   email,
   password: z.string().min(8, "Password must be at least 8 characters").max(128, "Password is too long"),
+  ref: z.string().regex(/^[a-z0-9_.]{3,24}$/).optional(),
 });
 
 export const loginSchema = z.object({
@@ -49,6 +50,7 @@ export const tutorialSchema = z.object({
   done: z.boolean(),
   version: z.number().int().min(0).max(1000).optional(),
   newStep: z.number().int().min(0).max(100).optional(),
+  guides: z.array(z.string().regex(/^[a-z-]{1,40}$/)).max(50).optional(),
 });
 
 const num = z.number().finite().min(0).max(100000).nullable();

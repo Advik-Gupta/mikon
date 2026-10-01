@@ -9,7 +9,7 @@ import { useSaveStatus } from "@/lib/storage";
 import { ProgramOverview } from "./ProgramOverview";
 import { useProgramAdvice } from "@/lib/advice";
 import { activateProgram, activeProgram, resizeDays, STEP_ORDER, targetDayCount, updateProgram } from "@/lib/programs";
-import { usePrograms } from "@/lib/storage";
+import { usePrograms, useSessionUser } from "@/lib/storage";
 import { Modal } from "../Modal";
 import { toast } from "../Toaster";
 import type { BuilderStep, Program } from "@/lib/types";
@@ -20,6 +20,28 @@ import { StructureStep } from "./StructureStep";
 import { TargetsStep } from "./TargetsStep";
 import { TrainingStep } from "./TrainingStep";
 import { BlockEditor } from "./workout/BlockEditor";
+import { Guide, type GuideStep } from "../tour/Guide";
+
+const BOARD_GUIDE: GuideStep[] = [
+  {
+    target: "builder-palette",
+    place: "right",
+    title: "Drag in your training",
+    body: "Drag an activity onto any day. Lifting, cardio, sport, mobility, whatever fits. A day can hold more than one.",
+  },
+  {
+    target: "builder-days",
+    place: "top",
+    title: "Fill in each session",
+    body: "Tap the checklist on a block to add exercises, sets and reps. Use the pencil to name a day, like Push or Long run.",
+  },
+  {
+    target: "builder-done",
+    place: "bottom",
+    title: "Done when you're happy",
+    body: "Everything saves as you go. Hit Done to save the program and pick a start date. You can always edit it later.",
+  },
+];
 
 export type ProgramUpdate = (fn: (p: Program) => Program) => void;
 export interface BuilderStepProps {
@@ -84,7 +106,10 @@ function SavedIndicator({ updatedAt }: { updatedAt: string }) {
 
 function DoneModal({ program, open, onClose }: { program: Program; open: boolean; onClose: () => void }) {
   const router = useRouter();
-  const current = activeProgram(usePrograms());
+  const programs = usePrograms();
+  const current = activeProgram(programs);
+  const user = useSessionUser();
+  const firstSave = !user?.tutorial.guides?.includes("first-program") && !programs?.some((p) => p.id !== program.id && p.status === "ready");
   const [start, setStart] = useState(!current);
   const [date, setDate] = useState(program.structure.startDate);
   const empty = !program.days.some((d) => d.blocks.length);
@@ -93,7 +118,7 @@ function DoneModal({ program, open, onClose }: { program: Program; open: boolean
     if (start && date) activateProgram(program.id, date);
     else updateProgram(program.id, (p) => ({ ...p, status: "ready" }));
     toast({ tone: "success", title: start ? "Program saved and scheduled" : "Program saved", message: "You can edit it any time from its page." });
-    router.push(`/programs/${program.id}`);
+    router.push(`/programs/${program.id}${firstSave ? "?welcome=1" : ""}`);
   };
 
   return (
@@ -185,6 +210,7 @@ export function Builder({ program }: { program: Program }) {
   return (
     <div className="flex h-full flex-col">
       <DoneModal key={String(doneOpen)} program={program} open={doneOpen} onClose={() => setDoneOpen(false)} />
+      {isBoard && !editingDay && draft && <Guide id="builder-board" steps={BOARD_GUIDE} />}
       <div className={cn("border-b border-line px-4 pt-4 sm:px-8", editingDay && "pb-4")}>
         <div className="flex items-center gap-3">
           <Link href={draft ? "/programs" : `/programs/${program.id}`} className="rounded-lg p-1.5 text-muted hover:bg-surface-2 hover:text-ink" aria-label="Back">
@@ -204,7 +230,7 @@ export function Builder({ program }: { program: Program }) {
           )}
           <SavedIndicator updatedAt={program.updatedAt} />
           {(isBoard || !draft) && (
-            <Button onClick={finish} className="h-9 px-3 sm:px-4">
+            <Button onClick={finish} data-tour="builder-done" className="h-9 px-3 sm:px-4">
               <Check className="size-4" strokeWidth={2.5} /> {draft ? "Done" : "Save"}
             </Button>
           )}
