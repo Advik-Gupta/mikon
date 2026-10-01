@@ -44,7 +44,12 @@ export const customExerciseSchema = z.looseObject({
   instructions: z.array(z.string().max(1000)).max(40),
 });
 
-export const tutorialSchema = z.object({ step: z.number().int().min(0).max(100), done: z.boolean() });
+export const tutorialSchema = z.object({
+  step: z.number().int().min(0).max(100),
+  done: z.boolean(),
+  version: z.number().int().min(0).max(1000).optional(),
+  newStep: z.number().int().min(0).max(100).optional(),
+});
 
 const num = z.number().finite().min(0).max(100000).nullable();
 

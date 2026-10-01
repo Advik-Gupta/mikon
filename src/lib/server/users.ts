@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { ObjectId } from "mongodb";
 import { getDb } from "./db";
 import { env } from "./env";
+import { TOUR_VERSION } from "@/components/tour/steps";
 
 export type Visibility = "private" | "friends" | "public";
 
@@ -17,7 +18,7 @@ export interface UserDoc {
   privacy: { profile: Visibility; activeProgram: Visibility; progress: Visibility };
   passwordHash: string;
   createdAt: Date;
-  tutorial: { step: number; done: boolean };
+  tutorial: { step: number; done: boolean; version?: number; newStep?: number };
 }
 
 export const DEFAULT_PRIVACY: UserDoc["privacy"] = { profile: "public", activeProgram: "friends", progress: "friends" };
@@ -73,7 +74,7 @@ export async function createUser(name: string, username: string, email: string, 
     privacy: DEFAULT_PRIVACY,
     passwordHash,
     createdAt: new Date(),
-    tutorial: { step: 0, done: false },
+    tutorial: { step: 0, done: false, version: TOUR_VERSION },
   };
   await (await users()).insertOne(doc);
   return doc;
