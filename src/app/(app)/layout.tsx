@@ -16,6 +16,7 @@ import { NotificationBell } from "@/components/social/Notifications";
 import { Toaster } from "@/components/Toaster";
 import { Tour } from "@/components/tour/Tour";
 import { TrackerHost } from "@/components/tracker/Tracker";
+import { ImportPrompt } from "@/components/import/ImportPrompt";
 import { cn } from "@/components/ui";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -76,6 +77,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Tour />
         <InstallPrompt />
         <TrackerHost />
+        <ImportPrompt />
       </div>
     </div>
   );

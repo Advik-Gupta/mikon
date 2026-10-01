@@ -7,7 +7,8 @@ import type { ReactNode } from "react";
 import { displayName, formatHeight, formatWeight, round1 } from "@/lib/body";
 import { GOALS, MODALITIES, WEEKDAYS, labelOf, regionLabel } from "@/lib/options";
 import { fmtDuration, freeMinutesByDay } from "@/lib/schedule";
-import { useLogs, useProfile, usePrograms } from "@/lib/storage";
+import { useLogs, useMeasurements, useProfile, usePrograms } from "@/lib/storage";
+import { ImportCard, Insights } from "@/components/home/Insights";
 import { TodayCard } from "@/components/home/TodayCard";
 import { DEFAULT_SHAPE, Figure } from "@/components/graphics/Figure";
 import { SEVERITY_COLOR } from "@/components/graphics/BodyMap";
@@ -86,6 +87,8 @@ export default function HomePage() {
   const profile = useProfile()!;
   const programs = usePrograms() ?? [];
   const logs = useLogs() ?? [];
+  const measurements = useMeasurements() ?? [];
+  const hasData = logs.length > 0 || measurements.length > 0;
   const active = activeProgram(programs);
   const others = programs.filter((p) => p.id !== active?.id);
   const today = new Date();
@@ -113,6 +116,8 @@ export default function HomePage() {
             <Pin className="size-3.5" /> Your board · {programs.length} program{programs.length === 1 ? "" : "s"}
           </div>
         </div>
+
+        <div className="mb-8">{hasData ? <Insights logs={logs} measurements={measurements} units={u} /> : <ImportCard />}</div>
 
         <div data-tour="home-board" className="columns-1 gap-6 md:columns-2 xl:columns-3">
           {active && (

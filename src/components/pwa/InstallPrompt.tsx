@@ -55,7 +55,7 @@ export function InstallPrompt() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 24 }}
           transition={{ type: "spring", bounce: 0.2, duration: 0.45 }}
-          className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-[65] mx-auto max-w-md rounded-3xl border border-line-strong bg-surface p-4 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.9)] backdrop-blur md:bottom-6 md:left-auto md:right-6 md:mx-0"
+          className="fixed inset-x-3 bottom-[calc(max(env(safe-area-inset-bottom)_-_12px,4px)_+_62px)] z-[65] mx-auto max-w-md rounded-3xl border border-line-strong bg-surface p-4 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.9)] backdrop-blur md:bottom-6 md:left-auto md:right-6 md:mx-0"
           role="dialog"
           aria-label="Install Mikon"
         >

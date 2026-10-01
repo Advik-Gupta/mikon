@@ -937,7 +937,7 @@ function MiniBar({ w }: { w: ActiveWorkout }) {
       exit={{ y: 80, opacity: 0 }}
       transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
       onClick={() => updateWorkout((y) => ({ ...y, minimized: false }))}
-      className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-[75] flex items-center gap-3 rounded-2xl border border-line-strong bg-surface/95 p-2.5 pr-3 text-left shadow-[0_18px_40px_-14px_rgb(0_0_0/0.9)] backdrop-blur md:inset-x-auto md:bottom-5 md:right-5 md:w-80"
+      className="fixed inset-x-3 bottom-[calc(max(env(safe-area-inset-bottom)_-_12px,4px)_+_62px)] z-[75] flex items-center gap-3 rounded-2xl border border-line-strong bg-surface/95 p-2.5 pr-3 text-left shadow-[0_18px_40px_-14px_rgb(0_0_0/0.9)] backdrop-blur md:inset-x-auto md:bottom-5 md:right-5 md:w-80"
       aria-label="Open workout"
     >
       <span className="relative flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-ink">
