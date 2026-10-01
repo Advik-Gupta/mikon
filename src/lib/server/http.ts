@@ -1,7 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
-import type { z } from "zod";
+import { ZodError, type z } from "zod";
 import { getDb } from "./db";
 import { env } from "./env";
 import { SESSION_COOKIE, signSession, verifySession } from "./session";
@@ -23,6 +23,10 @@ export function handler<A extends unknown[]>(fn: (...args: A) => Promise<Respons
       return await fn(...args);
     } catch (e) {
       if (e instanceof HttpError) return fail(e.status, e.message);
+      if (e instanceof ZodError) {
+        console.error("Invalid server config:", e.issues.map((i) => i.path.join(".")).join(", "));
+        return fail(503, "Mikon isn't set up correctly on the server yet. Please try again later.");
+      }
       console.error(e);
       return fail(500, "Something went wrong");
     }

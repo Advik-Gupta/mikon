@@ -12,7 +12,13 @@ export async function GET(req: NextRequest) {
       await (await getDb()).command({ ping: 1 });
       db = "ok";
     } catch (e) {
-      db = (e as Error).name === "MongoServerSelectionError" ? "unreachable (check Atlas network access)" : "error";
+      const err = e as Error & { codeName?: string; code?: number | string };
+      db =
+        err.name === "MongoServerSelectionError"
+          ? "unreachable (check Atlas network access)"
+          : err.codeName === "AtlasError" || err.code === 8000 || err.code === 18
+            ? "authentication failed (check the user and password in MONGODB_URI)"
+            : `${err.name}${err.codeName ? ` ${err.codeName}` : ""}`;
     }
   }
   const ok = !env.length && db === "ok";
