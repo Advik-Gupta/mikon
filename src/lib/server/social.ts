@@ -52,6 +52,20 @@ export async function cardsFor(ids: string[]) {
 
 export type NotificationType = "friend_request" | "friend_accept" | "program_shared";
 
+export async function acceptInvite(user: UserDoc, inviterUsername: string) {
+  const inviter = await (await users()).findOne({ username: inviterUsername });
+  if (!inviter || inviter._id.equals(user._id)) return;
+  const a = inviter._id.toHexString();
+  const b = user._id.toHexString();
+  const now = new Date();
+  await (await friendships()).updateOne(
+    { pair: pairKey(a, b) },
+    { $setOnInsert: { _id: new ObjectId(), pair: pairKey(a, b), users: [a, b], from: a, to: b, createdAt: now }, $set: { status: "accepted", acceptedAt: now } },
+    { upsert: true },
+  );
+  await notify(a, user, "friend_accept", { title: `${user.name} joined Mikon from your invite`, body: `You and @${user.username} are now friends.`, url: `/u/${user.username}` });
+}
+
 export async function notify(userId: string, actor: UserDoc, type: NotificationType, text: { title: string; body: string; url: string }) {
   await (await getDb()).collection("notifications").insertOne({
     userId,

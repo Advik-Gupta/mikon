@@ -25,7 +25,9 @@ const safeNext = (next: string | null) => (next && next.startsWith("/") && !next
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
-  const next = safeNext(useSearchParams().get("next"));
+  const params = useSearchParams();
+  const next = safeNext(params.get("next"));
+  const ref = params.get("ref")?.toLowerCase().match(/^[a-z0-9_.]{3,24}$/)?.[0];
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [touchedUsername, setTouchedUsername] = useState(false);
@@ -59,7 +61,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       const res = await fetch(`/api/auth/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(signup ? { name, username: handle, email, password } : { email, password }),
+        body: JSON.stringify(signup ? { name, username: handle, email, password, ...(ref ? { ref } : {}) } : { email, password }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Something went wrong");
@@ -105,6 +107,11 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           </div>
           <h1 className="mt-8 font-display text-3xl font-semibold tracking-tight lg:mt-0">{signup ? "Create your account" : "Welcome back"}</h1>
           <p className="mt-2 text-sm text-muted">{signup ? "It takes a minute. Then we'll get to know you." : "Sign in to keep building."}</p>
+          {signup && ref && (
+            <p className="mt-4 rounded-xl border border-accent/30 bg-accent/10 px-3.5 py-2.5 text-sm text-accent">
+              You were invited by <span className="font-semibold">@{ref}</span>. You&apos;ll be friends as soon as you join.
+            </p>
+          )}
 
           <div className="mt-8 space-y-4">
             {signup && (

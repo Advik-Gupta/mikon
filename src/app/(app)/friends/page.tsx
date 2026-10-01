@@ -6,6 +6,7 @@ import { Loader2, Search, UserPlus, Users } from "lucide-react";
 import { useApi, type Relation, type UserCard } from "@/lib/api";
 import { FriendButton } from "@/components/social/FriendButton";
 import { UserRow } from "@/components/social/UserRow";
+import { InviteCard } from "@/components/social/InviteCard";
 import { cn } from "@/components/ui";
 
 type Friend = UserCard & { since: string };
@@ -104,7 +105,13 @@ function Friends() {
         </div>
 
         {tab === "find" ? (
-          <FindPeople />
+          <div className="space-y-6">
+            <FindPeople />
+            <section>
+              <h3 className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.14em] text-faint">Not on Mikon yet? Invite them</h3>
+              <InviteCard />
+            </section>
+          </div>
         ) : loading ? (
           <div className="space-y-2">
             {[0, 1, 2].map((i) => (

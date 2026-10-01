@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { CalendarCheck, CircleStop, Pencil, SearchX, Share2 } from "lucide-react";
 import { ShareModal } from "@/components/program/ShareModal";
 import { visibilityOf } from "@/components/social/VisibilityPicker";
@@ -10,15 +10,22 @@ import { ProgramView } from "@/components/program/ProgramView";
 import { StartModal } from "@/components/program/StartModal";
 import { Button } from "@/components/ui";
 import { deactivateProgram, programDayOn, useProgram } from "@/lib/programs";
-import { useProfile } from "@/lib/storage";
+import { setTutorial, useProfile, useSessionUser } from "@/lib/storage";
+import { CongratsModal } from "@/components/program/CongratsModal";
 
-export default function ProgramPage() {
+function ProgramPageInner() {
   const { id } = useParams<{ id: string }>();
   const program = useProgram(id);
   const profile = useProfile();
   const router = useRouter();
   const [starting, setStarting] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const welcome = useSearchParams().get("welcome") === "1";
+  const user = useSessionUser();
+  const closeWelcome = () => {
+    if (user) setTutorial({ ...user.tutorial, guides: [...new Set([...(user.tutorial.guides ?? []), "first-program"])] });
+    router.replace(`/programs/${id}`);
+  };
 
   useEffect(() => {
     if (program?.status === "draft") router.replace(`/programs/${id}/edit`);
@@ -69,6 +76,15 @@ export default function ProgramPage() {
       />
       <StartModal key={String(starting)} program={program} open={starting} onClose={() => setStarting(false)} />
       <ShareModal program={program} open={sharing} onClose={() => setSharing(false)} />
+      <CongratsModal open={welcome} onClose={closeWelcome} name={program.name} />
     </>
+  );
+}
+
+export default function ProgramPage() {
+  return (
+    <Suspense>
+      <ProgramPageInner />
+    </Suspense>
   );
 }
