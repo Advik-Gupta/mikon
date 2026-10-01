@@ -14,9 +14,10 @@ import { ExerciseThumb } from "../explorer/ExerciseBits";
 import { ExerciseSheet } from "../tracker/ExerciseSheet";
 import { Button, cn } from "../ui";
 
-export const APPS: { id: AppId; label: string; color: string; files: string; steps: string[] }[] = [
+export const APPS: { id: AppId; label: string; logo: string; color: string; files: string; steps: string[] }[] = [
   {
     id: "strong",
+    logo: "/logos/strong.png",
     label: "Strong",
     color: "#3b82f6",
     files: "strong_workouts.csv and any measurement CSVs",
@@ -24,6 +25,7 @@ export const APPS: { id: AppId; label: string; color: string; files: string; ste
   },
   {
     id: "hevy",
+    logo: "/logos/hevy.png",
     label: "Hevy",
     color: "#2563eb",
     files: "hevy workout data and measurement data CSVs",
@@ -31,6 +33,7 @@ export const APPS: { id: AppId; label: string; color: string; files: string; ste
   },
   {
     id: "lyfta",
+    logo: "/logos/lyfta.png",
     label: "Lyfta",
     color: "#f97316",
     files: "your Lyfta CSV export",
@@ -38,12 +41,20 @@ export const APPS: { id: AppId; label: string; color: string; files: string; ste
   },
   {
     id: "macrofactor",
+    logo: "/logos/macrofactor.png",
     label: "MacroFactor Workouts",
     color: "#ef4444",
     files: "the workouts .xlsx export",
     steps: ["Open MacroFactor Workouts and tap More", "Go to Settings, then Data Management, then Export", "Export your workout data and save the file"],
   },
 ];
+
+export function AppLogo({ app, className }: { app: { logo: string; label: string }; className?: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={app.logo} alt={`${app.label} logo`} className={cn("shrink-0 rounded-[28%] object-cover", className)} />
+  );
+}
 
 type Step = "pick" | "upload" | "review" | "importing" | "done";
 interface RawFile {
@@ -143,9 +154,7 @@ export function ImportFlow({ initialApp, onExit }: { initialApp?: AppId | null; 
                   onClick={() => (setApp(a.id), setStep("upload"))}
                   className="flex flex-col items-start gap-3 rounded-2xl border border-line bg-surface p-4 text-left transition active:scale-[0.98] hover:border-line-strong"
                 >
-                  <span className="flex size-11 items-center justify-center rounded-xl font-display text-lg font-bold text-white" style={{ background: a.color }}>
-                    {a.label[0]}
-                  </span>
+                  <AppLogo app={a} className="size-11" />
                   <span className="text-[15px] font-semibold leading-tight">{a.label}</span>
                 </button>
               ))}
@@ -170,9 +179,7 @@ export function ImportFlow({ initialApp, onExit }: { initialApp?: AppId | null; 
               <ArrowLeft className="size-4" /> Choose another app
             </button>
             <div className="flex items-center gap-3">
-              <span className="flex size-12 items-center justify-center rounded-2xl font-display text-xl font-bold text-white" style={{ background: info.color }}>
-                {info.label[0]}
-              </span>
+              <AppLogo app={info} className="size-12" />
               <div>
                 <h2 className="font-display text-2xl font-semibold tracking-tight">Export from {info.label}</h2>
                 <p className="text-xs text-muted">Takes about a minute</p>

@@ -112,6 +112,7 @@ export function profileShare(p: {
       .join("")
       .toUpperCase(),
     cta: "Add me as a friend on Mikon",
+    apps: true,
     url: `${origin()}/signup?ref=${p.username}`,
     fileName: `mikon-${p.username}.png`,
   };

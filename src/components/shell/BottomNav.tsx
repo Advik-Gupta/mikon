@@ -25,7 +25,7 @@ const MORE = [
   { href: "/friends", label: "Friends", icon: Users, hint: "Train together and compare" },
   { href: "/notifications", label: "Notifications", icon: Bell, hint: "Requests and shares" },
   { href: "/profile", label: "Profile", icon: User, hint: "Account, privacy and photo" },
-  { href: "/import", label: "Import history", icon: Download, hint: "From Strong, Hevy, Lyfta or MacroFactor" },
+  { href: "/import", label: "Import & export", icon: Download, hint: "Move your history in or out" },
 ];
 
 export function BottomNav() {

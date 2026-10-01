@@ -15,7 +15,7 @@ export const MAIN_NAV: NavItem[] = [
   { href: "/body", label: "Body", icon: Ruler },
   { href: "/friends", label: "Friends", icon: Users },
   { href: "/calendar", label: "Calendar", icon: CalendarDays, soon: true },
-  { href: "/import", label: "Import history", icon: Download },
+  { href: "/import", label: "Import & export", icon: Download },
 ];
 
 export const FOOTER_NAV: NavItem[] = [{ href: "/settings", label: "Settings", icon: Settings, soon: true }];

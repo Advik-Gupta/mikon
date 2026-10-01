@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, Sparkles } from "lucide-react";
 import { setTutorial, useProfile, useSessionUser } from "@/lib/storage";
 import { Sheet } from "../tracker/Sheet";
-import { APPS } from "./ImportFlow";
+import { APPS, AppLogo } from "./ImportFlow";
 
 export const IMPORT_ASKED = "import-asked";
 
@@ -35,9 +35,7 @@ export function ImportPrompt() {
               onClick={() => answer(`/import?app=${a.id}`)}
               className="flex w-full items-center gap-3.5 rounded-2xl border border-line bg-surface-2/50 px-3.5 py-3 text-left transition active:scale-[0.99] hover:border-line-strong"
             >
-              <span className="flex size-10 items-center justify-center rounded-xl font-display text-base font-bold text-white" style={{ background: a.color }}>
-                {a.label[0]}
-              </span>
+              <AppLogo app={a} className="size-10" />
               <span className="flex-1 text-[15px] font-medium">{a.label}</span>
               <ChevronRight className="size-4 text-faint" />
             </button>
