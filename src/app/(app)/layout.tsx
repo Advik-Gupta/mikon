@@ -14,10 +14,10 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { isImmersive, titleFor } from "@/components/shell/nav";
 import { NotificationBell } from "@/components/social/Notifications";
 import { Toaster } from "@/components/Toaster";
-import { Tour } from "@/components/tour/Tour";
 import { TrackerHost } from "@/components/tracker/Tracker";
 import { ImportPrompt } from "@/components/import/ImportPrompt";
 import { EarlyDays } from "@/components/import/EarlyDays";
+import { StartHub } from "@/components/tour/StartHub";
 import { FeedbackSheet } from "@/components/feedback/Feedback";
 import { AnnouncementBar } from "@/components/shell/Announcements";
 import { cn } from "@/components/ui";
@@ -78,11 +78,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main className={cn("scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain", immersive && "pt-[env(safe-area-inset-top)] md:pt-0")}>{children}</main>
         {!immersive && <BottomNav />}
         <Toaster />
-        <Tour />
         <InstallPrompt />
         <TrackerHost />
         <EarlyDays />
         <ImportPrompt />
+        <StartHub />
         <FeedbackSheet />
       </div>
     </div>

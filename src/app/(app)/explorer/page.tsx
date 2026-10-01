@@ -10,6 +10,8 @@ import { ExplorerTabs } from "@/components/explorer/ExplorerTabs";
 import { ExercisePanel, GroupPanel, MusclePanel, OverviewPanel } from "@/components/explorer/Panels";
 import { useExplorerNav } from "@/components/explorer/useExplorerNav";
 import { Segmented } from "@/components/ui";
+import { Guide } from "@/components/tour/Guide";
+import { GUIDES } from "@/components/tour/guides";
 
 function Explorer() {
   const nav = useExplorerNav();
@@ -28,6 +30,7 @@ function Explorer() {
 
   return (
     <div className="flex flex-col lg:h-full">
+      <Guide id="explorer" steps={GUIDES.explorer} />
       <ExplorerTabs
         right={
           <Segmented

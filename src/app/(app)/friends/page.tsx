@@ -8,6 +8,8 @@ import { FriendButton } from "@/components/social/FriendButton";
 import { UserRow } from "@/components/social/UserRow";
 import { InviteCard } from "@/components/social/InviteCard";
 import { cn } from "@/components/ui";
+import { Guide } from "@/components/tour/Guide";
+import { GUIDES } from "@/components/tour/guides";
 
 type Friend = UserCard & { since: string };
 interface FriendsData {
@@ -78,6 +80,7 @@ function Friends() {
 
   return (
     <div className="board-grid min-h-full">
+      <Guide id="friends" steps={GUIDES.friends} />
       <div className="mx-auto max-w-3xl px-4 pb-10 pt-6 sm:px-8 sm:pt-8">
         <div className="mb-5 flex items-end justify-between gap-3">
           <div>
@@ -106,7 +109,9 @@ function Friends() {
 
         {tab === "find" ? (
           <div className="space-y-6">
-            <FindPeople />
+            <div data-tour="friends-find">
+              <FindPeople />
+            </div>
             <section>
               <h3 className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.14em] text-faint">Not on Mikon yet? Invite them</h3>
               <InviteCard />

@@ -21,6 +21,8 @@ import { AvatarEditor } from "@/components/profile/AvatarEditor";
 import { BodyMap, SEVERITY_COLOR } from "@/components/graphics/BodyMap";
 import { ProfileSections } from "@/components/profile/ProfileSections";
 import { Button, cn } from "@/components/ui";
+import { Guide } from "@/components/tour/Guide";
+import { GUIDES } from "@/components/tour/guides";
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -87,12 +89,13 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-8 sm:pt-8">
+      <Guide id="profile" steps={GUIDES.profile} />
       <section className="relative overflow-hidden rounded-3xl border border-line bg-surface">
         <div className="relative h-24 bg-gradient-to-br from-accent/25 via-surface-2 to-info/15 sm:h-28">
           <div className="board-grid absolute inset-0" />
         </div>
         <div className="flex flex-col gap-4 px-5 pb-5 sm:px-6 sm:pb-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="-mt-12 flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
+          <div data-tour="profile-photo" className="-mt-12 flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
             <AvatarEditor size={92} />
             <div className="min-w-0 sm:pb-1">
               <h2 className="font-display text-2xl font-semibold tracking-tight">
@@ -156,7 +159,7 @@ export default function ProfilePage() {
         <div className="sm:pr-4">
           <p className="text-sm font-semibold">Share and invite</p>
           <p className="text-xs text-muted">Show off your training or bring friends to Mikon.</p>
-          <Button onClick={() => setSharing(true)} className="mt-3 h-11 w-full rounded-full sm:w-auto">
+          <Button data-tour="profile-share" onClick={() => setSharing(true)} className="mt-3 h-11 w-full rounded-full sm:w-auto">
             <Share2 className="size-4" /> Share my profile
           </Button>
         </div>

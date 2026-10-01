@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { AtSign, Check, Loader2 } from "lucide-react";
+import { AtSign, Check, Lightbulb, Loader2 } from "lucide-react";
 import { apiSend } from "@/lib/api";
-import { setSessionUser, type Privacy, type SessionUser } from "@/lib/storage";
+import { setSessionUser, setTutorial, type Privacy, type SessionUser } from "@/lib/storage";
 import { toast } from "../Toaster";
 import { VisibilityPicker } from "../social/VisibilityPicker";
 import { Button, Field, Input, Textarea } from "../ui";
@@ -15,7 +15,13 @@ const PRIVACY_ROWS: { key: keyof Privacy; label: string; hint: string }[] = [
   { key: "progress", label: "Exercise progress", hint: "Your logged lifts on exercise pages and comparisons" },
 ];
 
+const KEEP = ["early-days", "import-asked", "start-hub"];
+
 export function AccountSettings({ user }: { user: SessionUser }) {
+  const replayTips = () => {
+    setTutorial({ ...user.tutorial, guides: (user.tutorial.guides ?? []).filter((g) => KEEP.includes(g)) });
+    toast({ tone: "success", title: "Tips will show again as you move around" });
+  };
   const [form, setForm] = useState({ name: user.name, username: user.username, bio: user.bio });
   const [busy, setBusy] = useState(false);
   const dirty = form.name !== user.name || form.username !== user.username || form.bio !== user.bio;
@@ -88,6 +94,13 @@ export function AccountSettings({ user }: { user: SessionUser }) {
         <div className="mt-4">
           <PushToggle />
         </div>
+      </section>
+      <section className="rounded-2xl border border-line bg-surface p-5">
+        <h3 className="text-sm font-semibold">Tips</h3>
+        <p className="mt-0.5 text-xs text-muted">Show the page tips and the getting started list again.</p>
+        <Button variant="secondary" className="mt-4" onClick={replayTips}>
+          <Lightbulb className="size-4" /> Replay tips
+        </Button>
       </section>
     </div>
   );

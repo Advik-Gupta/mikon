@@ -53,6 +53,7 @@ import type { WorkoutLog } from "@/lib/types";
 import { ExerciseImages, ExerciseThumb } from "../explorer/ExerciseBits";
 import { toast } from "../Toaster";
 import { Guide, type GuideStep } from "../tour/Guide";
+import { useOverlay } from "@/lib/overlay";
 import { Button, cn } from "../ui";
 import { ExerciseSheet } from "./ExerciseSheet";
 import { Keypad, RIR_COLOR, type Field } from "./Keypad";
@@ -427,6 +428,7 @@ function ExpandedTracker({ w, onFinished }: { w: ActiveWorkout; onFinished: (log
   const [noteDraft, setNoteDraft] = useState("");
   const [nameDraft, setNameDraft] = useState(w.name);
   useWakeLock(true);
+  useOverlay(true);
 
   const index = Math.min(w.current, Math.max(0, w.exercises.length - 1));
   const x = w.exercises[index];
@@ -602,7 +604,7 @@ function ExpandedTracker({ w, onFinished }: { w: ActiveWorkout; onFinished: (log
         </button>
       </header>
 
-      <div data-tour="tracker-strip" className="scrollbar-thin flex shrink-0 gap-2 overflow-x-auto px-4 pb-1">
+      <div data-tour="tracker-strip" className="no-scrollbar flex shrink-0 gap-2 overflow-x-auto px-4 pb-1">
         {w.exercises.map((e, i) => {
           const ee = exercises.get(e.exerciseId);
           const total = e.sets.length || 1;
@@ -697,7 +699,18 @@ function ExpandedTracker({ w, onFinished }: { w: ActiveWorkout; onFinished: (log
                 <BestChip exerciseId={x.exerciseId} logs={logs} units={units} />
               </div>
 
-              <div className="scrollbar-thin -mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1">
+              <div className="no-scrollbar -mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1">
+                <button type="button" className={chip} onClick={() => setSheet("reorder")} disabled={w.exercises.length < 2}>
+                  <GripVertical className="size-4" /> Reorder
+                </button>
+                <button
+                  type="button"
+                  className={cn(chip, x.supersetId && "bg-accent/15 text-accent")}
+                  onClick={() => (x.supersetId ? unlinkSuperset(x.id) : linkNext())}
+                  disabled={!x.supersetId && index === w.exercises.length - 1}
+                >
+                  <Link2 className="size-4" /> {x.supersetId ? "Unlink" : "Superset next"}
+                </button>
                 <button type="button" className={chip} onClick={() => setSheet("info")}>
                   <Info className="size-4" /> Info
                 </button>
@@ -727,17 +740,6 @@ function ExpandedTracker({ w, onFinished }: { w: ActiveWorkout; onFinished: (log
                 </button>
                 <button type="button" className={chip} onClick={() => setSheet("rest")}>
                   <Timer className="size-4" /> {fmtClock(x.restSec * 1000)}
-                </button>
-                <button
-                  type="button"
-                  className={cn(chip, x.supersetId && "bg-accent/15 text-accent")}
-                  onClick={() => (x.supersetId ? unlinkSuperset(x.id) : linkNext())}
-                  disabled={!x.supersetId && index === w.exercises.length - 1}
-                >
-                  <Link2 className="size-4" /> {x.supersetId ? "Unlink" : "Superset next"}
-                </button>
-                <button type="button" className={chip} onClick={() => setSheet("reorder")} disabled={w.exercises.length < 2}>
-                  <GripVertical className="size-4" /> Reorder
                 </button>
                 <button
                   type="button"
@@ -1103,7 +1105,7 @@ function ExpandedTracker({ w, onFinished }: { w: ActiveWorkout; onFinished: (log
         <ReorderList w={w} exercises={exercises} />
       </Sheet>
 
-      <Guide id="tracker" steps={TRACKER_GUIDE} />
+      <Guide id="tracker" steps={TRACKER_GUIDE} layer="overlay" finalLabel="Start lifting" />
     </motion.div>
   );
 }

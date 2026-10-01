@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
+import { useOverlay } from "@/lib/overlay";
 import { cn } from "./ui";
 
 export function Modal({
@@ -23,6 +24,7 @@ export function Modal({
   footer?: ReactNode;
   className?: string;
 }) {
+  useOverlay(open);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();

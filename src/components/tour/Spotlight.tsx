@@ -1,4 +1,4 @@
-import type { Rect } from "./Tour";
+import type { Rect } from "./target";
 
 const T = "transition-all duration-300 ease-out";
 

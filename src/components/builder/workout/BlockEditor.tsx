@@ -415,7 +415,7 @@ export function BlockEditor({ program, dayId, blockId }: { program: Program; day
         </div>
       </div>
 
-      {kind !== "cardio" && kind !== "session" && <Guide id="builder-block" steps={BLOCK_GUIDE} onStep={(i) => setPane(GUIDE_PANES[i])} />}
+      {kind !== "cardio" && kind !== "session" && <Guide id="builder-block" steps={BLOCK_GUIDE} finalLabel="Start building" onStep={(i) => setPane(GUIDE_PANES[i])} />}
 
       <DragOverlay dropAnimation={{ duration: 160 }}>
         {activeExercise ? (

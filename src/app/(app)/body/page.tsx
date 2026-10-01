@@ -9,6 +9,8 @@ import { latestByMetric } from "@/lib/measure-store";
 import { METRICS, fmtMetric, toDisplay } from "@/lib/measurements";
 import { useMeasurements, useProfile } from "@/lib/storage";
 import { cn } from "@/components/ui";
+import { Guide } from "@/components/tour/Guide";
+import { GUIDES } from "@/components/tour/guides";
 
 export default function BodyPage() {
   const all = useMeasurements();
@@ -25,7 +27,7 @@ export default function BodyPage() {
           const delta = hit?.prev ? toDisplay(m.kind, hit.last.value, units) - toDisplay(m.kind, hit.prev.value, units) : 0;
           return (
             <motion.li key={m.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} className="flex items-center">
-              <Link href={`/body/${m.id}`} className="flex min-w-0 flex-1 items-center gap-3 py-3.5 pl-4 transition active:bg-surface-2">
+              <Link href={`/body/${m.id}`} data-tour="body-metric" className="flex min-w-0 flex-1 items-center gap-3 py-3.5 pl-4 transition active:bg-surface-2">
                 <span className="flex-1 text-[16px] font-semibold">{m.label}</span>
                 {hit && (
                   <span className="flex items-center gap-2 text-right">
@@ -42,6 +44,7 @@ export default function BodyPage() {
               </Link>
               <button
                 type="button"
+                data-tour="body-add"
                 onClick={() => setAdding(m.id)}
                 className="mx-3 flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent transition active:scale-90"
                 aria-label={`Log ${m.label}`}
@@ -57,6 +60,7 @@ export default function BodyPage() {
 
   return (
     <div className="board-grid min-h-full">
+      <Guide id="body" steps={GUIDES.body} />
       <div className="mx-auto max-w-2xl px-4 pb-10 pt-6 sm:px-8 sm:pt-8">
         <h2 className="font-display text-2xl font-semibold tracking-tight">Body</h2>
         <p className="mt-1 text-sm text-muted">Log your weight and measurements. Tap any row to see how it&apos;s changed.</p>

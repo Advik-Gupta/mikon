@@ -10,11 +10,14 @@ import { fmtDuration, freeMinutesByDay } from "@/lib/schedule";
 import { useLogs, useMeasurements, useProfile, usePrograms } from "@/lib/storage";
 import { ImportCard, Insights } from "@/components/home/Insights";
 import { TodayCard } from "@/components/home/TodayCard";
+import { Checklist } from "@/components/home/Checklist";
 import { DEFAULT_SHAPE, Figure } from "@/components/graphics/Figure";
 import { SEVERITY_COLOR } from "@/components/graphics/BodyMap";
 import { cn } from "@/components/ui";
 import { MiniBoard, programMeta } from "@/components/builder/ProgramPreview";
 import { activeProgram, programHref } from "@/lib/programs";
+import { Guide } from "@/components/tour/Guide";
+import { GUIDES } from "@/components/tour/guides";
 
 function greeting() {
   const h = new Date().getHours();
@@ -117,7 +120,17 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mb-8">{hasData ? <Insights logs={logs} measurements={measurements} units={u} /> : <ImportCard />}</div>
+        <div className="mb-8 space-y-6">
+          <Checklist />
+          {hasData ? (
+            <div data-tour="home-insights">
+              <Insights logs={logs} measurements={measurements} units={u} />
+            </div>
+          ) : (
+            <ImportCard />
+          )}
+        </div>
+        <Guide id="home" steps={GUIDES.home} />
 
         <div data-tour="home-board" className="columns-1 gap-6 md:columns-2 xl:columns-3">
           {active && (

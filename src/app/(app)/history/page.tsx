@@ -18,6 +18,8 @@ import { RIR_COLOR } from "@/components/tracker/Keypad";
 import { Sheet } from "@/components/tracker/Sheet";
 import { toast } from "@/components/Toaster";
 import { Button, cn } from "@/components/ui";
+import { Guide } from "@/components/tour/Guide";
+import { GUIDES } from "@/components/tour/guides";
 
 const WEEKS = 18;
 
@@ -187,13 +189,14 @@ export default function HistoryPage() {
 
   return (
     <div className="board-grid min-h-full">
+      <Guide id="history" steps={GUIDES.history} />
       <div className="mx-auto max-w-3xl px-4 pb-10 pt-6 sm:px-8 sm:pt-8">
         <div className="flex items-end justify-between gap-3">
           <div>
             <h2 className="font-display text-2xl font-semibold tracking-tight">Workout history</h2>
             <p className="mt-1 text-sm text-muted">Every session you&apos;ve logged.</p>
           </div>
-          <Button onClick={() => openStartSheet()} className="shrink-0">
+          <Button data-tour="history-start" onClick={() => openStartSheet()} className="shrink-0">
             <Play className="size-4" /> Start
           </Button>
         </div>
@@ -236,6 +239,7 @@ export default function HistoryPage() {
                   return (
                     <motion.button
                       key={l.id}
+                      data-tour="history-item"
                       type="button"
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}

@@ -56,7 +56,7 @@ export const tutorialSchema = z.object({
   done: z.boolean(),
   version: z.number().int().min(0).max(1000).optional(),
   newStep: z.number().int().min(0).max(100).optional(),
-  guides: z.array(z.string().regex(/^[a-z-]{1,40}$/)).max(50).optional(),
+  guides: z.array(z.string().regex(/^[a-z-]{1,40}$/)).max(80).optional(),
 });
 
 const num = z.number().finite().min(0).max(100000).nullable();

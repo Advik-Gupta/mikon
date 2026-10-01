@@ -12,6 +12,8 @@ import { Button } from "@/components/ui";
 import { deactivateProgram, programDayOn, useProgram } from "@/lib/programs";
 import { setTutorial, useProfile, useSessionUser } from "@/lib/storage";
 import { CongratsModal } from "@/components/program/CongratsModal";
+import { Guide } from "@/components/tour/Guide";
+import { GUIDES } from "@/components/tour/guides";
 
 function ProgramPageInner() {
   const { id } = useParams<{ id: string }>();
@@ -50,13 +52,14 @@ function ProgramPageInner() {
 
   return (
     <>
+      <Guide id="program" steps={GUIDES.program} />
       <ProgramView
         program={program}
         sex={profile?.personal.sex === "female" ? "female" : "male"}
         units={profile?.body.units ?? "metric"}
         actions={
           <>
-            <Button variant="secondary" onClick={() => setSharing(true)} title={`Visible to: ${visibilityOf(program.visibility).label}`}>
+            <Button variant="secondary" data-tour="program-share" onClick={() => setSharing(true)} title={`Visible to: ${visibilityOf(program.visibility).label}`}>
               <Share2 className="size-4" /> Share
             </Button>
             <Button variant="secondary" onClick={() => router.push(`/programs/${id}/edit`)}>
@@ -67,7 +70,7 @@ function ProgramPageInner() {
                 <CircleStop className="size-4" /> Stop
               </Button>
             ) : (
-              <Button onClick={() => setStarting(true)}>
+              <Button data-tour="program-start" onClick={() => setStarting(true)}>
                 <CalendarCheck className="size-4" /> Start program
               </Button>
             )}

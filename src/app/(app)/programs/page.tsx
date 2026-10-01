@@ -6,12 +6,15 @@ import { deleteProgram, programHref } from "@/lib/programs";
 import { StatusBadge } from "@/components/program/ProgramView";
 import { usePrograms } from "@/lib/storage";
 import { MiniBoard, programMeta } from "@/components/builder/ProgramPreview";
+import { Guide } from "@/components/tour/Guide";
+import { GUIDES } from "@/components/tour/guides";
 
 export default function ProgramsPage() {
   const programs = usePrograms() ?? [];
 
   return (
     <div className="board-grid min-h-full">
+      <Guide id="programs" steps={GUIDES.programs} />
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-8">
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
@@ -20,6 +23,7 @@ export default function ProgramsPage() {
           </div>
           <Link
             href="/programs/new"
+            data-tour="programs-new"
             className="flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-accent px-3.5 text-sm font-semibold text-accent-ink transition hover:bg-[#d4ff4a] sm:px-4"
           >
             <Plus className="size-4" strokeWidth={2.5} /> New<span className="hidden sm:inline"> program</span>
@@ -72,6 +76,7 @@ export default function ProgramsPage() {
                   <div className="mt-5 flex items-center gap-2">
                     <Link
                       href={programHref(p)}
+                      data-tour="programs-open"
                       className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-line bg-surface-2 text-sm font-medium transition hover:border-line-strong hover:bg-surface-3"
                     >
                       {p.status === "draft" ? "Continue" : "Open"} <ArrowRight className="size-3.5" />

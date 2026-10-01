@@ -11,6 +11,8 @@ import { dayOf, movingAverage, useSeries } from "@/lib/measure-store";
 import { fmtMetric, metricById, toDisplay, unitFor } from "@/lib/measurements";
 import { addDays, parseISODate, toISODate } from "@/lib/programs";
 import { useProfile } from "@/lib/storage";
+import { Guide } from "@/components/tour/Guide";
+import { GUIDES } from "@/components/tour/guides";
 
 const RANGES = [
   { id: "1m", label: "1M", days: 31 },
@@ -49,6 +51,7 @@ export default function MetricPage() {
 
   return (
     <div className="board-grid min-h-full">
+      <Guide id="metric" steps={GUIDES.metric} />
       <div className="mx-auto max-w-2xl px-4 pb-24 pt-5 sm:px-8 sm:pt-8">
         <Link href="/body" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
           <ArrowLeft className="size-4" /> Body
@@ -64,12 +67,12 @@ export default function MetricPage() {
               </p>
             )}
           </div>
-          <Button onClick={() => setEntry({})} className="shrink-0 rounded-full">
+          <Button data-tour="metric-add" onClick={() => setEntry({})} className="shrink-0 rounded-full">
             <Plus className="size-4" /> Log
           </Button>
         </div>
 
-        <div className="mt-5 flex gap-1 rounded-2xl border border-line bg-surface p-1">
+        <div data-tour="metric-range" className="mt-5 flex gap-1 rounded-2xl border border-line bg-surface p-1">
           {RANGES.map((r) => (
             <button key={r.id} type="button" onClick={() => setRange(r.id)} className={cn("flex-1 rounded-xl py-2 text-sm font-medium transition", range === r.id ? "bg-ink text-bg" : "text-muted")}>
               {r.label}

@@ -1,60 +1,114 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, Lightbulb } from "lucide-react";
-import { setTutorial, useSessionUser } from "@/lib/storage";
-import { Spotlight } from "./Spotlight";
+import { claimGuide, releaseGuide, useGuideOwner, useOverlayCount } from "@/lib/overlay";
+import { setTutorial, useSessionUser, type SessionUser } from "@/lib/storage";
 import { Button } from "../ui";
-import { CARD_W, cardPosition, useTargetRect } from "./Tour";
+import { Spotlight } from "./Spotlight";
+import { CARD_W, cardPosition, useTargetRect, type Place } from "./target";
 
 export interface GuideStep {
   target: string;
-  place?: "right" | "left" | "top" | "bottom";
+  place?: Place;
   title: string;
   body: string;
 }
 
-export function useGuideSeen(id: string) {
-  const user = useSessionUser();
-  if (!user) return true;
-  return !user.tutorial.done || !!user.tutorial.guides?.includes(id);
+export const ONBOARDING_STEPS = ["early-days", "import-asked"];
+
+export function onboardingDone(user: SessionUser | null) {
+  if (!user) return false;
+  const g = user.tutorial.guides ?? [];
+  return ONBOARDING_STEPS.every((s) => g.includes(s)) && (user.tutorial.done || g.includes("start-hub"));
 }
 
-export function Guide({ id, steps, onStep }: { id: string; steps: GuideStep[]; onStep?: (index: number) => void }) {
+export function useGuideSeen(id: string) {
   const user = useSessionUser();
+  return !user || !!user.tutorial.guides?.includes(id);
+}
+
+export function markGuide(user: SessionUser, id: string) {
+  if (user.tutorial.guides?.includes(id)) return;
+  setTutorial({ ...user.tutorial, guides: [...(user.tutorial.guides ?? []), id].slice(-80) });
+}
+
+export function Guide({
+  id,
+  steps,
+  onStep,
+  layer = "page",
+  finalLabel = "Got it",
+  delay = 900,
+}: {
+  id: string;
+  steps: GuideStep[];
+  onStep?: (index: number) => void;
+  layer?: "page" | "overlay";
+  finalLabel?: string;
+  delay?: number;
+}) {
+  const user = useSessionUser();
+  const overlays = useOverlayCount();
+  const owner = useGuideOwner();
   const seen = useGuideSeen(id);
-  const [index, setIndex] = useState(0);
   const [ready, setReady] = useState(false);
-  const step = steps[index];
-  const { rect, missing } = useTargetRect(step, ready && !seen, 600);
+  const [index, setIndex] = useState(0);
+  const [gaveUp, setGaveUp] = useState(false);
+  const shown = useRef(false);
   const [, redraw] = useState(0);
 
+  const blocked = layer === "page" ? overlays > 0 || !onboardingDone(user) : !onboardingDone(user);
+  const eligible = ready && !seen && !blocked && !gaveUp && !!user;
+  const mine = owner === id;
+
   useEffect(() => {
-    const t = setTimeout(() => setReady(true), 700);
+    const t = setTimeout(() => setReady(true), delay);
     const onResize = () => redraw((n) => n + 1);
     window.addEventListener("resize", onResize);
     return () => {
       clearTimeout(t);
       window.removeEventListener("resize", onResize);
+      releaseGuide(id);
     };
-  }, []);
+  }, [id, delay]);
 
   useEffect(() => {
-    if (ready && !seen) onStep?.(index);
-  }, [index, ready, seen, onStep]);
+    if (eligible) claimGuide(id);
+    else releaseGuide(id);
+  }, [eligible, id, owner]);
 
-  if (seen || !ready || !user) return null;
+  const active = eligible && mine;
+  const step = steps[Math.min(index, steps.length - 1)];
 
-  const close = () => setTutorial({ ...user.tutorial, guides: [...(user.tutorial.guides ?? []), id] });
-  const last = index === steps.length - 1;
-  const spot = rect && !missing ? rect : null;
-  if (!spot && !missing) return null;
-  const pos = cardPosition(spot, step.place);
+  const finish = () => {
+    if (user) markGuide(user, id);
+    releaseGuide(id);
+  };
+
+  const rect = useTargetRect(step?.target, active, 75, () => {
+    if (index < steps.length - 1) setIndex((i) => i + 1);
+    else if (shown.current) finish();
+    else {
+      setGaveUp(true);
+      releaseGuide(id);
+    }
+  }, () => {
+    shown.current = true;
+  });
+
+  useEffect(() => {
+    if (active) onStep?.(index);
+  }, [index, active, onStep]);
+
+  if (!active || !rect || !user) return null;
+  const last = index >= steps.length - 1;
+  const pos = cardPosition(rect, step.place);
 
   return (
-    <div className="fixed inset-0 z-[70]" aria-live="polite">
-      <Spotlight rect={spot} dim={0.55} />
+    <div className="fixed inset-0 z-[90]" aria-live="polite">
+      <Spotlight rect={rect} dim={0.5} />
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
@@ -69,17 +123,17 @@ export function Guide({ id, steps, onStep }: { id: string; steps: GuideStep[]; o
         >
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-warn">
-              <Lightbulb className="size-3.5" /> Tip {index + 1} of {steps.length}
+              <Lightbulb className="size-3.5" /> {steps.length > 1 ? `Tip ${index + 1} of ${steps.length}` : "Tip"}
             </span>
-            <button type="button" onClick={close} className="rounded-md px-1.5 py-1 text-xs text-muted hover:bg-surface-2 hover:text-ink">
+            <button type="button" onClick={finish} className="rounded-md px-1.5 py-1 text-xs text-muted hover:bg-surface-2 hover:text-ink">
               Skip tips
             </button>
           </div>
           <h3 className="mt-2 font-display text-base font-semibold leading-snug">{step.title}</h3>
           <p className="mt-1 text-sm leading-relaxed text-muted">{step.body}</p>
           <div className="mt-3 flex justify-end">
-            <Button className="h-9" onClick={() => (last ? close() : setIndex(index + 1))}>
-              {last ? "Start building" : "Next"} {!last && <ArrowRight className="size-4" />}
+            <Button className="h-9" onClick={() => (last ? finish() : setIndex(index + 1))}>
+              {last ? finalLabel : "Next"} {!last && <ArrowRight className="size-4" />}
             </Button>
           </div>
         </motion.div>
