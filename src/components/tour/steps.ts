@@ -36,6 +36,15 @@ export const TOUR: TourStep[] = [
     body: "Jump between your programs, the explorer and your friends. New areas will appear here as they launch.",
   },
   {
+    id: "train",
+    route: "/",
+    target: "train",
+    place: "right",
+    title: "Start a workout",
+    body: "Tap here any time to train: today's session, any program day, a past workout or an empty one. It keeps saving even if you close the app.",
+    since: 3,
+  },
+  {
     id: "bell",
     route: "/",
     target: "bell",

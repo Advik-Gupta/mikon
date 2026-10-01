@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { Folder, LogOut, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
+import { Dumbbell, Folder, LogOut, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
+import { openStartSheet, updateWorkout, useActiveWorkout } from "@/lib/tracker";
 import { programHref } from "@/lib/programs";
 import { KEYS, logout, usePrograms, useStored, writeStored } from "@/lib/storage";
 import { Logo, LogoMark } from "../graphics/Logo";
@@ -31,6 +32,25 @@ function NavLink({ item, active, collapsed, onNavigate }: { item: NavItem; activ
         </>
       )}
     </Link>
+  );
+}
+
+function StartButton({ collapsed }: { collapsed: boolean }) {
+  const workout = useActiveWorkout();
+  return (
+    <button
+      type="button"
+      data-tour="train"
+      onClick={() => (workout ? updateWorkout((w) => ({ ...w, minimized: false })) : openStartSheet())}
+      title={collapsed ? (workout ? "Resume workout" : "Start workout") : undefined}
+      className="mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface-2 text-sm font-semibold transition hover:border-accent/50 active:scale-[0.98]"
+    >
+      <span className="relative">
+        <Dumbbell className="size-4 text-accent" />
+        {workout && <span className="absolute -right-1.5 -top-1 size-2 animate-pulse rounded-full bg-danger" />}
+      </span>
+      {!collapsed && (workout ? "Resume workout" : "Start workout")}
+    </button>
   );
 }
 
@@ -80,6 +100,8 @@ export function Sidebar({ mobile, onNavigate }: { mobile?: boolean; onNavigate?:
         <Plus className="size-4" strokeWidth={2.5} />
         {!collapsed && "New program"}
       </Link>
+
+      <StartButton collapsed={collapsed} />
 
       <nav data-tour="nav" className="mt-6 space-y-0.5">
         {!collapsed && <p className="mb-2 px-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-faint">Main</p>}

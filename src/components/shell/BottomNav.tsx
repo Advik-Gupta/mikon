@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import { Compass, Dumbbell, Layers, LayoutGrid, Users } from "lucide-react";
 import { useApi } from "@/lib/api";
+import { openStartSheet, updateWorkout, useActiveWorkout } from "@/lib/tracker";
 import { cn } from "../ui";
 
 const TABS = [
@@ -18,6 +19,7 @@ const TABS = [
 export function BottomNav() {
   const pathname = usePathname();
   const requests = useApi<{ incoming: unknown[] }>("/api/friends", 60_000).data?.incoming.length ?? 0;
+  const workout = useActiveWorkout();
   const active = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
 
   return (
@@ -27,11 +29,19 @@ export function BottomNav() {
           const on = active(t.href);
           if (t.center)
             return (
-              <Link key={t.href} href={t.href} className="flex flex-col items-center justify-center" aria-label={t.label}>
-                <span className={cn("flex size-11 items-center justify-center rounded-2xl shadow-[0_8px_20px_-8px_rgb(198_244_50/0.6)] transition active:scale-95", on ? "bg-ink text-bg" : "bg-accent text-accent-ink")}>
+              <button
+                key={t.href}
+                type="button"
+                data-tour="train"
+                onClick={() => (workout ? updateWorkout((w) => ({ ...w, minimized: false })) : openStartSheet())}
+                className="flex flex-col items-center justify-center"
+                aria-label={workout ? "Resume workout" : "Start workout"}
+              >
+                <span className="relative flex size-12 items-center justify-center rounded-2xl bg-accent text-accent-ink shadow-[0_8px_20px_-8px_rgb(198_244_50/0.6)] transition active:scale-90">
                   <t.icon className="size-5" strokeWidth={2.4} />
+                  {workout && <span className="absolute -right-1 -top-1 size-3 animate-pulse rounded-full bg-danger ring-2 ring-bg" />}
                 </span>
-              </Link>
+              </button>
             );
           return (
             <Link key={t.href} href={t.href} className={cn("relative flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition", on ? "text-ink" : "text-faint")}>

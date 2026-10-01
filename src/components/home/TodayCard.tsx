@@ -3,12 +3,46 @@
 import Link from "next/link";
 import { ArrowRight, Check, CircleCheck, Play } from "lucide-react";
 import { useExerciseMap } from "@/lib/analysis";
-import { findLog, logProgress } from "@/lib/logs";
+import { findLog } from "@/lib/logs";
+import { useSessionUser } from "@/lib/storage";
+import { askRestNotifications, startFromProgram, updateWorkout, useActiveWorkout } from "@/lib/tracker";
 import { blockType } from "@/lib/options";
 import { addDays, dayLabel, parseISODate, programDayOn, toISODate } from "@/lib/programs";
 import type { Program, Units, WorkoutLog } from "@/lib/types";
 import { DayContent } from "../program/DayContent";
 import { cn } from "../ui";
+
+function TodayButton({ program, index, log }: { program: Program; index: number; log: WorkoutLog | null }) {
+  const user = useSessionUser();
+  const workout = useActiveWorkout();
+  const exercises = useExerciseMap();
+  const base = "mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold transition active:scale-[0.98]";
+  if (log?.completedAt)
+    return (
+      <Link href="/history" className={cn(base, "border border-accent/40 bg-accent/10 text-accent")}>
+        <Check className="size-4" strokeWidth={3} /> Done today · view workout
+      </Link>
+    );
+  if (workout)
+    return (
+      <button type="button" onClick={() => updateWorkout((w) => ({ ...w, minimized: false }))} className={cn(base, "bg-accent text-accent-ink")}>
+        <Play className="size-4" /> Resume workout
+      </button>
+    );
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (!user) return;
+        askRestNotifications();
+        startFromProgram(user.id, program, index, exercises);
+      }}
+      className={cn(base, "bg-accent text-accent-ink hover:bg-[#d4ff4a]")}
+    >
+      <Play className="size-4" /> Start workout
+    </button>
+  );
+}
 
 export function TodayCard({ program, logs, units }: { program: Program; logs: WorkoutLog[]; units: Units }) {
   const exercises = useExerciseMap();
@@ -76,8 +110,9 @@ export function TodayCard({ program, logs, units }: { program: Program; logs: Wo
           return (
             <Link
               key={i}
-              href={`/workout?date=${toISODate(d)}`}
-              className={cn("flex flex-1 flex-col items-center gap-1 rounded-lg py-1.5", isToday ? "bg-surface-3" : "hover:bg-surface-2")}
+              href={done ? "/history" : "#"}
+              onClick={(e) => !done && e.preventDefault()}
+              className={cn("flex flex-1 flex-col items-center gap-1 rounded-lg py-1.5", isToday ? "bg-surface-3" : done && "hover:bg-surface-2")}
             >
               <span className={cn("text-[10px]", isToday ? "font-semibold text-ink" : "text-faint")}>{d.toLocaleDateString(undefined, { weekday: "narrow" })}</span>
               <span className="flex h-4 items-center">
@@ -102,27 +137,7 @@ export function TodayCard({ program, logs, units }: { program: Program; logs: Wo
       </div>
 
       {!rest && (
-        <Link
-          href="/workout"
-          className={cn(
-            "mt-5 flex h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold transition active:scale-[0.98]",
-            log?.completedAt ? "border border-accent/40 bg-accent/10 text-accent" : "bg-accent text-accent-ink hover:bg-[#d4ff4a]",
-          )}
-        >
-          {log?.completedAt ? (
-            <>
-              <Check className="size-4" strokeWidth={3} /> Done today · view log
-            </>
-          ) : log ? (
-            <>
-              <Play className="size-4" /> Continue workout · {Math.round(logProgress(log) * 100)}%
-            </>
-          ) : (
-            <>
-              <Play className="size-4" /> Start workout
-            </>
-          )}
-        </Link>
+        <TodayButton program={program} index={today.index} log={log} />
       )}
     </>
   );

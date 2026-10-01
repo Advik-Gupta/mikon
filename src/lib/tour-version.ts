@@ -1,1 +1,1 @@
-export const TOUR_VERSION = 2;
+export const TOUR_VERSION = 3;
