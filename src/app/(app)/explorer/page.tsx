@@ -27,7 +27,7 @@ function Explorer() {
   }, [panelKey]);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col lg:h-full">
       <ExplorerTabs
         right={
           <Segmented
@@ -41,8 +41,8 @@ function Explorer() {
           />
         }
       />
-      <div className="grid min-h-0 flex-1 grid-rows-[minmax(360px,55vh)_1fr] lg:grid-cols-2 lg:grid-rows-1">
-        <div data-tour="explorer-figure" className="board-grid relative min-h-0 border-b border-line lg:border-b-0 lg:border-r">
+      <div className="grid grid-cols-[minmax(0,1fr)] lg:min-h-0 lg:flex-1 lg:grid-cols-2">
+        <div data-tour="explorer-figure" className="board-grid relative h-[58vh] min-h-[340px] border-b border-line lg:h-auto lg:min-h-0 lg:border-b-0 lg:border-r">
           <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-3 sm:p-4">
             {focusGroup || exercise ? (
               <button
@@ -81,7 +81,7 @@ function Explorer() {
           </div>
         </div>
 
-        <div ref={panelRef} className="scrollbar-thin min-h-0 overflow-y-auto">
+        <div ref={panelRef} className="scrollbar-thin lg:min-h-0 lg:overflow-y-auto">
           <div className="mx-auto max-w-2xl px-5 py-6 sm:px-8 sm:py-8">
             {error && <p className="mb-4 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">{error}</p>}
             <AnimatePresence mode="wait" initial={false}>

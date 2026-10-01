@@ -286,12 +286,12 @@ export function ProgramView({ program, sex, units, actions, byline }: { program:
               <p className="text-xs text-muted">Fatigue on each muscle group, day by day. Look for heavy days back to back.</p>
             </header>
             <div className="scrollbar-thin overflow-x-auto p-4">
-              <table className="w-full min-w-[520px] border-separate border-spacing-1 text-xs">
+              <table className="w-max min-w-full border-separate border-spacing-1 text-xs">
                 <thead>
                   <tr>
-                    <th className="sticky left-0 bg-surface" />
+                    <th className="sticky left-0 z-10 w-28 bg-surface sm:w-36" />
                     {program.days.map((d, i) => (
-                      <th key={d.id} className="px-0.5 pb-1 font-medium">
+                      <th key={d.id} className="min-w-12 px-0.5 pb-1 font-medium">
                         <button type="button" onClick={() => pick(i)} className={cn("w-full rounded-md py-0.5", sel === i ? "bg-ink text-bg" : "text-muted hover:text-ink")}>
                           {dayLabel(program, i)}
                         </button>
@@ -302,7 +302,7 @@ export function ProgramView({ program, sex, units, actions, byline }: { program:
                 <tbody>
                   {trainedGroups.map((g) => (
                     <tr key={g.id}>
-                      <td className="sticky left-0 whitespace-nowrap bg-surface pr-3 text-muted">{g.name}</td>
+                      <td className="sticky left-0 z-10 max-w-28 truncate whitespace-nowrap bg-surface pr-3 text-muted shadow-[-6px_0_0_0_var(--color-surface)] sm:max-w-36">{g.name}</td>
                       {g.fatigue.map((f, i) => (
                         <td
                           key={i}

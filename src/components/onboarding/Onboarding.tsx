@@ -173,7 +173,7 @@ export function Onboarding({ editProfile, editStep }: { editProfile?: Profile; e
   const phaseSteps = (ph: number) => STEPS.map((s, i) => ({ ...s, i })).filter((s) => s.phase === ph && s.id !== "welcome");
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-bg">
+    <div className="fixed inset-0 flex overflow-hidden bg-bg">
       <aside className="hidden w-72 shrink-0 flex-col border-r border-line bg-surface/50 p-6 lg:flex">
         <Logo />
         <nav className="mt-12 flex-1 space-y-7">

@@ -38,6 +38,12 @@
 
 html {
   color-scheme: dark;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+main {
+  -webkit-overflow-scrolling: touch;
 }
 
 body {

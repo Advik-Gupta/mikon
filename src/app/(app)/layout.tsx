@@ -33,7 +33,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!profile) return <SessionScreen status={session.status} retry={session.retry} />;
 
   return (
-    <div className="flex h-dvh overflow-hidden">
+    <div className="fixed inset-0 flex overflow-hidden">
       <div className="hidden md:block">
         <Sidebar />
       </div>
