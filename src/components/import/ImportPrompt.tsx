@@ -13,7 +13,7 @@ export function ImportPrompt() {
   const profile = useProfile();
   const router = useRouter();
   const guides = user?.tutorial.guides ?? [];
-  const open = !!user && !!profile && guides.includes("early-days") && !guides.includes(IMPORT_ASKED);
+  const open = !!user && !!profile && guides.includes("early-days") && !user.invite && !guides.includes(IMPORT_ASKED);
   const answer = (to?: string) => {
     if (!user) return;
     setTutorial({ ...user.tutorial, guides: [...(user.tutorial.guides ?? []), IMPORT_ASKED] });

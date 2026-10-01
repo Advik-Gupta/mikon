@@ -1,6 +1,8 @@
 "use client";
 
 import { Hammer, MessageSquareHeart, Sprout } from "lucide-react";
+import { useNeedsInstall } from "@/lib/pwa";
+import { INSTALL_ASKED } from "../pwa/InstallSheet";
 import { setTutorial, useProfile, useSessionUser } from "@/lib/storage";
 import { openFeedback, ROADMAP } from "../feedback/Feedback";
 import { Sheet } from "../tracker/Sheet";
@@ -11,7 +13,8 @@ export const EARLY_DAYS = "early-days";
 export function EarlyDays() {
   const user = useSessionUser();
   const profile = useProfile();
-  const open = !!user && !!profile && !user.tutorial.guides?.includes(EARLY_DAYS);
+  const needsInstall = useNeedsInstall();
+  const open = !!user && !!profile && !user.tutorial.guides?.includes(EARLY_DAYS) && (!needsInstall || !!user.tutorial.guides?.includes(INSTALL_ASKED));
   const done = (feedback = false) => {
     if (!user) return;
     setTutorial({ ...user.tutorial, guides: [...(user.tutorial.guides ?? []), EARLY_DAYS] });

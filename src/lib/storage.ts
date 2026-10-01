@@ -33,6 +33,7 @@ export interface SessionUser {
   privacy: Privacy;
   role: "user" | "admin";
   tutorial: { step: number; done: boolean; version?: number; newStep?: number; guides?: string[] };
+  invite?: { name: string; username: string; avatarUrl: string | null } | null;
 }
 
 const memory = new Map<string, unknown>();

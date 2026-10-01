@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { Bell, Share2, UserCheck, UserPlus } from "lucide-react";
+import { Bell, Gift, Share2, UserCheck, UserPlus } from "lucide-react";
 import { apiSend, revalidate, useApi, type UserCard } from "@/lib/api";
 import { UserAvatar } from "../shell/Avatar";
 import { toast } from "../Toaster";
@@ -12,7 +12,7 @@ import { cn } from "../ui";
 
 export interface Notice {
   id: string;
-  type: "friend_request" | "friend_accept" | "program_shared";
+  type: "friend_request" | "friend_accept" | "program_shared" | "invite_joined";
   title: string;
   body: string;
   url: string;
@@ -22,7 +22,7 @@ export interface Notice {
 }
 
 const URL_ = "/api/notifications";
-const ICON = { friend_request: UserPlus, friend_accept: UserCheck, program_shared: Share2 };
+const ICON = { friend_request: UserPlus, friend_accept: UserCheck, program_shared: Share2, invite_joined: Gift };
 
 export function timeAgo(iso: string) {
   const s = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 1000));

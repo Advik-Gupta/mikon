@@ -50,10 +50,10 @@ export async function cardsFor(ids: string[]) {
   return new Map(list.map((u) => [u._id.toHexString(), userCard(u)]));
 }
 
-export type NotificationType = "friend_request" | "friend_accept" | "program_shared";
+export type NotificationType = "friend_request" | "friend_accept" | "program_shared" | "invite_joined";
 
-export async function acceptInvite(user: UserDoc, inviterUsername: string) {
-  const inviter = await (await users()).findOne({ username: inviterUsername });
+export async function acceptInvite(user: UserDoc, inviterId: string) {
+  const inviter = await (await users()).findOne({ _id: new ObjectId(inviterId) });
   if (!inviter || inviter._id.equals(user._id)) return;
   const a = inviter._id.toHexString();
   const b = user._id.toHexString();
@@ -63,7 +63,7 @@ export async function acceptInvite(user: UserDoc, inviterUsername: string) {
     { $setOnInsert: { _id: new ObjectId(), pair: pairKey(a, b), users: [a, b], from: a, to: b, createdAt: now }, $set: { status: "accepted", acceptedAt: now } },
     { upsert: true },
   );
-  await notify(a, user, "friend_accept", { title: `${user.name} joined Mikon from your invite`, body: `You and @${user.username} are now friends.`, url: `/u/${user.username}` });
+  await notify(a, user, "friend_accept", { title: `${user.name} added you as a friend`, body: `You and @${user.username} are now friends.`, url: `/u/${user.username}` });
 }
 
 export async function notify(userId: string, actor: UserDoc, type: NotificationType, text: { title: string; body: string; url: string }) {

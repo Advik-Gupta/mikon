@@ -8,6 +8,7 @@ import { useProfile } from "@/lib/storage";
 import { SessionScreen, useSession } from "@/components/SessionGate";
 import { LogoMark } from "@/components/graphics/Logo";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { InstallSheet } from "@/components/pwa/InstallSheet";
 import { Avatar } from "@/components/shell/Avatar";
 import { BottomNav } from "@/components/shell/BottomNav";
 import { Sidebar } from "@/components/shell/Sidebar";
@@ -18,6 +19,8 @@ import { TrackerHost } from "@/components/tracker/Tracker";
 import { ImportPrompt } from "@/components/import/ImportPrompt";
 import { EarlyDays } from "@/components/import/EarlyDays";
 import { StartHub } from "@/components/tour/StartHub";
+import { InvitePrompt } from "@/components/social/InvitePrompt";
+import { ClientBeacon } from "@/components/shell/ClientBeacon";
 import { FeedbackSheet } from "@/components/feedback/Feedback";
 import { AnnouncementBar } from "@/components/shell/Announcements";
 import { cn } from "@/components/ui";
@@ -81,6 +84,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <InstallPrompt />
         <TrackerHost />
         <EarlyDays />
+        <InstallSheet />
+        <InvitePrompt />
+        <ClientBeacon />
         <ImportPrompt />
         <StartHub />
         <FeedbackSheet />

@@ -106,3 +106,8 @@ export async function promptInstall() {
   installListeners.forEach((l) => l());
   return outcome === "accepted";
 }
+
+export const isPhone = () => typeof navigator !== "undefined" && (isIOS() || /android.+mobile|android/i.test(navigator.userAgent));
+
+const noopSubscribe = () => () => {};
+export const useNeedsInstall = () => useSyncExternalStore(noopSubscribe, () => isPhone() && !isStandalone(), () => false);

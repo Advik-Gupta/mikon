@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Download, Share, SquarePlus, X } from "lucide-react";
-import { isIOS, isStandalone, promptInstall, useInstallEvent } from "@/lib/pwa";
+import { isIOS, isStandalone, promptInstall, useInstallEvent, useNeedsInstall } from "@/lib/pwa";
 import { useSessionUser } from "@/lib/storage";
 import { LogoMark } from "../graphics/Logo";
 import { Button } from "../ui";
@@ -32,7 +32,8 @@ export function InstallPrompt() {
     return () => clearTimeout(t);
   }, []);
 
-  const tourRunning = !!user && !user.tutorial.done;
+  const needsInstall = useNeedsInstall();
+  const tourRunning = !!user && (!user.tutorial.done || (needsInstall && !user.tutorial.guides?.includes("install-asked")));
   const show = ready && !dismissed && !tourRunning && (!!event || ios);
 
   const dismiss = () => {

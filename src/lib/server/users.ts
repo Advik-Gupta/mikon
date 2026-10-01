@@ -22,6 +22,21 @@ export interface UserDoc {
   lastActiveAt?: Date;
   createdAt: Date;
   tutorial: { step: number; done: boolean; version?: number; newStep?: number; guides?: string[] };
+  referredBy?: string;
+  invite?: { from: string; name: string; username: string; avatarUrl: string | null; status: "pending" | "accepted" | "skipped" };
+  client?: ClientInfo;
+}
+
+export interface ClientInfo {
+  browser: string;
+  os: string;
+  device: string;
+  standalone: boolean;
+  screen: string;
+  lang: string;
+  tz: string;
+  push: string;
+  at: Date;
 }
 
 export const DEFAULT_PRIVACY: UserDoc["privacy"] = { profile: "public", activeProgram: "friends", progress: "friends" };
@@ -40,6 +55,7 @@ export const publicUser = (u: UserDoc) => ({
   privacy: { ...DEFAULT_PRIVACY, ...u.privacy },
   role: u.role === "admin" ? ("admin" as const) : ("user" as const),
   tutorial: u.tutorial,
+  invite: u.invite?.status === "pending" ? { name: u.invite.name, username: u.invite.username, avatarUrl: u.invite.avatarUrl } : null,
 });
 
 export const userCard = (u: Pick<UserDoc, "_id" | "name" | "username" | "avatarUrl">) => ({
@@ -65,7 +81,7 @@ export async function ensureUsername(u: UserDoc) {
   return { ...u, username };
 }
 
-export async function createUser(name: string, username: string, email: string, password: string) {
+export async function createUser(name: string, username: string, email: string, password: string, inviter?: UserDoc | null) {
   const passwordHash = await bcrypt.hash(password, env.BCRYPT_ROUNDS);
   const doc: UserDoc = {
     _id: new ObjectId(),
@@ -79,6 +95,10 @@ export async function createUser(name: string, username: string, email: string, 
     passwordHash,
     createdAt: new Date(),
     tutorial: { step: 0, done: false, version: TOUR_VERSION },
+    ...(inviter && {
+      referredBy: inviter._id.toHexString(),
+      invite: { from: inviter._id.toHexString(), name: inviter.name, username: inviter.username, avatarUrl: inviter.avatarUrl ?? null, status: "pending" as const },
+    }),
   };
   await (await users()).insertOne(doc);
   return doc;

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { ArrowRight, AtSign, Check, Eye, EyeOff, Lock, Mail, User, X } from "lucide-react";
 import { Figure } from "../graphics/Figure";
 import { Logo } from "../graphics/Logo";
+import { UserAvatar } from "../shell/Avatar";
 import { Button, cn, Field, Input } from "../ui";
 
 function strength(pw: string) {
@@ -53,11 +54,40 @@ export function AuthShell({ children }: { children: ReactNode }) {
   );
 }
 
+const HANDLE = /^[a-z0-9_.]{3,24}$/;
+
+const readRefCookie = () => {
+  const m = document.cookie.match(/(?:^|;\s*)mikon_ref=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+};
+
+function useInviteRef(param: string | null) {
+  const cookie = useSyncExternalStore(() => () => {}, readRefCookie, () => null);
+  const v = (param ?? cookie)?.toLowerCase();
+  return v && HANDLE.test(v) ? v : null;
+}
+
+function useInviter(ref: string | null) {
+  const [inviter, setInviter] = useState<{ name: string; username: string; avatarUrl: string | null } | null>(null);
+  useEffect(() => {
+    if (!ref) return;
+    let live = true;
+    fetch(`/api/invite?u=${encodeURIComponent(ref)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => live && d && setInviter(d.inviter))
+      .catch(() => null);
+    return () => {
+      live = false;
+    };
+  }, [ref]);
+  return ref && inviter?.username === ref ? inviter : null;
+}
+
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
-  const ref = params.get("ref")?.toLowerCase().match(/^[a-z0-9_.]{3,24}$/)?.[0];
+  const ref = useInviteRef(params.get("ref"));
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [touchedUsername, setTouchedUsername] = useState(false);
@@ -69,6 +99,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const [wrongCredentials, setWrongCredentials] = useState(false);
   const [busy, setBusy] = useState(false);
   const signup = mode === "signup";
+  const inviter = useInviter(ref);
   const s = strength(password);
   const handle = touchedUsername ? username : name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 24);
   const validHandle = /^[a-z0-9_.]{3,24}$/.test(handle);
@@ -138,10 +169,24 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           </div>
           <h1 className="mt-8 font-display text-3xl font-semibold tracking-tight lg:mt-0">{signup ? "Create your account" : "Welcome back"}</h1>
           <p className="mt-2 text-sm text-muted">{signup ? "It takes a minute. Then we'll get to know you." : "Sign in to keep building."}</p>
-          {signup && ref && (
-            <p className="mt-4 rounded-xl border border-accent/30 bg-accent/10 px-3.5 py-2.5 text-sm text-accent">
-              You were invited by <span className="font-semibold">@{ref}</span>. You&apos;ll be friends as soon as you join.
-            </p>
+          {!signup && inviter && (
+            <Link href="/signup" className="mt-5 flex items-center gap-3 rounded-2xl border border-accent/30 bg-accent/[0.08] p-3 transition hover:border-accent/60">
+              <UserAvatar name={inviter.name} src={inviter.avatarUrl} size={44} />
+              <p className="flex-1 text-sm leading-snug">
+                <span className="font-semibold">{inviter.name}</span> invited you
+                <span className="block text-xs text-muted">New to Mikon? Create an account</span>
+              </p>
+              <ArrowRight className="size-4 text-accent" />
+            </Link>
+          )}
+          {signup && inviter && (
+            <div className="mt-5 flex items-center gap-3 rounded-2xl border border-accent/30 bg-accent/[0.08] p-3">
+              <UserAvatar name={inviter.name} src={inviter.avatarUrl} size={44} />
+              <p className="text-sm leading-snug">
+                <span className="font-semibold">{inviter.name}</span> invited you to Mikon
+                <span className="block text-xs text-muted">Sign up and you can add them as a friend straight away.</span>
+              </p>
+            </div>
           )}
 
           <div className="mt-8 space-y-4">

@@ -2,15 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, BarChart3, HardDrive, Megaphone, MessageSquareWarning, ShieldAlert, Users } from "lucide-react";
+import { Activity, BarChart3, HardDrive, Megaphone, MessageSquareWarning, MonitorSmartphone, ShieldAlert, Users } from "lucide-react";
 import { useSessionUser } from "@/lib/storage";
 import { KpiGrid, Overview, useOverview } from "@/components/admin/Overview";
+import { Audience, Referrers, useAudience } from "@/components/admin/Audience";
 import { AnnouncementsPanel, FeedbackPanel, LogsPanel, StoragePanel, UsersPanel } from "@/components/admin/Tables";
 import { cn } from "@/components/ui";
 
 const TABS = [
   { id: "overview", label: "Overview", icon: BarChart3 },
   { id: "users", label: "Users", icon: Users },
+  { id: "audience", label: "Audience", icon: MonitorSmartphone },
   { id: "activity", label: "Activity log", icon: Activity },
   { id: "feedback", label: "Feedback", icon: MessageSquareWarning },
   { id: "announcements", label: "Announcements", icon: Megaphone },
@@ -19,9 +21,11 @@ const TABS = [
 
 function MobileAdmin() {
   const { data } = useOverview();
+  const audience = useAudience().data;
   return (
     <div className="space-y-5 md:hidden">
       {data ? <KpiGrid k={data.kpis} /> : <div className="h-64 animate-pulse rounded-2xl bg-surface" />}
+      {audience && <Referrers data={audience} />}
       <AnnouncementsPanel />
       <p className="text-center text-xs text-muted">Open the admin panel on a computer for users, logs, feedback and storage.</p>
     </div>
@@ -70,6 +74,7 @@ export default function AdminPage() {
         </div>
         {tab === "overview" && <Overview />}
         {tab === "users" && <UsersPanel />}
+        {tab === "audience" && <Audience />}
         {tab === "activity" && <LogsPanel />}
         {tab === "feedback" && <FeedbackPanel />}
         {tab === "announcements" && <AnnouncementsPanel />}

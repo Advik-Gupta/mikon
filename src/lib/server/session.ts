@@ -45,3 +45,5 @@ export async function sessionClaims(token: string | undefined, secret: string) {
     return null;
   }
 }
+export const REF_COOKIE = "mikon_ref";
+export const KNOWN_COOKIE = "mikon_known";
