@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, BookOpen, ChevronRight, Crosshair, Layers, Link2, Search, Sparkles, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, ChevronRight, Crosshair, Layers, Link2, Search, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { groupById, MUSCLE_GROUPS, MUSCLES, muscleById, REGIONS } from "@/data/muscles";
 import {
   deleteCustomExercise,
@@ -413,6 +414,12 @@ export function ExercisePanel({ nav, exercise }: { nav: ExplorerNav; exercise: E
         )}
       </div>
       {exercise.source === "custom" && <p className="mt-1 text-xs text-info">Your exercise</p>}
+      <Link
+        href={`/exercises/${exercise.id}`}
+        className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface-2 px-2.5 py-1.5 text-xs font-medium hover:border-line-strong"
+      >
+        <TrendingUp className="size-3.5 text-accent" /> Your progress and friends
+      </Link>
       <CreateExerciseModal
         open={editingEx}
         onClose={() => setEditingEx(false)}

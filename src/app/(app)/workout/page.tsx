@@ -77,10 +77,9 @@ function Logger() {
   const history = (logs ?? []).filter((l) => l.date < date);
 
   const finish = () => {
-    write((l) => ({ ...l, completedAt: new Date().toISOString(), exercises: l.exercises }));
+    write((l) => ({ ...l, completedAt: new Date().toISOString() }));
     const prs = log.exercises.filter((x) => {
-      const ex = exercises.get(x.exerciseId);
-      const m = metricFor(ex, x.sets);
+      const m = metricFor(x.sets);
       const now = bestValue(x.sets, m);
       const before = seriesFor(history, x.exerciseId, m);
       return now != null && before.length > 0 && now > Math.max(...before.map((p) => p.value));
@@ -139,7 +138,7 @@ function Logger() {
         {log.exercises.map((x, xi) => {
           const ex = exercises.get(x.exerciseId);
           const timed = x.sets.some((s) => s.holdSec != null && s.reps == null);
-          const metric = metricFor(ex, x.sets);
+          const metric = metricFor(x.sets);
           const prev = seriesFor(history, x.exerciseId, metric).at(-1);
           const now = bestValue(x.sets, metric);
           const pr = now != null && prev && now > prev.value;
