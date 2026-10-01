@@ -54,7 +54,13 @@
   Save a finished program and analyse it day by day or across the week, with a heat mapped muscle figure, weekly volume, a load map and targets.
 
 - **Daily Training**
-  Start a program on any date and the home board shows each day's session. Log sets, reps and weights and get notified of new bests.
+  Start a program on any date and the home board shows each day's session.
+
+- **Workout Tracker**
+  A phone first logger in the spirit of Strong and MacroFactor: start today's session, any program day, a past workout or an empty one. Custom keypad with reps in reserve, previous numbers, warm ups, swaps, notes, rest timers that survive leaving the app, minimize to keep browsing, and a summary with new bests.
+
+- **Workout History**
+  Every logged session with a consistency heatmap, full set details and per exercise history.
 
 - **Friends and Sharing**
   Search people by username, send friend requests, see each other's active programs, share programs or list them on your public profile. Invite links (WhatsApp, share sheet or copy) make you friends with whoever joins.

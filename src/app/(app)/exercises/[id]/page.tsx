@@ -8,7 +8,9 @@ import { useApi, type UserCard } from "@/lib/api";
 import { useExerciseDB, musclesForExercise, titleCase } from "@/lib/explorer";
 import { metricFormat, METRIC_LABEL, type Metric, type Point } from "@/lib/metrics";
 import { activeProgram, dayLabel } from "@/lib/programs";
-import { useProfile, usePrograms, useSessionUser } from "@/lib/storage";
+import { useLogs, useProfile, usePrograms, useSessionUser } from "@/lib/storage";
+import { kgToLb, round1 } from "@/lib/body";
+import { parseISODate as parseDate } from "@/lib/programs";
 import { BodyFigure } from "@/components/explorer/BodyFigure";
 import { ExerciseImages, LevelDot } from "@/components/explorer/ExerciseBits";
 import { UserAvatar } from "@/components/shell/Avatar";
@@ -42,6 +44,7 @@ export default function ExercisePage() {
   const profile = useProfile();
   const me = useSessionUser();
   const programs = usePrograms();
+  const logs = useLogs();
   const units = profile?.body.units ?? "metric";
   const sex = profile?.personal.sex === "female" ? "female" : "male";
   const { data } = useApi<ProgressData>(`/api/progress/${id}`);
@@ -75,6 +78,11 @@ export default function ExercisePage() {
   const first = mine?.points[0];
   const last = mine?.points.at(-1);
 
+  const sessions = (logs ?? [])
+    .filter((l) => l.completedAt && l.exercises.some((e) => e.exerciseId === id && e.sets.some((x) => x.done)))
+    .sort((a, b) => (b.startedAt ?? b.date).localeCompare(a.startedAt ?? a.date))
+    .slice(0, 12);
+  const wfmt = (kg: number) => (units === "metric" ? `${round1(kg)} kg` : `${Math.round(kgToLb(kg))} lb`);
   const program = activeProgram(programs);
   const usedOn = program
     ? program.days
@@ -221,6 +229,29 @@ export default function ExercisePage() {
                   </li>
                 ))}
               </ol>
+            </Card>
+          )}
+          {sessions.length > 0 && (
+            <Card title="Your sessions" icon={CalendarDays} className="lg:col-span-2">
+              <ul className="divide-y divide-line">
+                {sessions.map((l) => {
+                  const sets = l.exercises.filter((e) => e.exerciseId === id).flatMap((e) => e.sets.filter((x) => x.done && x.kind !== "warmup"));
+                  return (
+                    <li key={l.id} className="flex flex-col gap-1 py-2.5 sm:flex-row sm:items-center sm:gap-4">
+                      <span className="w-28 shrink-0 text-sm text-muted">{parseDate(l.date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</span>
+                      <span className="flex flex-wrap gap-1.5">
+                        {sets.map((x, i) => (
+                          <span key={i} className="rounded-lg bg-surface-2 px-2 py-1 text-xs tabular-nums">
+                            {x.weight ? `${wfmt(x.weight)} × ` : ""}
+                            {x.holdSec != null && x.reps == null ? `${x.holdSec}s` : x.reps}
+                            {x.rir != null && <span className="text-muted"> @{x.rir}</span>}
+                          </span>
+                        ))}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
             </Card>
           )}
           {program && (
