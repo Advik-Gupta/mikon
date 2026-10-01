@@ -32,7 +32,7 @@
   Contact details, body metrics, body fat estimate, an injury body map, experience and PRs, training disciplines, ranked goals and a weekly availability calendar.
 
 - **Guided Tour**
-  A short walkthrough after signup that visits the board, profile, explorer and friends and ends at creating your first program. New features get a short what's new tour.
+  A short walkthrough after signup that visits the board, profile, explorer and friends and ends at creating your first program. New features get a short what's new tour, and the builder shows a few quick tips the first time.
 
 - **Muscle and Exercise Explorer**
   Interactive male and female body maps with zoomable muscle groups, anatomy for every muscle, and a library of 900+ exercises you can extend with your own.
@@ -56,7 +56,7 @@
   Start a program on any date and the home board shows each day's session. Log sets, reps and weights and get notified of new bests.
 
 - **Friends and Sharing**
-  Search people by username, send friend requests, see each other's active programs, share programs or list them on your public profile.
+  Search people by username, send friend requests, see each other's active programs, share programs or list them on your public profile. Invite links (WhatsApp, share sheet or copy) make you friends with whoever joins.
 
 - **Progress Comparisons**
   Every exercise has a page with your progress chart and a friends leaderboard, plus head to head charts on a friend's profile.
