@@ -15,6 +15,7 @@ import { isImmersive, titleFor } from "@/components/shell/nav";
 import { NotificationBell } from "@/components/social/Notifications";
 import { Toaster } from "@/components/Toaster";
 import { Tour } from "@/components/tour/Tour";
+import { TrackerHost } from "@/components/tracker/Tracker";
 import { cn } from "@/components/ui";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -74,6 +75,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Toaster />
         <Tour />
         <InstallPrompt />
+        <TrackerHost />
       </div>
     </div>
   );

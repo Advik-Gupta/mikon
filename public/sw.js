@@ -1,4 +1,4 @@
-const CACHE = "mikon-v2";
+const CACHE = "mikon-v3";
 const OFFLINE = "/offline.html";
 const PRECACHE = [OFFLINE, "/icons/icon-192.png", "/icons/icon-512.png"];
 const DEV = ["localhost", "127.0.0.1"].includes(self.location.hostname);
@@ -70,6 +70,40 @@ self.addEventListener("notificationclick", (event) => {
       const open = list.find((c) => c.url.startsWith(self.location.origin));
       if (open) return open.focus().then((c) => c.navigate(target));
       return self.clients.openWindow(target);
+    }),
+  );
+});
+
+let restTimer = null;
+let restDone = null;
+
+self.addEventListener("message", (event) => {
+  const data = event.data || {};
+  if (data.type === "rest-cancel" || data.type === "rest-timer") {
+    clearTimeout(restTimer);
+    if (restDone) restDone();
+    restDone = null;
+  }
+  if (data.type !== "rest-timer") return;
+  const delay = data.endsAt - Date.now();
+  if (delay <= 0) return;
+  event.waitUntil(
+    new Promise((resolve) => {
+      restDone = resolve;
+      restTimer = setTimeout(() => {
+        self.registration
+          .showNotification("Rest's over", {
+            body: "Time for your next set.",
+            tag: "rest-timer",
+            renotify: true,
+            icon: "/icons/icon-192.png",
+            badge: "/icons/badge-96.png",
+            vibrate: [220, 120, 220],
+            data: { url: "/" },
+          })
+          .finally(resolve);
+        restDone = null;
+      }, delay);
     }),
   );
 });

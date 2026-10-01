@@ -86,7 +86,7 @@ export function Toaster() {
     () => toasts,
   );
   return (
-    <div className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] right-4 z-[60] flex flex-col items-end gap-2 md:bottom-4">
+    <div className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] right-4 z-[110] flex flex-col items-end gap-2 md:bottom-4">
       <AnimatePresence initial={false}>
         {list.map((t) => (
           <ToastCard key={t.id} t={t} />
