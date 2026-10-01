@@ -28,6 +28,7 @@ export interface TrackExercise {
   sets: TrackSet[];
   note: string;
   restSec: number;
+  supersetId?: string;
 }
 
 export interface ActiveWorkout {

@@ -140,3 +140,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .scroll-left > * {
   direction: ltr;
 }
+
+@media (display-mode: standalone) {
+  html,
+  body {
+    height: 100lvh;
+  }
+  .app-shell {
+    bottom: auto;
+    height: 100lvh;
+  }
+  .tab-bar {
+    padding-bottom: max(calc(env(safe-area-inset-bottom) - 16px), 6px);
+  }
+}

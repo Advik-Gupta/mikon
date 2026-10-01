@@ -55,7 +55,7 @@ export function BottomNav() {
     <>
       <nav
         data-tour="nav"
-        className="shrink-0 border-t border-line bg-bg/90 pb-[max(calc(env(safe-area-inset-bottom)-12px),4px)] backdrop-blur-xl md:hidden"
+        className="tab-bar shrink-0 border-t border-line bg-bg/95 pb-[max(calc(env(safe-area-inset-bottom)-12px),4px)] backdrop-blur-xl md:hidden"
         aria-label="Main"
       >
         <div className="grid h-[54px] grid-cols-5">
