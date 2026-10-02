@@ -1,21 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowRight, CalendarCheck, Dumbbell, Lock, Pencil, SearchX, Swords } from "lucide-react";
+import { ArrowRight, CalendarCheck, Dumbbell, Lock, Pencil, SearchX } from "lucide-react";
 import { useApi, type Relation, type UserCard } from "@/lib/api";
 import { useExerciseMap } from "@/lib/analysis";
-import { metricFormat, METRIC_UNIT, type Metric, type Point } from "@/lib/metrics";
 import { GOALS, labelOf } from "@/lib/options";
 import { cycleSummary, parseISODate } from "@/lib/programs";
-import { useProfile } from "@/lib/storage";
 import type { Privacy } from "@/lib/storage";
 import type { Program, WorkoutLog } from "@/lib/types";
 import { MiniBoard } from "@/components/builder/ProgramPreview";
 import { StatusBadge } from "@/components/program/ProgramView";
 import { UserAvatar } from "@/components/shell/Avatar";
 import { FriendButton } from "@/components/social/FriendButton";
-import { ProgressChart, SERIES_COLORS } from "@/components/social/ProgressChart";
+import { FriendsSheet } from "@/components/social/FriendsSheet";
+import { HeadToHead } from "@/components/social/HeadToHead";
 import { Button } from "@/components/ui";
 
 interface ProfileData {
@@ -27,11 +27,6 @@ interface ProfileData {
   programs: Program[];
   recent: WorkoutLog[] | null;
   privacy?: Privacy;
-}
-
-interface CompareData {
-  status: "ok" | "self" | "hidden" | "no-active-self" | "no-active-them" | "progress-hidden";
-  exercises: { exerciseId: string; metric: Metric; mine: Point[]; theirs: Point[] }[];
 }
 
 function ProgramCard({ program, href, label }: { program: Program; href: string; label?: string }) {
@@ -54,68 +49,12 @@ function ProgramCard({ program, href, label }: { program: Program; href: string;
   );
 }
 
-function Compare({ username, name }: { username: string; name: string }) {
-  const profile = useProfile();
-  const units = profile?.body.units ?? "metric";
-  const exercises = useExerciseMap();
-  const { data, loading } = useApi<CompareData>(`/api/users/${username}/compare`);
-  if (loading || !data || data.status === "self" || data.status === "hidden") return null;
-  const first = name.split(" ")[0];
-
-  const message: Record<string, string> = {
-    "no-active-self": "Start a program of your own to compare the exercises you share.",
-    "no-active-them": `${first} isn't running a program right now.`,
-  };
-
-  return (
-    <section className="mt-6">
-      <h3 className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight">
-        <Swords className="size-5 text-accent" /> Head to head
-      </h3>
-      <p className="mt-0.5 text-sm text-muted">Exercises in both of your active programs.</p>
-      {message[data.status] ? (
-        <p className="mt-4 rounded-2xl border border-dashed border-line-strong px-4 py-6 text-center text-sm text-muted">{message[data.status]}</p>
-      ) : data.exercises.length === 0 ? (
-        <p className="mt-4 rounded-2xl border border-dashed border-line-strong px-4 py-6 text-center text-sm text-muted">Your active programs don&apos;t share any exercises yet.</p>
-      ) : (
-        <>
-          {data.status === "progress-hidden" && <p className="mt-3 text-xs text-faint">{first} keeps their progress private, so only your numbers are shown.</p>}
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            {data.exercises.map((x) => {
-              const ex = exercises.get(x.exerciseId);
-              const fmt = metricFormat(x.metric, units);
-              const series = [
-                { id: "me", label: "You", color: SERIES_COLORS[0], points: x.mine },
-                { id: "them", label: first, color: SERIES_COLORS[1], points: x.theirs },
-              ].filter((s) => s.points.length);
-              return (
-                <div key={x.exerciseId} className="rounded-2xl border border-line bg-surface p-4">
-                  <div className="mb-3 flex items-baseline justify-between gap-2">
-                    <Link href={`/exercises/${x.exerciseId}`} className="truncate font-medium hover:underline">
-                      {ex?.name ?? "Exercise"}
-                    </Link>
-                    <span className="shrink-0 text-[11px] text-faint">{METRIC_UNIT[x.metric]}</span>
-                  </div>
-                  {series.length ? (
-                    <ProgressChart series={series} format={fmt} />
-                  ) : (
-                    <p className="py-8 text-center text-sm text-faint">No logged sessions yet. Log a workout to start the race.</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
-    </section>
-  );
-}
-
 export default function UserPage() {
   const { username } = useParams<{ username: string }>();
   const router = useRouter();
   const exercises = useExerciseMap();
   const { data, error, loading, reload } = useApi<ProfileData>(`/api/users/${username.toLowerCase()}`);
+  const [showFriends, setShowFriends] = useState(false);
 
   if (loading) return <div className="mx-auto mt-10 h-48 max-w-5xl animate-pulse rounded-3xl bg-surface px-4" />;
   if (error || !data) {
@@ -136,6 +75,7 @@ export default function UserPage() {
 
   return (
     <div className="board-grid min-h-full">
+      <FriendsSheet username={user.username} name={user.name} own={self} open={showFriends} onClose={() => setShowFriends(false)} />
       <div className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-8 sm:pt-8">
         <section className="overflow-hidden rounded-3xl border border-line bg-surface">
           <div className="relative h-24 bg-gradient-to-br from-info/25 via-surface-2 to-accent/20 sm:h-28">
@@ -155,8 +95,11 @@ export default function UserPage() {
             </div>
             <div className="flex flex-col gap-3 sm:items-end">
               <div className="flex gap-5 text-center">
+                <button type="button" onClick={() => setShowFriends(true)} className="group" aria-label={`See ${user.name}'s friends`}>
+                  <p className="font-display text-xl font-semibold tabular-nums group-hover:text-accent">{stats.friends}</p>
+                  <p className="text-[11px] text-muted underline decoration-dotted underline-offset-2">Friends</p>
+                </button>
                 {[
-                  ["Friends", stats.friends],
                   ["Programs", stats.programs],
                   ["Workouts", stats.workouts],
                 ].map(([label, v]) => (
@@ -204,7 +147,7 @@ export default function UserPage() {
               </section>
             )}
 
-            {!self && <Compare username={user.username} name={user.name} />}
+            {!self && <HeadToHead username={user.username} name={user.name} />}
 
             {data.programs.length > 0 && (
               <section className="mt-6">
