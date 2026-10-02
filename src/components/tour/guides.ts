@@ -15,6 +15,7 @@ export const GUIDES = {
     { target: "profile-photo", title: "Make it yours", body: "Tap your picture to add a photo. Friends see it on your profile and in comparisons." },
     { target: "profile-edit", title: "Your details", body: "Body stats, goals, schedule and injuries. Programs adapt when these change." },
     { target: "profile-share", title: "Share and invite", body: "Make a card with your best lifts and split, or send friends an invite link." },
+    { target: "profile-versus", title: "You vs your friends", body: "A quick animated rundown of who trained more, lifted more and kept the longer streak this month." },
   ],
   friends: [
     { target: "friends-tabs", title: "Friends and requests", body: "Your friends, requests waiting for you, and a tab to find people." },

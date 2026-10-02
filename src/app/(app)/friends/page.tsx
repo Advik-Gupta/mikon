@@ -2,12 +2,13 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, Search, UserPlus, Users } from "lucide-react";
+import { Loader2, Search, Swords, UserPlus, Users } from "lucide-react";
+import { openVersus } from "@/components/social/Versus";
 import { useApi, type Relation, type UserCard } from "@/lib/api";
 import { FriendButton } from "@/components/social/FriendButton";
 import { UserRow } from "@/components/social/UserRow";
 import { InviteCard } from "@/components/social/InviteCard";
-import { cn } from "@/components/ui";
+import { Button, cn } from "@/components/ui";
 import { Guide } from "@/components/tour/Guide";
 import { GUIDES } from "@/components/tour/guides";
 
@@ -87,6 +88,9 @@ function Friends() {
             <h2 className="font-display text-2xl font-semibold tracking-tight">Friends</h2>
             <p className="mt-1 text-sm text-muted">Train alongside friends, see their programs and compare progress.</p>
           </div>
+          <Button data-tour="friends-versus" variant="secondary" onClick={openVersus} className="shrink-0 rounded-full border-accent/40">
+            <Swords className="size-4 text-accent" /> VS friends
+          </Button>
         </div>
         <div data-tour="friends-tabs" className="mb-5 flex gap-1 rounded-2xl border border-line bg-surface p-1">
           {TABS.map((t) => (

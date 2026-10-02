@@ -19,7 +19,9 @@ import { TrackerHost } from "@/components/tracker/Tracker";
 import { ImportPrompt } from "@/components/import/ImportPrompt";
 import { EarlyDays } from "@/components/import/EarlyDays";
 import { StartHub } from "@/components/tour/StartHub";
+import { WhatsNew } from "@/components/tour/WhatsNew";
 import { InvitePrompt } from "@/components/social/InvitePrompt";
+import { VersusHost } from "@/components/social/Versus";
 import { ClientBeacon } from "@/components/shell/ClientBeacon";
 import { FeedbackSheet } from "@/components/feedback/Feedback";
 import { AnnouncementBar } from "@/components/shell/Announcements";
@@ -86,6 +88,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <EarlyDays />
         <InstallSheet />
         <InvitePrompt />
+        <VersusHost />
+        <WhatsNew />
         <ClientBeacon />
         <ImportPrompt />
         <StartHub />

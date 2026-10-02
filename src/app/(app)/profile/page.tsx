@@ -11,7 +11,7 @@ import { activeProgram, dayLabel } from "@/lib/programs";
 import { blockType } from "@/lib/options";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarCheck, ExternalLink, LogOut, Mail, MapPin, Pencil, RotateCcw, Share2, Users } from "lucide-react";
+import { CalendarCheck, ExternalLink, LogOut, Mail, MapPin, Pencil, RotateCcw, Share2, Swords, Users } from "lucide-react";
 import { age, bmi, bmiLabel, displayName, fatBand, formatHeight, formatWeight, round1 } from "@/lib/body";
 import type { InjurySeverity } from "@/lib/types";
 import { logout, resetAll, useLogs, useProfile, usePrograms, useSessionUser } from "@/lib/storage";
@@ -21,6 +21,8 @@ import { AvatarEditor } from "@/components/profile/AvatarEditor";
 import { BodyMap, SEVERITY_COLOR } from "@/components/graphics/BodyMap";
 import { ProfileSections } from "@/components/profile/ProfileSections";
 import { Button, cn } from "@/components/ui";
+import { FriendsSheet } from "@/components/social/FriendsSheet";
+import { openVersus } from "@/components/social/Versus";
 import { Guide } from "@/components/tour/Guide";
 import { GUIDES } from "@/components/tour/guides";
 
@@ -46,6 +48,7 @@ export default function ProfilePage() {
   const done = useMemo(() => (allLogs ?? []).filter((l) => l.completedAt), [allLogs]);
   const workouts = done.length;
   const [sharing, setSharing] = useState(false);
+  const [showFriends, setShowFriends] = useState(false);
   const exerciseMap = useExerciseMap();
   const shareContent = useMemo(
     () =>
@@ -122,10 +125,10 @@ export default function ProfilePage() {
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:flex-col lg:items-end">
             <div className="flex gap-5 text-center">
-              <Link href="/friends" className="group">
+              <button type="button" data-tour="profile-friends" onClick={() => setShowFriends(true)} className="group" aria-label="See your friends">
                 <p className="font-display text-xl font-semibold tabular-nums group-hover:text-accent">{friends?.length ?? "-"}</p>
-                <p className="text-[11px] text-muted">Friends</p>
-              </Link>
+                <p className="text-[11px] text-muted underline decoration-dotted underline-offset-2">Friends</p>
+              </button>
               <div>
                 <p className="font-display text-xl font-semibold tabular-nums">{programs.length}</p>
                 <p className="text-[11px] text-muted">Programs</p>
@@ -159,14 +162,20 @@ export default function ProfilePage() {
         <div className="sm:pr-4">
           <p className="text-sm font-semibold">Share and invite</p>
           <p className="text-xs text-muted">Show off your training or bring friends to Mikon.</p>
-          <Button data-tour="profile-share" onClick={() => setSharing(true)} className="mt-3 h-11 w-full rounded-full sm:w-auto">
-            <Share2 className="size-4" /> Share my profile
-          </Button>
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:flex">
+            <Button data-tour="profile-share" onClick={() => setSharing(true)} className="h-11 rounded-full">
+              <Share2 className="size-4" /> Share profile
+            </Button>
+            <Button data-tour="profile-versus" variant="secondary" onClick={openVersus} className="h-11 rounded-full border-accent/40">
+              <Swords className="size-4 text-accent" /> VS friends
+            </Button>
+          </div>
         </div>
         <div className="min-w-0">
           <InviteCard compact />
         </div>
       </section>
+      {user && <FriendsSheet username={user.username} name={user.name} own open={showFriends} onClose={() => setShowFriends(false)} />}
       <ShareStudio open={sharing} onClose={() => setSharing(false)} content={shareContent} />
 
       <div className="scrollbar-thin mt-6 flex gap-1 overflow-x-auto border-b border-line">
