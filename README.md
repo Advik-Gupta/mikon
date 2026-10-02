@@ -36,7 +36,7 @@
   Contact details, body metrics, body fat estimate, an injury body map, experience and PRs, training disciplines, ranked goals and a weekly availability calendar.
 
 - **Guided Start**
-  After signup you choose where to begin: build a program, start a workout, explore or set up your profile. Every page shows a few quick tips the first time you open it, a Getting started list on Home ticks off as you go, and tips can be replayed from settings.
+  After signup you choose where to begin: build a program, start a workout, explore or set up your profile. Every page shows a few quick tips the first time you open it, a Getting started list on Home ticks off as you go, and tips can be replayed from settings. Existing users get a short What's new list when features land.
 
 - **Muscle and Exercise Explorer**
   Interactive male and female body maps with zoomable muscle groups, anatomy for every muscle, and a library of 900+ exercises you can extend with your own.
@@ -72,7 +72,7 @@
   Download your history in Strong, Hevy, Lyfta or MacroFactor format.
 
 - **Admin Panel**
-  Role based admin area with usage charts, users, top referrers, device and browser stats, request logs, feedback, announcements and storage tracking.
+  Role based admin area with usage charts, users, top referrers, device and browser stats, request logs, feedback, storage tracking and announcements that also go out as push notifications.
 
 - **Body Measurements**
   Log weight, body fat, calories and body part measurements, with progress charts and a weight trend line.
@@ -81,16 +81,19 @@
   Every logged session with a consistency heatmap, full set details and per exercise history.
 
 - **Friends and Sharing**
-  Search people by username, send friend requests, see each other's active programs, share programs or list them on your public profile. Invite links are remembered through signup, and new users get a prompt to add whoever invited them.
+  Search people by username, send friend requests, see each other's active programs, share programs or list them on your public profile. Tap the friends count on any profile to see their friends. Invite links are remembered through signup, and new users get a prompt to add whoever invited them.
 
 - **Progress Comparisons**
-  Every exercise has a page with your progress chart and a friends leaderboard, plus head to head charts on a friend's profile.
+  Every exercise has a page with your progress chart and a friends leaderboard. A friend's profile shows a head to head on workouts, volume, streak, body weight and every exercise you've both logged, with or without a shared program.
+
+- **VS Friends**
+  An animated story with music that ranks you against your friends on workouts, volume, streak, time and shared lifts, ending in a summary image you can share.
 
 - **Privacy Controls**
   Choose who sees your profile, active program and progress: everyone, friends or only you.
 
 - **Installable App**
-  A full PWA with offline fallback, push notifications and phone first layouts. Phone users are guided to install it before anything else.
+  A full PWA with offline fallback, push notifications and phone first layouts. Phone users are guided to install it first, and a gentle reminder to install and turn on notifications stays until it's done or dismissed for good.
 
 ## 🚀 Getting Started
 
