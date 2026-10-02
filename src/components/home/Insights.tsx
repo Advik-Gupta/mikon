@@ -11,9 +11,9 @@ import { workoutStats } from "@/lib/tracker";
 import type { Units, WorkoutLog } from "@/lib/types";
 import { cn } from "../ui";
 
-function Card({ href, title, sub, children, footer, delay = 0 }: { href: string; title: string; sub: string; children: ReactNode; footer: ReactNode; delay?: number }) {
+function Card({ href, title, sub, children, footer, delay = 0, className }: { href: string; title: string; sub: string; children: ReactNode; footer: ReactNode; delay?: number; className?: string }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }} className={className}>
       <Link href={href} className="flex h-full flex-col rounded-3xl border border-line bg-surface p-4 transition active:scale-[0.98] hover:border-line-strong">
         <p className="text-[15px] font-semibold leading-tight">{title}</p>
         <p className="text-xs text-muted">{sub}</p>
@@ -79,12 +79,11 @@ export function Insights({ logs, measurements, units }: { logs: WorkoutLog[]; me
   const latest = latestByMetric(measurements);
   const days = Array.from({ length: 30 }, (_, i) => toISODate(addDays(new Date(), i - 29)));
   const workoutDays = new Set(done.map((l) => l.date));
-  const weighDays = new Set(weights.map((m) => toISODate(new Date(m.date))));
   const weekStart = toISODate(addDays(new Date(), -((new Date().getDay() + 6) % 7)));
   const thisWeek = done.filter((l) => l.date >= weekStart).length;
   const weighThisWeek = weights.filter((m) => toISODate(new Date(m.date)) >= weekStart).length;
   const streak = weekStreak(done);
-  const bodyCards = ["weight", "bodyFat", "waist", "chest", "leftBicep", "hips"].filter((id) => latest.get(id));
+  const bodyCards = ["bodyFat", "waist", "chest", "leftBicep", "hips", "shoulders"].filter((id) => latest.get(id));
 
   return (
     <div className="space-y-6">
@@ -111,20 +110,18 @@ export function Insights({ logs, measurements, units }: { logs: WorkoutLog[]; me
               <span className="text-xs text-faint">No workouts yet</span>
             )}
           </Card>
+          <Card href="/history" title="Training days" sub="Last 30 days" footer={<span className="text-sm"><span className="font-display text-lg font-semibold">{thisWeek}</span> this week</span>} delay={0.08}>
+            <Dots days={days} on={workoutDays} color="#ff9a6b" />
+          </Card>
           <Card
             href="/body/weight"
             title="Weight trend"
-            sub={`Last ${Math.min(7, weights.length)} entries`}
+            sub={weights.length ? `${weighThisWeek} weigh-in${weighThisWeek === 1 ? "" : "s"} this week` : "Track it a few times a week"}
             footer={<span className="font-display text-lg font-semibold">{weights.at(-1) ? fmtMetric("mass", weights.at(-1)!.value, units) : "Log your weight"}</span>}
-            delay={0.08}
+            delay={0.12}
+            className="col-span-2 lg:col-span-1"
           >
-            <Sparkline values={weights.slice(-7).map((m) => m.value)} color="#a78bfa" />
-          </Card>
-          <Card href="/body/weight" title="Weigh-ins" sub="Last 30 days" footer={<span className="text-sm"><span className="font-display text-lg font-semibold">{weighThisWeek}/7</span> this week</span>} delay={0.12}>
-            <Dots days={days} on={weighDays} color="#5ed1a0" />
-          </Card>
-          <Card href="/history" title="Training days" sub="Last 30 days" footer={<span className="text-sm"><span className="font-display text-lg font-semibold">{thisWeek}</span> this week</span>} delay={0.16}>
-            <Dots days={days} on={workoutDays} color="#ff9a6b" />
+            <Sparkline values={weights.slice(-10).map((m) => m.value)} color="#a78bfa" />
           </Card>
         </div>
       </section>

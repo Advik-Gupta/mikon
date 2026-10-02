@@ -14,12 +14,12 @@ export interface Series {
 export const SERIES_COLORS = ["#c6f432", "#5aaeff", "#ff9a3c", "#a78bfa", "#3dd6d0", "#ff6b8a"];
 
 const H = 220;
-const PAD = { l: 40, r: 14, t: 14, b: 26 };
+const PAD = { l: 46, r: 14, t: 14, b: 26 };
 const day = (d: string) => parseISODate(d).getTime() / 86400000;
 
 export function ProgressChart({ series, format }: { series: Series[]; format: (v: number) => string }) {
   const wrap = useRef<HTMLDivElement>(null);
-  const [w, setW] = useState(600);
+  const [w, setW] = useState(320);
   const [hover, setHover] = useState<number | null>(null);
 
   useEffect(() => {
@@ -54,11 +54,11 @@ export function ProgressChart({ series, format }: { series: Series[]; format: (v
   const nearest = hover == null ? [] : series.map((s) => s.points.reduce<Point | null>((best, p) => (!best || Math.abs(day(p.date) - hover) < Math.abs(day(best.date) - hover) ? p : best), null));
 
   return (
-    <div ref={wrap} className="relative w-full overflow-hidden select-none">
+    <div ref={wrap} className="relative w-full min-w-0 overflow-hidden select-none">
       <svg
-        width={w}
+        viewBox={`0 0 ${w} ${H}`}
         height={H}
-        className="block touch-pan-y"
+        className="block w-full touch-pan-y"
         onPointerMove={(e) => {
           const r = e.currentTarget.getBoundingClientRect();
           const x = e.clientX - r.left;
@@ -99,7 +99,7 @@ export function ProgressChart({ series, format }: { series: Series[]; format: (v
         >
           {series.map((s, i) =>
             nearest[i] ? (
-              <p key={s.id} className="flex items-center gap-2 whitespace-nowrap">
+              <p key={s.id} className="flex max-w-[60vw] items-center gap-2 whitespace-nowrap">
                 <span className="size-2 rounded-full" style={{ background: s.color }} />
                 <span className="text-muted">{s.label}</span>
                 <span className="ml-auto pl-2 font-semibold tabular-nums">{format(nearest[i]!.value)}</span>

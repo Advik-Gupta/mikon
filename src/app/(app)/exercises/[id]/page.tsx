@@ -26,7 +26,7 @@ interface ProgressData {
 
 function Card({ title, icon: Icon, children, aside, className }: { title: string; icon: typeof Users; children: React.ReactNode; aside?: React.ReactNode; className?: string }) {
   return (
-    <section className={cn("rounded-3xl border border-line bg-surface p-5", className)}>
+    <section className={cn("min-w-0 rounded-3xl border border-line bg-surface p-4 sm:p-5", className)}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <h3 className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
           <Icon className="size-4 text-accent" /> {title}
@@ -97,12 +97,12 @@ export default function ExercisePage() {
           <ArrowLeft className="size-3.5" /> Exercise library
         </Link>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <section className="overflow-hidden rounded-3xl border border-line bg-surface">
-            <div className="grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <section className="min-w-0 overflow-hidden rounded-3xl border border-line bg-surface">
+            <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <ExerciseImages exercise={exercise} className="aspect-[4/3] w-full sm:aspect-auto sm:h-full sm:min-h-64" />
               <div className="p-5 sm:p-6">
-                <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">{exercise.name}</h2>
+                <h2 className="break-words font-display text-2xl font-semibold tracking-tight sm:text-3xl">{exercise.name}</h2>
                 <div className="mt-3 flex flex-wrap gap-1.5 text-xs">
                   {[exercise.discipline, exercise.equipment, exercise.mechanic].filter(Boolean).map((t) => (
                     <span key={t} className="rounded-full border border-line px-2.5 py-1 text-muted">
@@ -151,7 +151,7 @@ export default function ExercisePage() {
           </section>
         </div>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
           <Card
             title="Progress"
             icon={TrendingUp}
@@ -175,7 +175,7 @@ export default function ExercisePage() {
               </p>
             )}
             {me && (
-              <p className="mt-4 flex items-center gap-1.5 text-[11px] text-faint">
+              <p className="mt-4 flex flex-wrap items-center gap-1.5 text-[11px] text-faint">
                 <Lock className="size-3" /> Your progress is visible to: {visibilityOf(me.privacy.progress).label.toLowerCase()}.
                 <Link href="/profile" className="underline hover:text-ink">
                   Change
@@ -218,7 +218,7 @@ export default function ExercisePage() {
           </Card>
         </div>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
           {exercise.instructions.length > 0 && (
             <Card title="How to do it" icon={BookOpen}>
               <ol className="space-y-3">
