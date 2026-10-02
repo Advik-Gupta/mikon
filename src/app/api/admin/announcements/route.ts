@@ -1,4 +1,4 @@
-import type { NextRequest } from "next/server";
+import { after, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getDb } from "@/lib/server/db";
 import { assertSameOrigin, handler, readJson, requireAdmin } from "@/lib/server/http";
@@ -11,7 +11,7 @@ const schema = z.object({
   tone: z.enum(["info", "success", "warn"]).default("info"),
   link: z.string().trim().max(300).regex(/^(\/|https:\/\/)/, "Links must start with / or https://").nullable().default(null),
   until: z.string().datetime().nullable().default(null),
-  push: z.boolean().default(false),
+  push: z.boolean().default(true),
 });
 
 export const GET = handler(async (req: NextRequest) => {
@@ -40,8 +40,11 @@ export const POST = handler(async (req: NextRequest) => {
   clearCache("announcements");
   let pushed = 0;
   if (a.push) {
-    const ids = await db.collection("push_subscriptions").distinct("userId");
-    for (const id of ids) await sendPush(id as string, { title: a.title, body: a.body || "Open Mikon to see what's new.", url: a.link ?? "/", tag: "announcement" }).catch(() => null);
+    const ids = (await db.collection("push_subscriptions").distinct("userId")) as string[];
+    const payload = { title: a.title, body: a.body || "Open Mikon to see what's new.", url: a.link ?? "/", tag: "announcement" };
+    after(async () => {
+      for (let i = 0; i < ids.length; i += 20) await Promise.all(ids.slice(i, i + 20).map((id) => sendPush(id, payload).catch(() => null)));
+    });
     pushed = ids.length;
   }
   return Response.json({ ok: true, pushed });

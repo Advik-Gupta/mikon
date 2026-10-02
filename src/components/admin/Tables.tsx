@@ -320,14 +320,14 @@ interface AnnouncementRow {
 
 export function AnnouncementsPanel() {
   const { data } = useApi<{ total: number; rows: AnnouncementRow[] }>("/api/admin/announcements?pageSize=50", 5000);
-  const [form, setForm] = useState({ title: "", body: "", tone: "info", link: "", push: false });
+  const [form, setForm] = useState({ title: "", body: "", tone: "info", link: "", push: true });
   const [busy, setBusy] = useState(false);
   const post = async () => {
     setBusy(true);
     try {
       const r = await apiSend<{ pushed: number }>("POST", "/api/admin/announcements", { ...form, link: form.link.trim() || null });
       toast({ tone: "success", title: "Announcement live", message: form.push ? `Push sent to ${r.pushed} users` : undefined });
-      setForm({ title: "", body: "", tone: "info", link: "", push: false });
+      setForm({ title: "", body: "", tone: "info", link: "", push: true });
       revalidate("/api/admin/announcements");
       revalidate("/api/announcements");
     } catch (e) {
@@ -356,7 +356,7 @@ export function AnnouncementsPanel() {
               </button>
             ))}
             <label className="ml-auto flex items-center gap-2 text-xs text-muted">
-              <input type="checkbox" checked={form.push} onChange={(e) => setForm({ ...form, push: e.target.checked })} className="accent-[#c6f432]" /> Also send a push notification
+              <input type="checkbox" checked={form.push} onChange={(e) => setForm({ ...form, push: e.target.checked })} className="accent-[#c6f432]" /> Send a push notification to everyone with notifications on
             </label>
           </div>
           <Button onClick={post} disabled={busy || !form.title.trim()} className="w-full">
